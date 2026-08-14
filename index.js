@@ -2,13 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
-const TelegramBot = require('node-telegram-bot-api'); // Подключаем библиотеку бота
+const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Подключаемся к Supabase с админскими правами (Service Role Key)
+// Подключаемся к Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const PORT = process.env.PORT || 10000;
 
@@ -16,49 +16,49 @@ const PORT = process.env.PORT || 10000;
 // ТЕЛЕГРАМ БОТ (МОСТ И УПРАВЛЕНИЕ)
 // ==========================================
 
-// Инициализация бота
 const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
-const ADMIN_USERNAME = 'DX77TR'; // Доступ строго для этого юзернейма
-let ADMIN_CHAT_ID = null; // Будет заполнен автоматически
+const ADMIN_USERNAME = 'DX77TR'; 
+let ADMIN_CHAT_ID = null; 
 
-// Обработка входящих сообщений в ТГ
-bot.on('message', (msg) => {
+bot.on('message', async (msg) => {
   if (msg.from.username === ADMIN_USERNAME) {
-    ADMIN_CHAT_ID = msg.chat.id; // Запоминаем чат админа при любом сообщении (или команде /start)
+    ADMIN_CHAT_ID = msg.chat.id; 
 
     // Если ты нажимаешь "Ответить" (Reply) на сообщение от юзера из поддержки
     if (msg.reply_to_message && msg.reply_to_message.text.includes('Email:')) {
       const replyText = msg.text;
+      // Вытаскиваем email юзера из твоего реплая
       const emailMatch = msg.reply_to_message.text.match(/Email:\s*([^\s]+)/);
       
       if (emailMatch && emailMatch[1]) {
         const userEmail = emailMatch[1];
-        // ТУТ в будущем можно записывать твой ответ в БД `support_chats`, 
-        // чтобы фронтенд сайта его прочитал и вывел юзеру.
-        bot.sendMessage(ADMIN_CHAT_ID, `✅ Ответ зафиксирован для пользователя ${userEmail}`);
+        
+        // Записываем твой ответ в БД, чтобы юзер увидел его на сайте
+        await supabase.from('support_messages').insert([{
+          user_email: userEmail,
+          sender: 'admin',
+          text: replyText
+        }]);
+
+        bot.sendMessage(ADMIN_CHAT_ID, `✅ Ответ сохранен! Пользователь ${userEmail} увидит его в чате.`);
       }
     }
   }
 });
 
-// Обработка нажатий на инлайн-кнопки (Выведено / Отменено)
 bot.on('callback_query', async (query) => {
-  // Блокируем, если жмет кто-то левый
   if (query.from.username !== ADMIN_USERNAME) {
     return bot.answerCallbackQuery(query.id, { text: 'У вас нет прав!', show_alert: true });
   }
 
-  const action = query.data.split('_')[0]; // 'complete' или 'cancel'
+  const action = query.data.split('_')[0]; 
   const orderId = query.data.split('_')[1];
   const newStatus = action === 'complete' ? 'completed' : 'cancelled';
 
-  // Обновляем статус заказа в Supabase
   const { error } = await supabase.from('withdrawals').update({ status: newStatus }).eq('id', orderId);
 
   if (!error) {
     const statusText = action === 'complete' ? '✅ ВЫВЕДЕНО' : '❌ ОТМЕНЕНО';
-    
-    // Редактируем сообщение, чтобы кнопки пропали и был виден статус
     bot.editMessageText(`${query.message.text}\n\nСтатус изменен: ${statusText}`, {
       chat_id: query.message.chat.id,
       message_id: query.message.message_id
@@ -119,8 +119,16 @@ app.post('/api/me/update', authenticateUser, async (req, res) => {
 app.post('/api/chat/send', authenticateUser, async (req, res) => {
   const { message } = req.body;
   
+  // 1. Сохраняем сообщение юзера в БД
+  await supabase.from('support_messages').insert([{
+    user_email: req.user.email,
+    sender: 'user',
+    text: message
+  }]);
+
+  // 2. Отправляем тебе в ТГ
   if (ADMIN_CHAT_ID) {
-    const text = `✉️ **Новое сообщение от пользователя**\nНик: ${req.user.username}\nEmail: ${req.user.email}\nID: ${req.user.secret_id}\n\nСообщение: ${message}\n\n_(Ответь на это сообщение (Reply), чтобы в будущем юзер получил ответ на сайте)_`;
+    const text = `✉️ **Новое сообщение от пользователя**\nНик: ${req.user.username}\nEmail: ${req.user.email}\nID: \`${req.user.secret_id}\`\n\nСообщение: ${message}\n\n_(Ответь на это сообщение (Reply), чтобы юзер получил ответ на сайте)_`;
     bot.sendMessage(ADMIN_CHAT_ID, text, { parse_mode: 'Markdown' });
   }
   
@@ -133,7 +141,6 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
 
 app.post('/api/promo/activate', authenticateUser, async (req, res) => {
   const { code } = req.body;
-  
   const { data: promo, error } = await supabase.from('promocodes').select('*').eq('code', code.toUpperCase()).eq('is_active', true).single();
   if (error || !promo) return res.status(404).json({ error: 'Промокод не существует или закончился' });
 
@@ -142,7 +149,6 @@ app.post('/api/promo/activate', authenticateUser, async (req, res) => {
     await supabase.from('users').update({ balance: newBalance }).eq('id', req.user.id);
     return res.json({ success: true, message: `Начислено ${promo.promo_value} G!`, type: promo.promo_type });
   }
-
   res.json({ success: true, promo });
 });
 
@@ -172,7 +178,6 @@ app.post('/api/finance/topup', authenticateUser, async (req, res) => {
 });
 
 app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
-  // Получаем данные, которые шлет обновленный фронтенд магазина
   const { amount, gameId, gameAvatar, targetSkin, pattern } = req.body;
   const withdrawAmount = Number(amount);
 
@@ -180,11 +185,9 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
   if (withdrawAmount < 100) return res.status(400).json({ error: 'Минимальная сумма вывода 100 G' });
   if (req.user.balance < withdrawAmount) return res.status(400).json({ error: 'Недостаточно средств' });
 
-  // 1. Списываем баланс в БД
   const newBalance = Number(req.user.balance) - withdrawAmount;
   await supabase.from('users').update({ balance: newBalance }).eq('id', req.user.id);
 
-  // 2. Создаем заявку (добавил .select().single() чтобы сразу получить ID созданного заказа)
   const { data: order, error } = await supabase.from('withdrawals').insert([{
     user_email: req.user.email,
     amount: withdrawAmount,
@@ -192,66 +195,23 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
     game_avatar: gameAvatar,
     target_skin: targetSkin,
     pattern: pattern,
-    status: 'pending' // По дефолту в ожидании
+    status: 'pending'
   }]).select().single();
 
-  // 3. ОТПРАВЛЯЕМ УВЕДОМЛЕНИЕ И КНОПКИ В ТЕЛЕГРАМ
   if (ADMIN_CHAT_ID && !error && order) {
-    const tgMessage = `
-🔥 **НОВЫЙ ЗАКАЗ ИЗ МАГАЗИНА!**
-👤 **Юзер ID:** \`${req.user.secret_id}\`
-💰 **Купил голды:** ${withdrawAmount} G
-💵 **Потратил валюты сайта:** ${withdrawAmount} ₸
-🔫 **Скин выставлен за:** ${targetSkin}
-🎮 **Игровой ID:** ${gameId}
-🎲 **Паттерн:** ${pattern}
-`;
+    const tgMessage = `🔥 **НОВЫЙ ЗАКАЗ ИЗ МАГАЗИНА!**\n👤 **Юзер ID:** \`${req.user.secret_id}\`\n💰 **Купил голды:** ${withdrawAmount} G\n💵 **Потратил валюты сайта:** ${withdrawAmount} ₸\n🔫 **Скин выставлен за:** ${targetSkin}\n🎮 **Игровой ID:** ${gameId}\n🎲 **Паттерн:** ${pattern}`;
 
     bot.sendMessage(ADMIN_CHAT_ID, tgMessage, {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
-          [
-            { text: '✅ Выведено', callback_data: `complete_${order.id}` },
-            { text: '❌ Отменено', callback_data: `cancel_${order.id}` }
-          ]
+          [ { text: '✅ Выведено', callback_data: `complete_${order.id}` }, { text: '❌ Отменено', callback_data: `cancel_${order.id}` } ]
         ]
       }
     });
   }
 
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
-});
-
-// ==========================================
-// СЕКРЕТНАЯ АДМИН-ПАНЕЛЬ
-// ==========================================
-
-app.post('/api/admin/items', authenticateUser, requireAdmin, async (req, res) => {
-  const { name, weapon, price, rarity, img } = req.body;
-  const { data, error } = await supabase.from('items').insert([{ name, weapon, price, rarity, image_url: img }]).select();
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true, item: data[0] });
-});
-
-app.post('/api/admin/cases', authenticateUser, requireAdmin, async (req, res) => {
-  const { name, price, img } = req.body;
-  const { data, error } = await supabase.from('cases').insert([{ name, price, image_url: img }]).select();
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true, case: data[0] });
-});
-
-app.post('/api/admin/case-items', authenticateUser, requireAdmin, async (req, res) => {
-  const { case_id, item_id, regular_chance, stattrack_chance } = req.body;
-  const { data, error } = await supabase.from('case_items').insert([{ 
-    case_id, 
-    item_id, 
-    regular_chance, 
-    stattrack_chance 
-  }]);
-  
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true, message: 'Скин успешно добавлен в кейс' });
 });
 
 app.listen(PORT, () => console.log(`Backend Server Live on port ${PORT}`));
