@@ -112,6 +112,18 @@ app.post('/api/me/update', authenticateUser, async (req, res) => {
 // ЧАТ ПОДДЕРЖКИ (САЙТ -> ТГ)
 // ==========================================
 
+// Получить историю чата (Бэкенд обходит блокировки Supabase)
+app.get('/api/chat/history', authenticateUser, async (req, res) => {
+  const { data, error } = await supabase
+    .from('support_messages')
+    .select('*')
+    .eq('user_email', req.user.email)
+    .order('created_at', { ascending: true });
+    
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true, messages: data });
+});
+
 app.post('/api/chat/send', authenticateUser, async (req, res) => {
   const { message } = req.body;
   
