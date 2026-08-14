@@ -122,7 +122,7 @@
         .product-card { background: rgba(20, 22, 30, 0.4); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 30px 20px; text-align: center; transition: var(--transition); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
         .product-card:hover { transform: translateY(-5px); border-color: rgba(244, 199, 69, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(244,199,69,0.05); }
         
-        /* СТИЛИ И СВЕЧЕНИЕ ДЛЯ JPEG КАРТИНОК */
+        /* СТИЛИ И СВЕЧЕНИЕ ДЛЯ png КАРТИНОК */
         .product-img-wrapper {
             position: relative;
             width: 140px;
@@ -157,7 +157,7 @@
             width: 100%;
             height: 100%;
             object-fit: contain; 
-            mix-blend-mode: screen; /* Убирает черный фон с JPEG */
+            mix-blend-mode: screen; /* Убирает черный фон с png */
             transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             filter: contrast(1.2) saturate(1.1);
         }
@@ -389,10 +389,10 @@
 
         // База товаров магазина (Прямые ссылки на корень репозитория)
         const shopItems = [
-            { id: 1, gold: 100, price: 100, img: '100.jpeg' },
-            { id: 2, gold: 500, price: 480, img: '500.jpeg' },
-            { id: 3, gold: 1000, price: 900, img: '1000.jpeg' },
-            { id: 4, gold: 3000, price: 2200, img: '3000.jpeg' }
+            { id: 1, gold: 100, price: 100, img: '100.png' },
+            { id: 2, gold: 500, price: 480, img: '500.png' },
+            { id: 3, gold: 1000, price: 900, img: '1000.png' },
+            { id: 4, gold: 3000, price: 2200, img: '3000.png' }
         ];
 
         // --- ГЛОБАЛЬНЫЕ UI ФУНКЦИИ ---
