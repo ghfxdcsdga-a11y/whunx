@@ -30,13 +30,7 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; user-select: none; }
         
-        body { 
-            background: linear-gradient(135deg, #0a0c14 0%, #131622 50%, #0a0c14 100%);
-            background-size: 200% 200%;
-            animation: gradientBG 15s ease infinite;
-            color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden;
-        }
-
+        body { background: linear-gradient(135deg, #0a0c14 0%, #131622 50%, #0a0c14 100%); background-size: 200% 200%; animation: gradientBG 15s ease infinite; color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
         /* Анимированные неоновые сферы на фоне */
@@ -90,6 +84,7 @@
         .product-img-wrapper { position: relative; width: 140px; height: 140px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; z-index: 1; }
         .product-img-wrapper::before { content: ''; position: absolute; width: 90px; height: 90px; background: var(--accent-gold); filter: blur(35px); opacity: 0.4; border-radius: 50%; animation: pulseGlow 3s infinite alternate; z-index: -1; transition: 0.4s; }
         @keyframes pulseGlow { 0% { transform: scale(0.8); opacity: 0.2; } 100% { transform: scale(1.3); opacity: 0.6; } }
+        /* mix-blend-mode оставлен для эффекта прозрачности, даже если картинки стали png */
         .product-img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); filter: contrast(1.2) saturate(1.1); }
         .product-card:hover .product-img-wrapper::before { background: #fff; opacity: 0.8; filter: blur(40px); transform: scale(1.5); }
         .product-card:hover .product-img { transform: scale(1.2) translateY(-10px); filter: contrast(1.3) saturate(1.2) drop-shadow(0 15px 15px rgba(244,199,69,0.3)); }
@@ -115,7 +110,7 @@
         #chatWidget.active { display: flex; transform: translateY(0); opacity: 1; }
         .chat-header { background: rgba(0,0,0,0.2); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); } .chat-header h4 { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
         .chat-messages { height: 300px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { max-width: 85%; padding: 10px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; line-height: 1.4; } .msg.user { background: var(--accent-blue); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; } .msg.admin { background: rgba(255,255,255,0.1); color: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg { max-width: 85%; padding: 10px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; line-height: 1.4; word-wrap: break-word; } .msg.user { background: var(--accent-blue); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; } .msg.admin { background: rgba(255,255,255,0.1); color: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
         .chat-input-area { padding: 15px; background: rgba(0,0,0,0.2); display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); } .chat-input { flex: 1; background: var(--bg-input); border: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 10px; color: #fff; font-size: 14px; outline: none; }
         .chat-send-btn { background: var(--accent-blue); color: #fff; width: 40px; height: 40px; border-radius: 10px; display: flex; justify-content: center; align-items: center; transition: 0.2s; } .chat-send-btn:hover { background: var(--accent-blue-hover); }
 
@@ -198,7 +193,7 @@
             <i class="fa-solid fa-xmark" style="cursor:pointer; color:var(--text-muted);" onclick="toggleChat()"></i>
         </div>
         <div class="chat-messages" id="chatMessages">
-            <div class="msg admin">Привет! Если есть вопросы по пополнению или выводу — пиши сюда.</div>
+            <!-- История подгрузится сюда -->
         </div>
         <div class="chat-input-area">
             <input type="text" id="chatInput" class="chat-input" placeholder="Введите сообщение..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
@@ -297,7 +292,7 @@
             
             <div class="market-item-target">
                 <img src="USP_G.png" alt="USP Ghosts">
-                <div class="market-item-info"><h5>USP "Ghosts"</h5><span>НЕ StatTrack</span></div>
+                <div class="market-item-info"><h5>USP "Ghosts"</h5><span>НЕ СТАТТРЕК</span></div>
             </div>
             <div class="f-warning-text" style="color:var(--text-muted);"><i class="fa-solid fa-circle-info" style="color:var(--text-muted);"></i> Выстави скин на рынок Standoff2 ровно за эту цену, в точности до копеек</div>
 
@@ -318,7 +313,7 @@
 
     <!-- JAVASCRIPT -->
     <script>
-        // === ВАЖНО: ВСТАВЬ СЮДА СВОЙ URL БЭКЕНДА (Например: https://whunx-backend.onrender.com) ===
+        // === ВАЖНО: ВСТАВЬ СЮДА СВОЙ URL БЭКЕНДА ===
         const BACKEND_URL = 'https://whunx-backend.onrender.com';
 
         const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
@@ -503,7 +498,7 @@
             
             setTimeout(async () => {
                 currentDbUser.balance += amount;
-                currentDbUser.weekly_deposit += amount; // Для тестов увеличиваем донат
+                currentDbUser.weekly_deposit += amount; 
                 updateUI();
                 await supabaseClient.from('users').update({ balance: currentDbUser.balance, weekly_deposit: currentDbUser.weekly_deposit }).eq('email', currentDbUser.email);
                 showToast('Баланс пополнен', `Баланс успешно пополнен на ${amount} ₸!`, 'success');
@@ -523,14 +518,62 @@
             });
         }
 
-        function toggleChat() { document.getElementById('chatWidget').classList.toggle('active'); }
+        /* =========================================
+           ЛОГИКА ЧАТА С ИСТОРИЕЙ ИЗ БД
+        ========================================= */
+        let chatInterval = null;
+
+        function toggleChat() { 
+            const widget = document.getElementById('chatWidget');
+            widget.classList.toggle('active'); 
+            
+            if (widget.classList.contains('active')) {
+                loadChatHistory();
+                chatInterval = setInterval(loadChatHistory, 3000);
+            } else {
+                clearInterval(chatInterval);
+            }
+        }
+
+        async function loadChatHistory() {
+            if (!currentDbUser || !currentSessionToken) return;
+            const chatBox = document.getElementById('chatMessages');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/chat/history`, {
+                    headers: { 'Authorization': `Bearer ${currentSessionToken}` }
+                });
+                
+                const result = await response.json();
+
+                if (result.success && result.messages) {
+                    const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
+
+                    chatBox.innerHTML = '<div class="msg admin">Привет! Если есть вопросы по пополнению или выводу — пиши сюда.</div>';
+                    
+                    result.messages.forEach(msg => {
+                        const div = document.createElement('div');
+                        div.className = msg.sender === 'user' ? 'msg user' : 'msg admin';
+                        div.innerText = msg.text;
+                        chatBox.appendChild(div);
+                    });
+
+                    if (isScrolledToBottom) {
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+                }
+            } catch (err) {
+                console.log('Не удалось загрузить историю чата');
+            }
+        }
 
         async function sendChatMessage() {
             const input = document.getElementById('chatInput'); const text = input.value.trim();
             if(!text || !currentDbUser || !currentSessionToken) { showToast('Внимание', 'Войдите в аккаунт, чтобы писать в поддержку.', 'info'); return; }
 
             const chatBox = document.getElementById('chatMessages');
-            chatBox.innerHTML += `<div class="msg user">${text}</div>`; input.value = ''; chatBox.scrollTop = chatBox.scrollHeight;
+            const userMsg = document.createElement('div'); userMsg.className = 'msg user'; userMsg.innerText = text;
+            chatBox.appendChild(userMsg); input.value = ''; chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
                 await fetch(`${BACKEND_URL}/api/chat/send`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ message: text }) });
