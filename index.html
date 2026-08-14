@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whunx Shop - Premium Cases</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        /* Современный дизайн в стиле топовых кейсов */
         :root {
-            --bg-dark: #0a0a0c;
-            --bg-card: #151518;
-            --primary: #ff4500;
-            --primary-glow: rgba(255, 69, 0, 0.4);
+            --bg-main: #0b0c10;
+            --bg-card: #14161d;
+            --accent: #f2a900; /* Золотой акцент */
+            --accent-glow: rgba(242, 169, 0, 0.3);
             --text-main: #ffffff;
-            --text-muted: #888891;
-            --gold: #ffd700;
+            --text-muted: #6b7280;
+            
+            /* Цвета редкости */
+            --rarity-blue: #4b69ff;
+            --rarity-purple: #8847ff;
+            --rarity-pink: #d32ce6;
+            --rarity-red: #eb4b4b;
+            --rarity-gold: #ffd700;
         }
 
         * {
@@ -22,23 +27,25 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Montserrat', sans-serif;
+            user-select: none;
         }
 
         body {
-            background-color: var(--bg-dark);
+            background-color: var(--bg-main);
             color: var(--text-main);
-            background-image: radial-gradient(circle at 50% 0%, #1f1a24 0%, transparent 50%);
             min-height: 100vh;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% -20%, #1a1c24 0%, var(--bg-main) 60%);
         }
 
-        /* Шапка */
+        /* --- ШАПКА --- */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 50px;
-            background: rgba(10, 10, 12, 0.8);
-            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            background: rgba(11, 12, 16, 0.85);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             position: sticky;
             top: 0;
@@ -48,60 +55,145 @@
         .logo {
             font-size: 24px;
             font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #fff;
+            letter-spacing: 1px;
         }
-        .logo span { color: var(--primary); }
+        .logo span { color: var(--accent); }
 
-        /* Авторизация и Баланс */
-        .auth-zone {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
+        .auth-zone { display: flex; align-items: center; gap: 15px; }
 
         .balance-box {
-            display: none; /* Скрыто до авторизации */
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid rgba(255, 215, 0, 0.3);
+            display: none;
+            background: rgba(242, 169, 0, 0.1);
+            border: 1px solid var(--accent);
             padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 700;
-            color: var(--gold);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+            border-radius: 6px;
+            font-weight: 800;
+            color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
         }
 
         .login-btn {
-            background: var(--primary);
-            color: white;
+            background: var(--accent);
+            color: #000;
             border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 800;
             cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 0 15px var(--primary-glow);
+            transition: 0.2s;
+        }
+        .login-btn:hover { background: #ffc133; box-shadow: 0 0 15px var(--accent-glow); }
+
+        /* --- НАВИГАЦИЯ СТРАНИЦ --- */
+        .page-view { display: none; }
+        .page-view.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 25px var(--primary-glow);
+        /* --- ГЛАВНАЯ СТРАНИЦА (ВИТРИНА) --- */
+        .main-container { padding: 40px; max-width: 1400px; margin: 0 auto; }
+        
+        .section-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 24px;
+            background: var(--accent);
         }
 
-        /* Зона рулетки */
-        .roulette-container {
-            display: none; /* Показываем только при открытии */
-            width: 100%;
-            max-width: 1000px;
-            margin: 40px auto;
+        .cases-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+        }
+
+        .case-card {
             background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 25px 20px;
+            text-align: center;
+            width: calc(25% - 19px); /* 4 в ряд */
+            min-width: 250px;
+            cursor: pointer;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .case-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 60%);
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .case-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+        }
+        .case-card:hover::after { opacity: 1; }
+
+        .case-card img {
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.5));
+            transition: 0.3s;
+        }
+        .case-card:hover img { transform: scale(1.05); }
+
+        .case-name { font-size: 18px; font-weight: 800; margin-bottom: 5px; }
+        .case-price { color: var(--accent); font-size: 20px; font-weight: 900; }
+
+        /* --- СТРАНИЦА КЕЙСА (РУЛЕТКА) --- */
+        .case-container { padding: 40px; max-width: 1200px; margin: 0 auto; }
+        
+        .back-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            transition: 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.1); }
+
+        .case-header { text-align: center; margin-bottom: 40px; }
+        .case-header img { width: 180px; filter: drop-shadow(0 20px 20px rgba(0,0,0,0.6)); margin-bottom: 20px; }
+        .case-header h1 { font-size: 32px; font-weight: 900; }
+        
+        /* Рулетка */
+        .roulette-wrapper {
+            background: #0f1015;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 2px;
+            position: relative;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            margin-bottom: 30px;
         }
 
         .roulette-window {
@@ -109,11 +201,9 @@
             height: 180px;
             position: relative;
             overflow: hidden;
-            border-radius: 8px;
-            background: #0d0d0f;
+            border-radius: 10px;
         }
 
-        /* Центральная линия */
         .roulette-window::before {
             content: '';
             position: absolute;
@@ -121,16 +211,15 @@
             top: 0;
             bottom: 0;
             width: 2px;
-            background: var(--gold);
+            background: var(--accent);
             z-index: 10;
-            box-shadow: 0 0 15px var(--gold);
+            box-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent);
             transform: translateX(-50%);
         }
 
         .roulette-tape {
             display: flex;
             height: 100%;
-            transition: transform 6s cubic-bezier(0.1, 0, 0.1, 1);
             will-change: transform;
         }
 
@@ -141,181 +230,320 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%);
-            border-right: 1px solid rgba(255,255,255,0.05);
-            padding: 10px;
-        }
-
-        .item-card img {
-            width: 100px;
-            height: 80px;
-            object-fit: contain;
-            margin-bottom: 10px;
-        }
-        
-        .item-rarity-red { border-bottom: 3px solid #eb4b4b; }
-        .item-rarity-pink { border-bottom: 3px solid #d32ce6; }
-
-        /* Витрина кейсов (сейчас 1 тестовый) */
-        .cases-grid {
-            display: flex;
-            justify-content: center;
-            padding: 80px 20px;
-        }
-
-        .case-card {
-            background: var(--bg-card);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 30px;
-            text-align: center;
-            width: 300px;
-            transition: 0.3s;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+            border-right: 1px solid rgba(255,255,255,0.02);
+            padding: 15px;
             position: relative;
         }
 
-        .case-card:hover {
-            transform: translateY(-10px);
-            border-color: rgba(255, 69, 0, 0.5);
-            box-shadow: 0 15px 40px var(--primary-glow);
+        /* Линия редкости внизу карточки в рулетке */
+        .item-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 4px;
         }
+        .item-card.rarity-pink::after { background: var(--rarity-pink); box-shadow: 0 -5px 15px rgba(211, 44, 230, 0.4); }
+        .item-card.rarity-red::after { background: var(--rarity-red); box-shadow: 0 -5px 15px rgba(235, 75, 75, 0.4); }
+        .item-card.rarity-blue::after { background: var(--rarity-blue); box-shadow: 0 -5px 15px rgba(75, 105, 255, 0.4); }
 
-        .case-card img {
-            width: 150px;
-            height: 150px;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
-        }
+        .item-card img { width: 110px; height: 80px; object-fit: contain; margin-bottom: 10px; }
+        .item-card span { font-size: 12px; color: var(--text-muted); font-weight: 600; text-align: center; }
+        .item-card b { font-size: 14px; text-align: center; }
 
-        .case-name { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
-        .case-price { color: var(--gold); font-size: 24px; font-weight: 900; margin-bottom: 20px; }
+        .action-zone { text-align: center; }
         
         .open-btn {
-            width: 100%;
-            padding: 15px;
-            background: #fff;
+            background: var(--accent);
             color: #000;
             border: none;
-            border-radius: 8px;
+            padding: 15px 50px;
+            font-size: 18px;
             font-weight: 900;
-            font-size: 16px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(242, 169, 0, 0.2);
+            transition: 0.2s;
         }
-        .open-btn:hover { background: #e0e0e0; }
+        .open-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(242, 169, 0, 0.4); }
+        .open-btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        /* --- КАСТОМНОЕ ОКНО ВЫИГРЫША --- */
+        .win-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .win-modal {
+            background: #14161d;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            width: 400px;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Заднее свечение в модалке */
+        .win-modal-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 200px; height: 200px;
+            background: var(--rarity-pink);
+            filter: blur(100px);
+            transform: translate(-50%, -50%);
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .win-modal-content { position: relative; z-index: 1; }
+        
+        .win-modal h2 { font-size: 24px; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; }
+        .win-modal img { width: 220px; height: 160px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.5)); }
+        .win-item-name { font-size: 22px; font-weight: 800; margin-bottom: 5px; }
+        .win-item-price { color: var(--accent); font-size: 18px; font-weight: 800; margin-bottom: 30px; }
+
+        .win-actions { display: flex; gap: 15px; }
+        
+        .btn-sell {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-sell:hover { background: rgba(242, 169, 0, 0.1); }
+
+        .btn-keep {
+            flex: 1;
+            background: var(--accent);
+            border: none;
+            color: #000;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-keep:hover { filter: brightness(1.1); }
     </style>
 </head>
 <body>
 
-    <!-- Шапка -->
+    <!-- ШАПКА -->
     <header>
         <div class="logo">WHUNX<span>.SHOP</span></div>
         <div class="auth-zone">
-            <!-- Пока пользователь не вошел -->
             <button class="login-btn" id="loginBtn" onclick="mockLogin()">Войти через Google</button>
-            
-            <!-- Появляется после входа -->
             <div class="balance-box" id="balanceBox">
                 <span id="balanceAmount">150</span> G
             </div>
         </div>
     </header>
 
-    <!-- Рулетка (Скрыта по умолчанию) -->
-    <div class="roulette-container" id="rouletteContainer">
-        <div class="roulette-window">
-            <div class="roulette-tape" id="rouletteTape">
-                <!-- Айтемы сгенерируются через JS -->
+    <!-- ГЛАВНАЯ СТРАНИЦА (ВИТРИНА) -->
+    <div id="mainPage" class="page-view active main-container">
+        <div class="section-title">Limited Cases</div>
+        <div class="cases-grid">
+            <!-- Тестовый кейс -->
+            <div class="case-card" onclick="openCasePage()">
+                <img src="https://wiki.standoff2.com/images/thumb/7/7b/Empire_case.png/300px-Empire_case.png" alt="Empire Case">
+                <div class="case-name">Empire Case</div>
+                <div class="case-price">10 G</div>
             </div>
+            <!-- Можно будет добавлять новые карточки сюда -->
         </div>
     </div>
 
-    <!-- Витрина (1 тестовый кейс) -->
-    <div class="cases-grid">
-        <div class="case-card">
-            <img src="https://via.placeholder.com/150/222222/ff4500?text=TEST+CASE" alt="Test Case">
-            <div class="case-name">TEST CASE</div>
-            <div class="case-price">10 G</div>
-            <button class="open-btn" onclick="startCaseOpening()">ОТКРЫТЬ КЕЙС</button>
+    <!-- СТРАНИЦА ОТКРЫТИЯ КЕЙСА -->
+    <div id="casePage" class="page-view case-container">
+        <button class="back-btn" onclick="goBackToMain()">&#8592; Назад к кейсам</button>
+        
+        <div class="case-header">
+            <img src="https://wiki.standoff2.com/images/thumb/7/7b/Empire_case.png/300px-Empire_case.png" alt="Empire Case">
+            <h1>Empire Case</h1>
+        </div>
+
+        <div class="roulette-wrapper">
+            <div class="roulette-window" id="rouletteWindow">
+                <div class="roulette-tape" id="rouletteTape">
+                    <!-- Айтемы генерируются через JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="action-zone">
+            <button class="open-btn" id="openBtn" onclick="startCaseOpening()">ОТКРЫТЬ ЗА 10 G</button>
+        </div>
+    </div>
+
+    <!-- КАСТОМНОЕ ОКНО ВЫИГРЫША -->
+    <div class="win-modal-overlay" id="winModal">
+        <div class="win-modal" id="winModalBox">
+            <div class="win-modal-glow" id="winModalGlow"></div>
+            <div class="win-modal-content">
+                <h2>Предмет получен</h2>
+                <img id="winImg" src="" alt="Weapon">
+                <div class="win-item-name" id="winName">M4A1 | Bubblegum</div>
+                <div class="win-item-price" id="winPrice">1200 G</div>
+                
+                <div class="win-actions">
+                    <button class="btn-sell" onclick="closeWinModal()">Продать</button>
+                    <button class="btn-keep" onclick="closeWinModal()">В инвентарь</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         let isLoggedIn = false;
+        const itemWidth = 160; 
 
-        // Временная имитация авторизации (для визуала)
+        // Имитация входа
         function mockLogin() {
             document.getElementById('loginBtn').style.display = 'none';
             document.getElementById('balanceBox').style.display = 'block';
             isLoggedIn = true;
         }
 
-        // Логика рулетки, которая НИКОГДА не врет
+        // Навигация
+        function openCasePage() {
+            document.getElementById('mainPage').classList.remove('active');
+            document.getElementById('casePage').classList.add('active');
+            resetRouletteTape();
+        }
+
+        function goBackToMain() {
+            document.getElementById('casePage').classList.remove('active');
+            document.getElementById('mainPage').classList.add('active');
+        }
+
+        // Подготовка пустой рулетки
+        function resetRouletteTape() {
+            const tape = document.getElementById('rouletteTape');
+            tape.style.transition = 'none';
+            tape.style.transform = 'translateX(0)';
+            tape.innerHTML = '';
+            
+            // Наполняем стартовым мусором для визуала
+            for(let i=0; i<15; i++) {
+                tape.innerHTML += `<div class="item-card rarity-blue"><img src="https://wiki.standoff2.com/images/thumb/8/87/AKR_Carbon.png/300px-AKR_Carbon.png"><br><b>AKR Carbon</b></div>`;
+            }
+        }
+
+        // Запуск прокрутки
         function startCaseOpening() {
             if (!isLoggedIn) {
-                alert("Сначала войдите в аккаунт!");
+                alert("Сначала войдите в аккаунт!"); // Здесь можно оставить системный алерт для ошибки авторизации
                 return;
             }
 
+            const btn = document.getElementById('openBtn');
+            btn.disabled = true;
+            btn.innerText = "ОТКРЫВАЕМ...";
+
             const tape = document.getElementById('rouletteTape');
-            const container = document.getElementById('rouletteContainer');
-            
-            // 1. Показываем рулетку и сбрасываем прошлую прокрутку
-            container.style.display = 'block';
             tape.style.transition = 'none';
             tape.style.transform = 'translateX(0)';
-            tape.innerHTML = ''; // очищаем ленту
+            tape.innerHTML = '';
 
-            // 2. Имитируем запрос на сервер (Позже здесь будет fetch на твой Render-сервер)
-            // Представим, что сервер УЖЕ решил, что мы выиграли этот предмет:
-            const wonItemFromServer = {
+            // То, что "ответил сервер"
+            const wonItem = {
                 name: "M4A1 | Bubblegum",
-                rarityClass: "item-rarity-pink",
-                img: "https://via.placeholder.com/100/222222/d32ce6?text=M4A1"
+                price: "1200 G",
+                rarityClass: "rarity-pink",
+                img: "https://wiki.standoff2.com/images/thumb/7/7b/M4_Samurai.png/300px-M4_Samurai.png" // Пример картинки
             };
 
-            // 3. Генерируем ленту. 
-            // Чтобы рулетка крутилась красиво, нам нужно сгенерировать штук 80 предметов.
-            // Но мы ЖЕСТКО ставим наш выигрышный предмет на 60-е место.
             const totalItems = 80;
             const winningIndex = 60;
-            const itemWidth = 160; // ширина одной карточки
 
             for (let i = 0; i < totalItems; i++) {
                 let div = document.createElement('div');
                 div.className = 'item-card';
 
                 if (i === winningIndex) {
-                    // Ставим выигрышный предмет, который сказал сервер
-                    div.classList.add(wonItemFromServer.rarityClass);
-                    div.innerHTML = `<img src="${wonItemFromServer.img}"><b>${wonItemFromServer.name}</b>`;
+                    div.classList.add(wonItem.rarityClass);
+                    div.innerHTML = `<img src="${wonItem.img}"><span>StatTrak™</span><b>${wonItem.name}</b>`;
                 } else {
-                    // Ставим фейковые красивые предметы просто для массовки в анимации
-                    div.classList.add('item-rarity-red');
-                    div.innerHTML = `<img src="https://via.placeholder.com/100/222222/eb4b4b?text=Trash"><b>Random</b>`;
+                    // Рандомный мусор для анимации
+                    const isRed = Math.random() > 0.8;
+                    div.classList.add(isRed ? 'rarity-red' : 'rarity-blue');
+                    const fakeImg = isRed ? 'https://wiki.standoff2.com/images/thumb/0/07/Butterfly_Legacy.png/300px-Butterfly_Legacy.png' : 'https://wiki.standoff2.com/images/thumb/8/87/AKR_Carbon.png/300px-AKR_Carbon.png';
+                    const fakeName = isRed ? 'Butterfly' : 'AKR Carbon';
+                    div.innerHTML = `<img src="${fakeImg}"><span>StatTrak™</span><b>${fakeName}</b>`;
                 }
                 tape.appendChild(div);
             }
 
-            // 4. Запускаем саму анимацию прокрутки
+            // Анимация
             setTimeout(() => {
-                // Включаем плавность
-                tape.style.transition = 'transform 6s cubic-bezier(0.1, 0, 0.1, 1)';
+                tape.style.transition = 'transform 6.5s cubic-bezier(0.1, 0, 0.1, 1)';
                 
-                // Вычисляем, на сколько пикселей сдвинуть ленту, чтобы 60-й предмет стал ровно по центру.
-                // Формула: (Индекс * Ширина предмета) - (Половина ширины экрана рулетки) + (Половина ширины предмета) + Рандомное смещение чтобы не ровно по центру линии стояло
-                const containerWidth = document.querySelector('.roulette-window').clientWidth;
-                const randomOffset = Math.floor(Math.random() * 60) - 30; // легкий сдвиг влево-вправо
-                
+                const containerWidth = document.getElementById('rouletteWindow').clientWidth;
+                const randomOffset = Math.floor(Math.random() * 80) - 40; 
                 const distance = (winningIndex * itemWidth) - (containerWidth / 2) + (itemWidth / 2) + randomOffset;
                 
                 tape.style.transform = `translateX(-${distance}px)`;
             }, 50);
 
-            // 5. После завершения анимации (через 6 секунд) показываем результат
+            // Показ окна выигрыша
             setTimeout(() => {
-                alert(`Вы выбили: ${wonItemFromServer.name}`);
-            }, 6200);
+                showWinModal(wonItem);
+                btn.disabled = false;
+                btn.innerText = "ОТКРЫТЬ ЗА 10 G";
+            }, 6700);
+        }
+
+        // Окно выигрыша
+        function showWinModal(item) {
+            const modal = document.getElementById('winModal');
+            const modalBox = document.getElementById('winModalBox');
+            
+            document.getElementById('winImg').src = item.img;
+            document.getElementById('winName').innerText = item.name;
+            document.getElementById('winPrice').innerText = item.price;
+            
+            // Меняем цвет свечения взависимости от редкости
+            const glow = document.getElementById('winModalGlow');
+            glow.className = 'win-modal-glow'; 
+            if(item.rarityClass === 'rarity-pink') glow.style.background = 'var(--rarity-pink)';
+            if(item.rarityClass === 'rarity-red') glow.style.background = 'var(--rarity-red)';
+            if(item.rarityClass === 'rarity-blue') glow.style.background = 'var(--rarity-blue)';
+
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modalBox.style.transform = 'scale(1)';
+            }, 10);
+        }
+
+        function closeWinModal() {
+            const modal = document.getElementById('winModal');
+            const modalBox = document.getElementById('winModalBox');
+            
+            modal.style.opacity = '0';
+            modalBox.style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+                resetRouletteTape(); // Сброс рулетки для нового открытия
+            }, 300);
         }
     </script>
 </body>
