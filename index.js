@@ -13,42 +13,38 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const PORT = process.env.PORT || 10000;
 
 // ==========================================
-// ТЕЛЕГРАМ БОТ (МОСТ И УПРАВЛЕНИЕ)
+// ТЕЛЕГРАМ БОТ (ЖЕСТКАЯ ПРИВЯЗКА К ТВОЕМУ ID)
 // ==========================================
 
 const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
-const ADMIN_USERNAME = 'DX77TR'; 
-let ADMIN_CHAT_ID = null; 
+const ADMIN_CHAT_ID = 1210777759; // Твой жестко зафиксированный Telegram ID
 
+// Обработка ответов в техподдержку через Reply
 bot.on('message', async (msg) => {
-  if (msg.from.username === ADMIN_USERNAME) {
-    ADMIN_CHAT_ID = msg.chat.id; 
-
-    // Если ты нажимаешь "Ответить" (Reply) на сообщение от юзера из поддержки
-    if (msg.reply_to_message && msg.reply_to_message.text.includes('Email:')) {
+  if (msg.chat.id === ADMIN_CHAT_ID) {
+    if (msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes('Email:')) {
       const replyText = msg.text;
-      // Вытаскиваем email юзера из твоего реплая
-      const emailMatch = msg.reply_to_message.text.match(/Email:\s*([^\s]+)/);
+      const emailMatch = msg.reply_to_message.text.match(/Email:\s*([^\s\n]+)/);
       
       if (emailMatch && emailMatch[1]) {
         const userEmail = emailMatch[1];
         
-        // Записываем твой ответ в БД, чтобы юзер увидел его на сайте
         await supabase.from('support_messages').insert([{
           user_email: userEmail,
           sender: 'admin',
           text: replyText
         }]);
 
-        bot.sendMessage(ADMIN_CHAT_ID, `✅ Ответ сохранен! Пользователь ${userEmail} увидит его в чате.`);
+        bot.sendMessage(ADMIN_CHAT_ID, `✅ Ответ отправлен пользователю ${userEmail}`);
       }
     }
   }
 });
 
+// Обработка кнопок "Выведено" / "Отменено"
 bot.on('callback_query', async (query) => {
-  if (query.from.username !== ADMIN_USERNAME) {
-    return bot.answerCallbackQuery(query.id, { text: 'У вас нет прав!', show_alert: true });
+  if (query.from.id !== ADMIN_CHAT_ID) {
+    return bot.answerCallbackQuery(query.id, { text: 'Доступ запрещен!', show_alert: true });
   }
 
   const action = query.data.split('_')[0]; 
@@ -59,13 +55,13 @@ bot.on('callback_query', async (query) => {
 
   if (!error) {
     const statusText = action === 'complete' ? '✅ ВЫВЕДЕНО' : '❌ ОТМЕНЕНО';
-    bot.editMessageText(`${query.message.text}\n\nСтатус изменен: ${statusText}`, {
+    bot.editMessageText(`${query.message.text}\n\nСтатус заказа: ${statusText}`, {
       chat_id: query.message.chat.id,
       message_id: query.message.message_id
     });
     bot.answerCallbackQuery(query.id, { text: 'Статус успешно обновлен!' });
   } else {
-    bot.answerCallbackQuery(query.id, { text: 'Ошибка БД!', show_alert: true });
+    bot.answerCallbackQuery(query.id, { text: 'Ошибка базы данных!', show_alert: true });
   }
 });
 
@@ -119,18 +115,16 @@ app.post('/api/me/update', authenticateUser, async (req, res) => {
 app.post('/api/chat/send', authenticateUser, async (req, res) => {
   const { message } = req.body;
   
-  // 1. Сохраняем сообщение юзера в БД
+  // 1. Сохраняем в базу данных
   await supabase.from('support_messages').insert([{
     user_email: req.user.email,
     sender: 'user',
     text: message
   }]);
 
-  // 2. Отправляем тебе в ТГ
-  if (ADMIN_CHAT_ID) {
-    const text = `✉️ **Новое сообщение от пользователя**\nНик: ${req.user.username}\nEmail: ${req.user.email}\nID: \`${req.user.secret_id}\`\n\nСообщение: ${message}\n\n_(Ответь на это сообщение (Reply), чтобы юзер получил ответ на сайте)_`;
-    bot.sendMessage(ADMIN_CHAT_ID, text, { parse_mode: 'Markdown' });
-  }
+  // 2. Отправляем в твой чат Telegram
+  const text = `✉️ **Новое сообщение в техподдержку**\nНик: ${req.user.username}\nEmail: ${req.user.email}\nID: \`${req.user.secret_id}\`\n\nСообщение: ${message}\n\n_(Ответь реплаем на это сообщение, чтобы юзер получил ответ)_`;
+  bot.sendMessage(ADMIN_CHAT_ID, text, { parse_mode: 'Markdown' });
   
   res.json({ success: true });
 });
@@ -178,16 +172,16 @@ app.post('/api/finance/topup', authenticateUser, async (req, res) => {
 });
 
 app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
-  const { amount, gameId, gameAvatar, targetSkin, pattern } = req.body;
+  const { amount, gameId, gameAvatar, targetSkin, pattern, spentTenge } = req.body;
   const withdrawAmount = Number(amount);
 
-  if (req.user.weekly_deposit < 100) return res.status(403).json({ error: 'Доступ к выводу закрыт. Необходим донат от 100 ₸ за неделю.' });
-  if (withdrawAmount < 100) return res.status(400).json({ error: 'Минимальная сумма вывода 100 G' });
-  if (req.user.balance < withdrawAmount) return res.status(400).json({ error: 'Недостаточно средств' });
+  if (req.user.balance < spentTenge) return res.status(400).json({ error: 'Недостаточно средств на балансе' });
 
-  const newBalance = Number(req.user.balance) - withdrawAmount;
+  // 1. Списываем баланс в тенге
+  const newBalance = Number(req.user.balance) - Number(spentTenge);
   await supabase.from('users').update({ balance: newBalance }).eq('id', req.user.id);
 
+  // 2. Создаем запись в базе
   const { data: order, error } = await supabase.from('withdrawals').insert([{
     user_email: req.user.email,
     amount: withdrawAmount,
@@ -195,17 +189,22 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
     game_avatar: gameAvatar,
     target_skin: targetSkin,
     pattern: pattern,
+    spent_rubles: spentTenge,
     status: 'pending'
   }]).select().single();
 
-  if (ADMIN_CHAT_ID && !error && order) {
-    const tgMessage = `🔥 **НОВЫЙ ЗАКАЗ ИЗ МАГАЗИНА!**\n👤 **Юзер ID:** \`${req.user.secret_id}\`\n💰 **Купил голды:** ${withdrawAmount} G\n💵 **Потратил валюты сайта:** ${withdrawAmount} ₸\n🔫 **Скин выставлен за:** ${targetSkin}\n🎮 **Игровой ID:** ${gameId}\n🎲 **Паттерн:** ${pattern}`;
+  // 3. Отправляем уведомление с кнопками прямо тебе в Telegram
+  if (!error && order) {
+    const tgMessage = `🔥 **НОВЫЙ ЗАКАЗ ГОЛДЫ!**\n👤 **ID на сайте:** \`${req.user.secret_id}\`\n💰 **Количество:** ${withdrawAmount} G\n💵 **Списано:** ${spentTenge} ₸\n🔫 **Выставить скин за:** ${targetSkin}\n🎮 **Игровой ID:** ${gameId}\n🎲 **Паттерн:** ${pattern}`;
 
     bot.sendMessage(ADMIN_CHAT_ID, tgMessage, {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
-          [ { text: '✅ Выведено', callback_data: `complete_${order.id}` }, { text: '❌ Отменено', callback_data: `cancel_${order.id}` } ]
+          [ 
+            { text: '✅ Выведено', callback_data: `complete_${order.id}` }, 
+            { text: '❌ Отменено', callback_data: `cancel_${order.id}` } 
+          ]
         ]
       }
     });
