@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHUNX | Standoff 2 Cases</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0b0d14; color: #ffffff; font-family: 'Segoe UI', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0d14; }
+        ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
+
+        /* Бесконечная лента без паузы */
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .live-feed-track { display: flex; width: 200%; animation: scroll 25s linear infinite; }
+
+        .case-card { background: #131722; border: 1px solid #1f2937; transition: all 0.3s ease; }
+        .case-card:hover { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); transform: translateY(-5px); }
+        
+        .currency-g { color: #fbbf24; font-weight: 900; text-shadow: 0 0 8px rgba(251, 191, 36, 0.6); margin-left: 2px; }
+
+        /* Стили для рулетки */
+        .roulette-container { position: relative; width: 100%; height: 160px; background: #0f111a; border: 2px solid #374151; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); }
+        .roulette-track { display: flex; height: 100%; transition: transform 5s cubic-bezier(0.15, 0.8, 0.1, 1); }
+        .roulette-item { width: 140px; height: 100%; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid #1f2937; padding: 10px; }
+        .roulette-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #fbbf24; z-index: 10; transform: translateX(-50%); box-shadow: 0 0 15px #fbbf24; }
+        
+        /* Цвета редкостей Standoff 2 */
+        .rarity-arcana { border-bottom: 3px solid #eb4b4b; }
+        .rarity-legendary { border-bottom: 3px solid #d32ce6; }
+        .rarity-mythic { border-bottom: 3px solid #8847ff; }
+        .rarity-rare { border-bottom: 3px solid #4b69ff; }
+        
+        .text-arcana { color: #eb4b4b; }
+        .text-legendary { color: #d32ce6; }
+        .text-mythic { color: #8847ff; }
+        .text-rare { color: #4b69ff; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative pb-20">
+
+    <!-- LIVE ЛЕНТА -->
+    <div class="h-16 bg-[#11141e] border-b border-gray-800 overflow-hidden flex items-center relative z-40">
+        <div class="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#11141e] to-transparent z-10"></div>
+        <div class="live-feed-track" id="live-drops-container">
+            <!-- JS заполнит это -->
+        </div>
+    </div>
+
+    <!-- ШАПКА -->
+    <header class="bg-[#0b0d14]/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-8">
+                <a href="#" class="text-3xl font-black italic tracking-wider text-white flex items-center gap-2">
+                    <i class="fa-solid fa-crosshairs text-yellow-400"></i> WHUNX
+                </a>
+                <nav class="hidden md:flex space-x-6 text-sm font-bold text-gray-400 uppercase">
+                    <a href="#" class="text-white hover:text-yellow-400 transition">Кейсы</a>
+                    <a href="#" class="hover:text-yellow-400 transition">Апгрейды</a>
+                </nav>
+            </div>
+
+            <!-- Блок пользователя -->
+            <div id="auth-container" class="flex items-center gap-4">
+                <button onclick="toggleModal('login-modal')" id="login-btn" class="bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-2 rounded-lg font-bold transition shadow-[0_0_15px_rgba(251,191,36,0.3)]">
+                    Войти
+                </button>
+                
+                <div id="user-profile" class="hidden flex items-center gap-4">
+                    <button onclick="toggleModal('inventory-modal')" class="text-gray-400 hover:text-white transition px-3 py-2 bg-gray-800 rounded-lg">
+                        <i class="fa-solid fa-backpack"></i> Инвентарь (<span id="inv-count">0</span>)
+                    </button>
+                    <div class="flex flex-col text-right ml-2">
+                        <span class="font-bold text-sm">Serega</span>
+                        <div class="flex items-center gap-1 font-black text-lg">
+                            <span id="user-balance">150.00</span> <span class="currency-g">G</span>
+                        </div>
+                    </div>
+                    <button onclick="toggleModal('deposit-modal')" class="bg-yellow-500 hover:bg-yellow-400 p-2 rounded text-black shadow-[0_0_10px_rgba(251,191,36,0.4)] transition">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <img src="https://via.placeholder.com/40" class="rounded-lg border border-gray-700 cursor-pointer" alt="avatar">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- СЕТКА КЕЙСОВ -->
+    <main class="max-w-7xl mx-auto px-4 py-10 flex-grow w-full">
+        <h2 class="text-2xl font-black uppercase mb-6 flex items-center gap-3">
+            <i class="fa-solid fa-box-open text-yellow-500"></i> Кейсы Standoff 2
+        </h2>
+        <!-- Сюда JS вставит 20 кейсов -->
+        <div id="cases-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+    </main>
+
+    <!-- МОДАЛКА ЛОГИНА (Только Gmail) -->
+    <div id="login-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-[#131722] border border-gray-800 p-8 rounded-2xl w-full max-w-md relative">
+            <button onclick="toggleModal('login-modal')" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h2 class="text-2xl font-black mb-6 text-center uppercase">Вход в аккаунт</h2>
+            <button onclick="simulateLogin()" class="w-full bg-white hover:bg-gray-100 text-black font-bold py-3 rounded-lg mb-4 flex items-center justify-center gap-3 transition">
+                <i class="fa-brands fa-google text-xl text-red-500"></i> Войти через Google
+            </button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА КАССЫ (Твой тестовый депозит) -->
+    <div id="deposit-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-[#131722] border border-gray-800 p-8 rounded-2xl w-full max-w-md relative">
+            <button onclick="toggleModal('deposit-modal')" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h2 class="text-2xl font-black mb-6 text-center uppercase">Пополнение баланса</h2>
+            <div class="mb-6">
+                <label class="block text-gray-400 text-sm font-bold mb-2">Сумма в <span class="currency-g">G</span></label>
+                <input type="number" id="deposit-amount" class="w-full bg-[#0b0d14] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500" placeholder="Например: 1000">
+            </div>
+            <button onclick="mockDeposit()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-3 rounded-lg shadow-[0_0_15px_rgba(251,191,36,0.3)] transition">
+                ТЕСТОВО ПОПОЛНИТЬ
+            </button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ИНВЕНТАРЯ -->
+    <div id="inventory-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-[#131722] border border-gray-800 p-6 rounded-2xl w-full max-w-4xl relative h-[80vh] flex flex-col">
+            <button onclick="toggleModal('inventory-modal')" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h2 class="text-2xl font-black mb-6 uppercase"><i class="fa-solid fa-backpack text-yellow-500"></i> Твой инвентарь</h2>
+            <div id="inventory-grid" class="grid grid-cols-3 md:grid-cols-5 gap-4 overflow-y-auto flex-grow pr-2">
+                <div class="text-gray-500 col-span-full text-center mt-10">Инвентарь пуст. Открой пару кейсов!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ОТКРЫТИЯ КЕЙСА (РУЛЕТКА) -->
+    <div id="roulette-modal" class="fixed inset-0 bg-black/90 z-[110] hidden flex items-center justify-center backdrop-blur-md">
+        <div class="w-full max-w-5xl px-4 relative flex flex-col items-center">
+            <button onclick="closeRoulette()" class="absolute -top-12 right-4 text-gray-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            <h2 id="roulette-case-name" class="text-3xl font-black mb-8 uppercase text-yellow-400 tracking-wider">Кейс</h2>
+            
+            <div class="roulette-container">
+                <div class="roulette-line"></div>
+                <div id="roulette-track" class="roulette-track">
+                    <!-- Предметы рулетки генерируются в JS -->
+                </div>
+            </div>
+
+            <button id="start-roulette-btn" class="mt-10 bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 px-12 rounded-xl text-xl shadow-[0_0_20px_rgba(251,191,36,0.4)] transition">
+                ОТКРЫТЬ ЗА <span id="roulette-price">0</span> <span class="currency-g">G</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ОКНО ВЫПАВШЕГО ПРЕДМЕТА -->
+    <div id="drop-result-modal" class="fixed inset-0 bg-black/80 z-[120] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-[#131722] border border-gray-800 p-8 rounded-2xl w-full max-w-sm relative text-center flex flex-col items-center">
+            <div class="text-gray-400 font-bold mb-2 uppercase text-sm">Ты выбил:</div>
+            <img id="drop-img" src="" class="h-32 mb-4 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+            <h3 id="drop-name" class="text-xl font-black mb-1">Weapon Name</h3>
+            <div class="font-bold mb-6"><span id="drop-price">0</span> <span class="currency-g">G</span></div>
+            
+            <div class="flex gap-3 w-full">
+                <button onclick="sellDrop()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg border border-gray-600 transition">
+                    Продать
+                </button>
+                <button onclick="keepDrop()" class="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-lg transition">
+                    Оставить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ДАННЫЕ ПРОЕКТА ---
+        let balance = 150.00;
+        let inventory = [];
+        let currentDrop = null; // Предмет, который выпал сейчас
+        let isSpinning = false;
+        let isLoggedIn = false;
+
+        // База возможных скинов Standoff 2 (для рулетки)
+        const itemsDB = [
+            { name: "Karambit | Gold", price: 5000, img: "https://via.placeholder.com/100?text=Karambit", rarity: "arcana" },
+            { name: "AWM | Treasure Hunter", price: 3000, img: "https://via.placeholder.com/100?text=AWM", rarity: "arcana" },
+            { name: "M4A1 | Bubblegum", price: 800, img: "https://via.placeholder.com/100?text=M4A1", rarity: "legendary" },
+            { name: "AKR | Necromancer", price: 450, img: "https://via.placeholder.com/100?text=AKR", rarity: "mythic" },
+            { name: "Desert Eagle | Dragon Glass", price: 200, img: "https://via.placeholder.com/100?text=Deagle", rarity: "mythic" },
+            { name: "USP | Genesis", price: 50, img: "https://via.placeholder.com/100?text=USP", rarity: "rare" },
+            { name: "Glock | Nest", price: 20, img: "https://via.placeholder.com/100?text=Glock", rarity: "rare" }
+        ];
+
+        // База 20 кейсов
+        const cases = [
+            { id: 1, name: "Origin Case", price: 100, img: "https://via.placeholder.com/120?text=Origin" },
+            { id: 2, name: "Furious Case", price: 100, img: "https://via.placeholder.com/120?text=Furious" },
+            { id: 3, name: "Rival Case", price: 100, img: "https://via.placeholder.com/120?text=Rival" },
+            { id: 4, name: "Scorpion Box", price: 50, img: "https://via.placeholder.com/120?text=Scorpion" },
+            { id: 5, name: "FabM Case", price: 150, img: "https://via.placeholder.com/120?text=FabM" },
+            { id: 6, name: "Empire Case", price: 120, img: "https://via.placeholder.com/120?text=Empire" },
+            { id: 7, name: "Fable Case", price: 130, img: "https://via.placeholder.com/120?text=Fable" },
+            { id: 8, name: "Revival Case", price: 110, img: "https://via.placeholder.com/120?text=Revival" },
+            { id: 9, name: "Project Z9 Case", price: 200, img: "https://via.placeholder.com/120?text=Z9" },
+            { id: 10, name: "New Year Box", price: 60, img: "https://via.placeholder.com/120?text=New+Year" },
+            { id: 11, name: "Halloween Case", price: 140, img: "https://via.placeholder.com/120?text=Halloween" },
+            { id: 12, name: "Nameless Case", price: 180, img: "https://via.placeholder.com/120?text=Nameless" },
+            { id: 13, name: "Sharp Case", price: 150, img: "https://via.placeholder.com/120?text=Sharp" },
+            { id: 14, name: "Space Vision", price: 250, img: "https://via.placeholder.com/120?text=Space" },
+            { id: 15, name: "Traveler Case", price: 90, img: "https://via.placeholder.com/120?text=Traveler" },
+            { id: 16, name: "Assault Case", price: 120, img: "https://via.placeholder.com/120?text=Assault" },
+            { id: 17, name: "Dragon Case", price: 300, img: "https://via.placeholder.com/120?text=Dragon" },
+            { id: 18, name: "Sniper Box", price: 70, img: "https://via.placeholder.com/120?text=Sniper" },
+            { id: 19, name: "Pistol Case", price: 80, img: "https://via.placeholder.com/120?text=Pistol" },
+            { id: 20, name: "Secret Case", price: 500, img: "https://via.placeholder.com/120?text=Secret" }
+        ];
+
+        let currentActiveCase = null;
+
+        // --- ИНИЦИАЛИЗАЦИЯ И РЕНДЕР ---
+        
+        function renderCases() {
+            const grid = document.getElementById('cases-grid');
+            cases.forEach(c => {
+                grid.innerHTML += `
+                    <div onclick="openRouletteModal(${c.id})" class="case-card rounded-xl p-4 flex flex-col items-center cursor-pointer group">
+                        <img src="${c.img}" class="h-28 object-contain group-hover:scale-110 transition duration-300" alt="case">
+                        <div class="text-center w-full mt-4">
+                            <h3 class="font-bold text-sm text-white truncate">${c.name}</h3>
+                            <div class="mt-3 bg-gray-800/50 rounded py-2 font-black text-yellow-400 group-hover:bg-yellow-500 group-hover:text-black transition flex items-center justify-center gap-1">
+                                ${c.price} <span class="currency-g text-sm group-hover:text-black">G</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- ЛОГИКА ИНТЕРФЕЙСА ---
+
+        function toggleModal(modalID) {
+            document.getElementById(modalID).classList.toggle('hidden');
+        }
+
+        function simulateLogin() {
+            isLoggedIn = true;
+            document.getElementById('login-btn').classList.add('hidden');
+            document.getElementById('user-profile').classList.remove('hidden');
+            document.getElementById('user-profile').classList.add('flex');
+            updateBalanceUI();
+            toggleModal('login-modal');
+        }
+
+        function mockDeposit() {
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            if(amount > 0) {
+                balance += amount;
+                updateBalanceUI();
+                alert(`Успешно пополнено на ${amount} G`);
+                toggleModal('deposit-modal');
+                document.getElementById('deposit-amount').value = '';
+            }
+        }
+
+        function updateBalanceUI() {
+            document.getElementById('user-balance').innerText = balance.toFixed(2);
+            document.getElementById('inv-count').innerText = inventory.length;
+        }
+
+        // --- ЛОГИКА РУЛЕТКИ И ИНВЕНТАРЯ ---
+
+        function openRouletteModal(caseId) {
+            if(!isLoggedIn) {
+                toggleModal('login-modal');
+                return;
+            }
+            currentActiveCase = cases.find(c => c.id === caseId);
+            document.getElementById('roulette-case-name').innerText = currentActiveCase.name;
+            document.getElementById('roulette-price').innerText = currentActiveCase.price;
+            
+            // Сбрасываем трек
+            const track = document.getElementById('roulette-track');
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0)';
+            track.innerHTML = '';
+            
+            document.getElementById('start-roulette-btn').onclick = spinRoulette;
+            document.getElementById('start-roulette-btn').classList.remove('hidden');
+            
+            toggleModal('roulette-modal');
+        }
+
+        function closeRoulette() {
+            if(!isSpinning) {
+                document.getElementById('roulette-modal').classList.add('hidden');
+            }
+        }
+
+        function spinRoulette() {
+            if(balance < currentActiveCase.price) {
+                alert("Недостаточно G на балансе!");
+                return;
+            }
+            
+            balance -= currentActiveCase.price;
+            updateBalanceUI();
+            isSpinning = true;
+            document.getElementById('start-roulette-btn').classList.add('hidden');
+
+            const track = document.getElementById('roulette-track');
+            track.innerHTML = '';
+            
+            // Генерируем 60 случайных предметов
+            let itemsHTML = '';
+            for(let i = 0; i < 60; i++) {
+                // Шансы: берем случайный айтем. В реальности тут нужен вес, но для теста берем рандом.
+                const randomItem = itemsDB[Math.floor(Math.random() * itemsDB.length)];
+                
+                // Назначаем 45-й предмет как победный
+                if(i === 45) currentDrop = randomItem; 
+
+                itemsHTML += `
+                    <div class="roulette-item rarity-${randomItem.rarity}">
+                        <img src="${randomItem.img}" class="h-16 mb-2">
+                        <div class="text-[10px] font-bold text-center text-${randomItem.rarity}">${randomItem.name}</div>
+                    </div>
+                `;
+            }
+            track.innerHTML = itemsHTML;
+
+            // Запускаем анимацию прокрутки к 45-му элементу
+            setTimeout(() => {
+                const itemWidth = 140; // Ширина элемента
+                // Вычисляем смещение: до 45 элемента, минус половина экрана, плюс случайный сдвиг внутри карточки
+                const offset = (itemWidth * 45) - (window.innerWidth / 2) + (itemWidth / 2) + (Math.random() * 80 - 40);
+                
+                track.style.transition = 'transform 5s cubic-bezier(0.15, 0.8, 0.1, 1)';
+                track.style.transform = `translateX(-${offset}px)`;
+            }, 50);
+
+            // Показываем окно выигрыша после анимации
+            setTimeout(() => {
+                isSpinning = false;
+                showDropResult();
+            }, 5200);
+        }
+
+        function showDropResult() {
+            document.getElementById('drop-img').src = currentDrop.img;
+            document.getElementById('drop-name').innerText = currentDrop.name;
+            document.getElementById('drop-price').innerText = currentDrop.price;
+            document.getElementById('drop-name').className = `text-xl font-black mb-1 text-${currentDrop.rarity}`;
+            
+            toggleModal('roulette-modal');
+            toggleModal('drop-result-modal');
+        }
+
+        function sellDrop() {
+            balance += currentDrop.price;
+            updateBalanceUI();
+            toggleModal('drop-result-modal');
+        }
+
+        function keepDrop() {
+            inventory.push(currentDrop);
+            updateBalanceUI();
+            renderInventory();
+            toggleModal('drop-result-modal');
+        }
+
+        function renderInventory() {
+            const grid = document.getElementById('inventory-grid');
+            if(inventory.length === 0) {
+                grid.innerHTML = '<div class="text-gray-500 col-span-full text-center mt-10">Инвентарь пуст. Открой пару кейсов!</div>';
+                return;
+            }
+            grid.innerHTML = '';
+            inventory.forEach((item, index) => {
+                grid.innerHTML += `
+                    <div class="bg-[#1a1e2d] rounded-lg p-3 flex flex-col items-center rarity-${item.rarity} relative">
+                        <img src="${item.img}" class="h-16 mb-2">
+                        <div class="text-[10px] font-bold text-center text-${item.rarity} truncate w-full">${item.name}</div>
+                        <div class="text-xs text-yellow-400 mt-1 font-bold">${item.price} G</div>
+                    </div>
+                `;
+            });
+        }
+
+        // Запуск
+        renderCases();
+
+    </script>
+</body>
+</html>
