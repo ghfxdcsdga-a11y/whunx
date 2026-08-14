@@ -162,7 +162,7 @@ app.post('/api/promo/activate', authenticateUser, async (req, res) => {
 app.post('/api/finance/topup', authenticateUser, async (req, res) => {
   let { amount, promoCode } = req.body;
   amount = Number(amount);
-  if (amount < 100) return res.status(400).json({ error: 'Минимальная сумма 100 ₸' });
+  if (amount < 0) return res.status(400).json({ error: 'Минимальная сумма 100 ₸' });
 
   let finalGold = amount;
 
