@@ -51,7 +51,7 @@
         .toast { background: rgba(16, 18, 26, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 15px 20px; border-radius: 12px; color: #fff; box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,255,255,0.05); display: flex; align-items: center; gap: 15px; min-width: 320px; animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; pointer-events: all; }
         .toast.success { border-left: 4px solid var(--accent-green); } .toast.error { border-left: 4px solid var(--accent-red); } .toast.info { border-left: 4px solid var(--accent-blue); }
         .toast-icon { font-size: 24px; } .toast.success .toast-icon { color: var(--accent-green); text-shadow: 0 0 10px rgba(16,185,129,0.5); } .toast.error .toast-icon { color: var(--accent-red); text-shadow: 0 0 10px rgba(239,68,68,0.5); } .toast.info .toast-icon { color: var(--accent-blue); text-shadow: 0 0 10px rgba(59,130,246,0.5); }
-        .toast-content h4 { font-size: 15px; font-weight: 800; margin-bottom: 3px; } .toast-content p { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+        .toast-content h4 { font-size: 15px; font-weight: 800; margin-bottom: 3px; } .toast-content p { font-size: 13px; color: var(--text-muted); font-weight: 600; line-height: 1.4; }
         @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
 
@@ -131,16 +131,13 @@
         .history-table th { color: var(--text-muted); font-weight: 700; text-align: left; padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
         .history-table td { padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.02); color: #fff; font-weight: 600; font-size: 14px; vertical-align: middle; }
         
-        /* Бедж со скином */
         .h-skin-badge { display: inline-flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.04); padding: 8px 20px 8px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .h-skin-badge img { height: 28px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
         .h-skin-badge span { font-weight: 800; font-size: 14px; }
         
-        /* Паттерн и градиентный кубик */
         .h-pattern { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; }
         .h-pattern i { font-size: 16px; background: linear-gradient(135deg, #f59e0b, #ef4444, #8b5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* Кнопки статуса */
         .h-status { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; min-width: 120px; }
         .h-status.pending { background: rgba(244, 199, 69, 0.08); color: var(--accent-gold); }
         .h-status.completed { background: rgba(16, 185, 129, 0.08); color: var(--accent-green); }
@@ -195,7 +192,6 @@
         </button>
     </footer>
 
-    <!-- ЧАТ САППОРТА -->
     <div id="chatWidget">
         <div class="chat-header">
             <h4><i class="fa-solid fa-headset" style="color:var(--accent-blue);"></i> Поддержка онлайн</h4>
@@ -328,7 +324,6 @@
 
     <script>
         const BACKEND_URL = 'https://whunx-backend.onrender.com';
-
         const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhucGJibXl0dGV4cW10YnR5YmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2OTc4NDcsImV4cCI6MjEwMjI3Mzg0N30.7x3UDegy7zCeT88-2Fps-uF2nMR-PDAnnXcLt5we0zw';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -356,7 +351,7 @@
             let iconClass = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info');
             toast.innerHTML = `<i class="fa-solid ${iconClass} toast-icon"></i><div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`;
             container.appendChild(toast);
-            setTimeout(() => { toast.style.animation = 'slideOutRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'; setTimeout(() => toast.remove(), 400); }, 4000);
+            setTimeout(() => { toast.style.animation = 'slideOutRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'; setTimeout(() => toast.remove(), 400); }, 7000); // 7 секунд для важных уведомлений
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -405,6 +400,37 @@
             }
             currentDbUser = dbUser;
             updateUI();
+            
+            // Проверка непрочитанных уведомлений об отмене/выводе
+            checkNotifications();
+        }
+
+        async function checkNotifications() {
+            if (!currentSessionToken) return;
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/notifications`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
+                const result = await response.json();
+                
+                if (result.success && result.notifications.length > 0) {
+                    const idsToMark = [];
+                    
+                    result.notifications.forEach(n => {
+                        idsToMark.push(n.id);
+                        if (n.status === 'completed') {
+                            showToast('Заказ выполнен', `Ваш заказ на ${n.amount} G успешно выведен в игру!`, 'success');
+                        } else if (n.status === 'cancelled') {
+                            showToast('Заказ отменен', `Вывод ${n.amount} G отменен. ${n.spent_rubles} ₸ возвращены на баланс. Уточните причину в поддержке.`, 'error');
+                        }
+                    });
+                    
+                    // Помечаем как прочитанные
+                    await fetch(`${BACKEND_URL}/api/notifications/read`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                        body: JSON.stringify({ ids: idsToMark })
+                    });
+                }
+            } catch(e) {}
         }
 
         function handleUserLogout() {
@@ -544,7 +570,6 @@
             }, 1000);
         }
 
-        // === ОБНОВЛЕННАЯ ЛОГИКА ГЕНЕРАЦИИ ТАБЛИЦЫ ПО СКРИНШОТУ ===
         async function openHistoryModal() {
             openModal('historyModal');
             const tbody = document.getElementById('historyTableBody'); 
@@ -559,11 +584,9 @@
 
             tbody.innerHTML = '';
             data.forEach(order => {
-                // Превращаем дату в формат как на фото: 14.08.2026, 22:17:21
                 const d = new Date(order.created_at);
                 const dateStr = d.toLocaleDateString('ru-RU') + ', ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit', second:'2-digit' });
                 
-                // Статус с нужными иконками
                 let statusHtml = '';
                 if (order.status === 'pending') {
                     statusHtml = `<span class="h-status pending"><i class="fa-solid fa-clock"></i> В ожидании</span>`;
@@ -573,7 +596,6 @@
                     statusHtml = `<span class="h-status cancelled"><i class="fa-solid fa-xmark"></i> Отменен</span>`;
                 }
 
-                // Убираем " G" из цены для чистого отображения как на фото
                 const price = (order.target_skin || order.amount).toString().replace(' G', '');
 
                 tbody.innerHTML += `
