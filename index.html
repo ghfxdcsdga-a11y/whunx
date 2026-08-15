@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Whunx Shop - Магазин игровой валюты</title>
     
+    <!-- Иконка сайта (Favicon) -->
+    <link rel="icon" type="image/png" href="whunx_icon.png">
+    <link rel="apple-touch-icon" href="whunx_icon.png">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -13,14 +17,14 @@
 
     <style>
         /* =========================================
-           GLOBAL VARIABLES & RESET
+           GLOBAL VARIABLES & RESET (ФИОЛЕТОВАЯ ТЕМА)
         ========================================= */
         :root {
             --bg-body: #08090d;
             --bg-input: rgba(30, 34, 48, 0.6);
-            --accent-gold: #f4c745;
-            --accent-blue: #3b82f6;
-            --accent-blue-hover: #2563eb;
+            --accent-gold: #f4c745; 
+            --accent-purple: #8b5cf6; /* Основной фиолетовый */
+            --accent-purple-hover: #7c3aed; /* Темно-фиолетовый для наведения */
             --accent-green: #10b981;
             --accent-red: #ef4444;
             --text-main: #ffffff;
@@ -33,14 +37,15 @@
         body { background: linear-gradient(135deg, #0a0c14 0%, #131622 50%, #0a0c14 100%); background-size: 200% 200%; animation: gradientBG 15s ease infinite; color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
+        /* Фоновые сферы теперь фиолетово-розовые */
         .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; pointer-events: none; opacity: 0.4; animation: floatOrb 20s infinite ease-in-out alternate; }
-        .orb-1 { width: 400px; height: 400px; background: rgba(59, 130, 246, 0.5); top: -10%; left: -10%; }
-        .orb-2 { width: 500px; height: 500px; background: rgba(244, 199, 69, 0.2); bottom: -20%; right: -10%; animation-delay: -5s; }
+        .orb-1 { width: 400px; height: 400px; background: rgba(139, 92, 246, 0.5); top: -10%; left: -10%; }
+        .orb-2 { width: 500px; height: 500px; background: rgba(244, 199, 69, 0.1); bottom: -20%; right: -10%; animation-delay: -5s; }
         .orb-3 { width: 350px; height: 350px; background: rgba(211, 44, 230, 0.3); top: 40%; left: 60%; animation-delay: -10s; }
         @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(100px, 80px) scale(1.2); } }
 
         button { font-family: inherit; cursor: pointer; border: none; outline: none; }
-        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: var(--accent-purple); }
         input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="number"] { -moz-appearance: textfield; }
 
@@ -49,8 +54,8 @@
         ========================================= */
         #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; pointer-events: none; }
         .toast { background: rgba(16, 18, 26, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 15px 20px; border-radius: 12px; color: #fff; box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,255,255,0.05); display: flex; align-items: center; gap: 15px; min-width: 320px; animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; pointer-events: all; }
-        .toast.success { border-left: 4px solid var(--accent-green); } .toast.error { border-left: 4px solid var(--accent-red); } .toast.info { border-left: 4px solid var(--accent-blue); }
-        .toast-icon { font-size: 24px; } .toast.success .toast-icon { color: var(--accent-green); text-shadow: 0 0 10px rgba(16,185,129,0.5); } .toast.error .toast-icon { color: var(--accent-red); text-shadow: 0 0 10px rgba(239,68,68,0.5); } .toast.info .toast-icon { color: var(--accent-blue); text-shadow: 0 0 10px rgba(59,130,246,0.5); }
+        .toast.success { border-left: 4px solid var(--accent-green); } .toast.error { border-left: 4px solid var(--accent-red); } .toast.info { border-left: 4px solid var(--accent-purple); }
+        .toast-icon { font-size: 24px; } .toast.success .toast-icon { color: var(--accent-green); text-shadow: 0 0 10px rgba(16,185,129,0.5); } .toast.error .toast-icon { color: var(--accent-red); text-shadow: 0 0 10px rgba(239,68,68,0.5); } .toast.info .toast-icon { color: var(--accent-purple); text-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
         .toast-content h4 { font-size: 15px; font-weight: 800; margin-bottom: 3px; } .toast-content p { font-size: 13px; color: var(--text-muted); font-weight: 600; line-height: 1.4; }
         @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
@@ -59,11 +64,11 @@
            HEADER
         ========================================= */
         header { height: 80px; background: rgba(16, 18, 26, 0.4); backdrop-filter: blur(30px); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 50px; position: sticky; top: 0; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .logo { font-size: 24px; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; text-shadow: 0 0 20px rgba(244,199,69,0.2); } .logo span { color: var(--accent-gold); }
+        .logo { font-size: 24px; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; text-shadow: 0 0 20px rgba(139, 92, 246, 0.2); } .logo span { color: var(--accent-purple); }
         .header-right { display: flex; align-items: center; gap: 20px; }
         .balance-module { display: none; align-items: center; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
         .balance-amount { padding: 0 15px; font-size: 16px; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); } .balance-amount span { color: var(--text-muted); font-size: 14px; margin-left: 4px; }
-        .balance-add-btn { width: 40px; height: 40px; background: var(--accent-blue); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; transition: var(--transition); box-shadow: 0 0 15px rgba(59,130,246,0.3); } .balance-add-btn:hover { background: var(--accent-blue-hover); transform: scale(1.05); box-shadow: 0 0 25px rgba(59,130,246,0.5); }
+        .balance-add-btn { width: 40px; height: 40px; background: var(--accent-purple); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; transition: var(--transition); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); } .balance-add-btn:hover { background: var(--accent-purple-hover); transform: scale(1.05); box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); }
         .login-btn { background: rgba(255,255,255,0.9); color: #000; height: 48px; padding: 0 25px; border-radius: 12px; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; transition: var(--transition); box-shadow: 0 0 20px rgba(255,255,255,0.1); } .login-btn:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 5px 25px rgba(255,255,255,0.3); }
         .profile-module { display: none; position: relative; }
         .profile-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 12px; transition: 0.2s; } .profile-trigger:hover { background: rgba(255,255,255,0.05); } .profile-trigger img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
@@ -77,6 +82,7 @@
         main { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 60px 20px; z-index: 10; position: relative; }
         .shop-header { text-align: center; margin-bottom: 50px; } .shop-header h1 { font-size: 36px; font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 20px rgba(255,255,255,0.2); } .shop-header p { color: var(--text-muted); font-size: 16px; }
         .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
+        
         .product-card { background: rgba(20, 22, 30, 0.4); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 30px 20px; text-align: center; transition: var(--transition); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
         .product-card:hover { transform: translateY(-5px); border-color: rgba(244, 199, 69, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(244,199,69,0.05); }
         
@@ -87,8 +93,11 @@
         .product-card:hover .product-img-wrapper::before { background: #fff; opacity: 0.8; filter: blur(40px); transform: scale(1.5); }
         .product-card:hover .product-img { transform: scale(1.2) translateY(-10px); filter: contrast(1.3) saturate(1.2) drop-shadow(0 15px 15px rgba(244,199,69,0.3)); }
         
-        .product-gold { font-size: 24px; font-weight: 900; color: var(--accent-gold); margin-bottom: 5px; text-shadow: 0 0 15px rgba(244,199,69,0.2); } .product-price { font-size: 16px; color: var(--text-muted); font-weight: 600; margin-bottom: 25px; }
-        .btn-buy { width: 100%; background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.2); padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 800; transition: 0.2s; position: relative; z-index: 2; } .product-card:hover .btn-buy { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); box-shadow: 0 0 20px rgba(59,130,246,0.4); }
+        .product-gold { font-size: 24px; font-weight: 900; color: var(--accent-gold); margin-bottom: 5px; text-shadow: 0 0 15px rgba(244,199,69,0.2); } 
+        .product-price { font-size: 16px; color: var(--text-muted); font-weight: 600; margin-bottom: 25px; }
+        
+        .btn-buy { width: 100%; background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); border: 1px solid rgba(139, 92, 246, 0.2); padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 800; transition: 0.2s; position: relative; z-index: 2; } 
+        .product-card:hover .btn-buy { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
 
         /* =========================================
            FOOTER & CHAT
@@ -100,9 +109,9 @@
         #chatWidget.active { display: flex; transform: translateY(0); opacity: 1; }
         .chat-header { background: rgba(0,0,0,0.2); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); } .chat-header h4 { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
         .chat-messages { height: 300px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { max-width: 85%; padding: 10px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; line-height: 1.4; word-wrap: break-word; } .msg.user { background: var(--accent-blue); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; } .msg.admin { background: rgba(255,255,255,0.1); color: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg { max-width: 85%; padding: 10px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; line-height: 1.4; word-wrap: break-word; } .msg.user { background: var(--accent-purple); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; } .msg.admin { background: rgba(255,255,255,0.1); color: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
         .chat-input-area { padding: 15px; background: rgba(0,0,0,0.2); display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); } .chat-input { flex: 1; background: var(--bg-input); border: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 10px; color: #fff; font-size: 14px; outline: none; }
-        .chat-send-btn { background: var(--accent-blue); color: #fff; width: 40px; height: 40px; border-radius: 10px; display: flex; justify-content: center; align-items: center; transition: 0.2s; } .chat-send-btn:hover { background: var(--accent-blue-hover); }
+        .chat-send-btn { background: var(--accent-purple); color: #fff; width: 40px; height: 40px; border-radius: 10px; display: flex; justify-content: center; align-items: center; transition: 0.2s; } .chat-send-btn:hover { background: var(--accent-purple-hover); }
 
         /* =========================================
            GLASSMORPHISM MODALS
@@ -113,10 +122,10 @@
         .modal-title { font-size: 24px; font-weight: 900; margin-bottom: 25px; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
         
         .f-input-group { margin-bottom: 20px; text-align: left; } .f-input-label { display: block; font-size: 13px; color: #fff; font-weight: 700; margin-bottom: 8px; } .f-input-wrapper { position: relative; }
-        .f-input { width: 100%; background: var(--bg-input); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; color: #fff; font-size: 16px; font-weight: 700; outline: none; transition: 0.2s; box-shadow: inset 0 5px 10px rgba(0,0,0,0.3); } .f-input:focus { border-color: var(--accent-blue); box-shadow: inset 0 5px 10px rgba(0,0,0,0.3), 0 0 15px rgba(59,130,246,0.2); }
+        .f-input { width: 100%; background: var(--bg-input); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; color: #fff; font-size: 16px; font-weight: 700; outline: none; transition: 0.2s; box-shadow: inset 0 5px 10px rgba(0,0,0,0.3); } .f-input:focus { border-color: var(--accent-purple); box-shadow: inset 0 5px 10px rgba(0,0,0,0.3), 0 0 15px rgba(139, 92, 246, 0.2); }
         .f-input-suffix { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 800; } .clear-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; transition: 0.2s; font-size: 16px; } .clear-icon:hover { color: #fff; }
-        .btn-submit { width: 100%; background: var(--accent-blue); color: #fff; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; transition: 0.2s; margin-top: 10px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); } .btn-submit:hover:not(:disabled) { background: var(--accent-blue-hover); transform: translateY(-2px); box-shadow: 0 15px 35px rgba(59, 130, 246, 0.6); } .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-        .upload-area { background: var(--bg-input); border: 1px dashed rgba(255,255,255,0.2); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; font-weight: 700; font-size: 14px; margin-bottom: 5px; box-shadow: inset 0 5px 10px rgba(0,0,0,0.2); } .upload-area:hover { border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.05); }
+        .btn-submit { width: 100%; background: var(--accent-purple); color: #fff; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 800; transition: 0.2s; margin-top: 10px; box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4); } .btn-submit:hover:not(:disabled) { background: var(--accent-purple-hover); transform: translateY(-2px); box-shadow: 0 15px 35px rgba(139, 92, 246, 0.6); } .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+        .upload-area { background: var(--bg-input); border: 1px dashed rgba(255,255,255,0.2); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; font-weight: 700; font-size: 14px; margin-bottom: 5px; box-shadow: inset 0 5px 10px rgba(0,0,0,0.2); } .upload-area:hover { border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.05); }
         
         .market-price-tag { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; font-weight: 800; font-size: 18px; color: var(--accent-gold); display: flex; align-items: center; gap: 10px; margin-bottom: 10px; border: 1px solid rgba(244,199,69,0.2); text-shadow: 0 0 10px rgba(244,199,69,0.3); box-shadow: inset 0 0 15px rgba(244,199,69,0.05); }
         .market-item-target { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; display: flex; align-items: center; gap: 15px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.05); } .market-item-target img { width: 80px; height: 60px; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); } .market-item-info h5 { font-size: 14px; font-weight: 800; margin-bottom: 3px; color: #fff; } .market-item-info span { font-size: 11px; color: var(--text-muted); font-weight: 700; }
@@ -208,14 +217,14 @@
         <button class="btn-donate" onclick="showToast('Донат', 'Спасибо за поддержку! Реквизиты скоро будут добавлены.', 'info')">
             <i class="fa-solid fa-heart"></i> Пожертвовать проекту
         </button>
-        <button class="btn-donate" style="color: var(--accent-blue); border-color: var(--accent-blue);" onclick="toggleChat()">
+        <button class="btn-donate" style="color: var(--accent-purple); border-color: var(--accent-purple);" onclick="toggleChat()">
             <i class="fa-solid fa-headset"></i> Тех. поддержка
         </button>
     </footer>
 
     <div id="chatWidget">
         <div class="chat-header">
-            <h4><i class="fa-solid fa-headset" style="color:var(--accent-blue);"></i> Поддержка онлайн</h4>
+            <h4><i class="fa-solid fa-headset" style="color:var(--accent-purple);"></i> Поддержка онлайн</h4>
             <i class="fa-solid fa-xmark" style="cursor:pointer; color:var(--text-muted);" onclick="toggleChat()"></i>
         </div>
         <div class="chat-messages" id="chatMessages"></div>
@@ -317,7 +326,7 @@
             <label class="f-input-label" style="margin-bottom:10px;">Загрузите ваш аватар в игре:</label>
             <div class="upload-area" style="background:transparent; border-color:transparent; padding:0; text-align:left; display:flex; align-items:center; gap:15px; margin-bottom:15px; cursor:default; box-shadow:none;">
                 <img id="gameAvatarPreview" src="" style="width:50px; height:50px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover;">
-                <span style="color:var(--accent-blue); font-size:13px; cursor:pointer;" onclick="resetGameAvatar()">Удалить аватар <i class="fa-solid fa-xmark"></i></span>
+                <span style="color:var(--accent-purple); font-size:13px; cursor:pointer;" onclick="resetGameAvatar()">Удалить аватар <i class="fa-solid fa-xmark"></i></span>
             </div>
             <input type="file" id="gameAvatarInput" style="display:none;" accept="image/*" onchange="previewGameAvatar(event)">
             <div class="upload-area" id="gameAvatarBtn" onclick="document.getElementById('gameAvatarInput').click()">Загрузить файл <i class="fa-solid fa-check"></i></div>
@@ -418,13 +427,11 @@
             currentDbUser = dbUser;
             updateUI();
             
-            // Запускаем фоновую синхронизацию каждые 5 секунд!
             if (!window.syncInterval) {
                 window.syncInterval = setInterval(syncUserData, 5000);
             }
         }
 
-        // Эта функция тихонько обновляет баланс и ищет уведомления (без перезагрузки страницы)
         async function syncUserData() {
             if (!currentSessionToken || !currentDbUser) return;
             try {
@@ -433,9 +440,9 @@
                 
                 if (freshUser && !freshUser.error) {
                     currentDbUser = freshUser;
-                    updateUI(); // Обновляет цифру баланса в шапке
+                    updateUI(); 
                 }
-                checkNotifications(); // Проверяет, не появились ли уведомления
+                checkNotifications(); 
             } catch(e) {}
         }
 
@@ -462,7 +469,6 @@
                             tIds.push(n.id);
                             if (n.status === 'approved') {
                                 showToast('Баланс пополнен', `Платеж ${n.amount} ₸ успешно зачислен!`, 'success');
-                                // УБРАНА МАТЕМАТИКА. Баланс уже актуален из БД через syncUserData!
                             } else if (n.status === 'rejected') {
                                 showToast('Платеж отклонен', `Пополнение на ${n.amount} ₸ не найдено. Напишите в поддержку.`, 'error');
                             }
