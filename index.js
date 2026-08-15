@@ -6,7 +6,6 @@ const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 app.use(cors());
-// Подняли лимит до 50 мегабайт для качественных аватарок
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -66,6 +65,30 @@ bot.on('callback_query', async (query) => {
   const action = query.data.split('_')[0]; 
   const orderId = query.data.split('_')[1];
 
+  // === ОБРАБОТКА ПОПОЛНЕНИЙ БАЛАНСА KASPI ===
+  if (action === 'approvetopup' || action === 'rejecttopup') {
+    const { data: request } = await supabase.from('topup_requests').select('*').eq('id', orderId).single();
+    if (!request) return bot.answerCallbackQuery(query.id, { text: 'Заявка не найдена', show_alert: true });
+    if (request.status !== 'pending') return bot.answerCallbackQuery(query.id, { text: 'Заявка уже обработана!', show_alert: true });
+
+    if (action === 'approvetopup') {
+      const { data: user } = await supabase.from('users').select('*').eq('email', request.user_email).single();
+      if (user) {
+        const newBalance = Number(user.balance) + Number(request.amount);
+        const newWeeklyDeposit = Number(user.weekly_deposit || 0) + Number(request.amount);
+        await supabase.from('users').update({ balance: newBalance, weekly_deposit: newWeeklyDeposit }).eq('email', request.user_email);
+        await supabase.from('transactions').insert([{ user_email: request.user_email, type: 'deposit', amount: request.amount, description: 'Пополнение Kaspi' }]);
+      }
+      await supabase.from('topup_requests').update({ status: 'approved' }).eq('id', orderId);
+      bot.editMessageText(`${query.message.text}\n\nСтатус: ✅ ЗАЧИСЛЕНО НА БАЛАНС`, { chat_id: query.message.chat.id, message_id: query.message.message_id });
+    } else {
+      await supabase.from('topup_requests').update({ status: 'rejected' }).eq('id', orderId);
+      bot.editMessageText(`${query.message.text}\n\nСтатус: ❌ ПЛАТЕЖ НЕ НАЙДЕН`, { chat_id: query.message.chat.id, message_id: query.message.message_id });
+    }
+    return bot.answerCallbackQuery(query.id, { text: 'Заявка обработана!' });
+  }
+
+  // === ОБРАБОТКА ВЫВОДА ГОЛДЫ ===
   const { data: order } = await supabase.from('withdrawals').select('*').eq('id', orderId).single();
   if (!order) return bot.answerCallbackQuery(query.id, { text: 'Заказ не найден', show_alert: true });
   if (order.status !== 'pending') return bot.answerCallbackQuery(query.id, { text: 'Заказ уже обработан!', show_alert: true });
@@ -87,16 +110,13 @@ bot.on('callback_query', async (query) => {
   const originalText = query.message.caption || query.message.text;
   const newText = `${originalText}\n\nСтатус заказа: ${statusText}`;
 
-  // ИСПРАВЛЕНИЕ: Если это фото - меняем Caption, если текст - Text. И убираем кнопки!
   const opts = { chat_id: query.message.chat.id, message_id: query.message.message_id, reply_markup: { inline_keyboard: [] } };
-  
   if (query.message.photo) {
     bot.editMessageCaption(newText, opts).catch(err => console.error(err));
   } else {
     bot.editMessageText(newText, opts).catch(err => console.error(err));
   }
-
-  bot.answerCallbackQuery(query.id, { text: 'Статус успешно обновлен!' });
+  bot.answerCallbackQuery(query.id, { text: 'Статус обновлен!' });
 });
 
 // ==========================================
@@ -113,13 +133,7 @@ const authenticateUser = async (req, res, next) => {
   next();
 };
 
-const requireAdmin = (req, res, next) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Доступ запрещен' });
-  next();
-};
-
 app.get('/api/me', authenticateUser, (req, res) => { res.json(req.user); });
-
 app.post('/api/me/update', authenticateUser, async (req, res) => {
   const { username, avatar_url } = req.body;
   const { data, error } = await supabase.from('users').update({ username, avatar_url }).eq('email', req.user.email).select().single();
@@ -127,15 +141,20 @@ app.post('/api/me/update', authenticateUser, async (req, res) => {
   res.json({ success: true, user: data });
 });
 
+// Уведомления теперь собирают и статусы голды, и статусы пополнения Kaspi
 app.get('/api/notifications', authenticateUser, async (req, res) => {
-  const { data } = await supabase.from('withdrawals').select('*').eq('user_email', req.user.email).neq('status', 'pending').eq('is_notified', false);
-  res.json({ success: true, notifications: data || [] });
+  const { data: withdrawals } = await supabase.from('withdrawals').select('*').eq('user_email', req.user.email).neq('status', 'pending').eq('is_notified', false);
+  const { data: topups } = await supabase.from('topup_requests').select('*').eq('user_email', req.user.email).neq('status', 'pending').eq('is_notified', false);
+  res.json({ success: true, notifications: { withdrawals: withdrawals || [], topups: topups || [] } });
 });
 
 app.post('/api/notifications/read', authenticateUser, async (req, res) => {
-  const { ids } = req.body;
-  if (ids && ids.length > 0) {
-    await supabase.from('withdrawals').update({ is_notified: true }).in('id', ids).eq('user_email', req.user.email);
+  const { withdrawalIds, topupIds } = req.body;
+  if (withdrawalIds && withdrawalIds.length > 0) {
+    await supabase.from('withdrawals').update({ is_notified: true }).in('id', withdrawalIds).eq('user_email', req.user.email);
+  }
+  if (topupIds && topupIds.length > 0) {
+    await supabase.from('topup_requests').update({ is_notified: true }).in('id', topupIds).eq('user_email', req.user.email);
   }
   res.json({ success: true });
 });
@@ -153,15 +172,35 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
   res.json({ success: true });
 });
 
+// НОВАЯ ЛОГИКА ПОПОЛНЕНИЯ БАЛАНСА KASPI
 app.post('/api/finance/topup', authenticateUser, async (req, res) => {
   let { amount } = req.body;
   amount = Number(amount);
   if (amount < 100) return res.status(400).json({ error: 'Минимальная сумма 100 ₸' });
 
-  const newBalance = Number(req.user.balance) + amount;
-  await supabase.from('users').update({ balance: newBalance, weekly_deposit: Number(req.user.weekly_deposit) + amount }).eq('id', req.user.id);
-  await supabase.from('transactions').insert([{ user_email: req.user.email, type: 'deposit', amount: amount, description: 'Пополнение баланса' }]);
-  res.json({ success: true, balance: newBalance });
+  const { data: request, error } = await supabase.from('topup_requests').insert([{
+    user_email: req.user.email,
+    amount: amount,
+    status: 'pending'
+  }]).select().single();
+
+  if (error) return res.status(500).json({ error: 'Ошибка базы данных' });
+
+  const tgMessage = `💵 **НОВАЯ ЗАЯВКА НА ПОПОЛНЕНИЕ (KASPI)!**\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID:** \`${req.user.secret_id}\`\n💰 **Ожидаемая сумма:** ${amount} ₸\n\nПроверь свой Kaspi! Если деньги поступили, жми Зачислить.`;
+  
+  bot.sendMessage(ADMIN_CHAT_ID, tgMessage, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [
+        [ 
+          { text: '✅ Зачислить', callback_data: `approvetopup_${request.id}` }, 
+          { text: '❌ Не пришли', callback_data: `rejecttopup_${request.id}` } 
+        ]
+      ]
+    }
+  });
+
+  res.json({ success: true, message: 'Заявка отправлена администратору' });
 });
 
 app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
@@ -206,28 +245,6 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
   }
 
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
-});
-
-// ==========================================
-// СЕКРЕТНАЯ АДМИН-ПАНЕЛЬ
-// ==========================================
-app.post('/api/admin/items', authenticateUser, requireAdmin, async (req, res) => {
-  const { name, weapon, price, rarity, img } = req.body;
-  const { data, error } = await supabase.from('items').insert([{ name, weapon, price, rarity, image_url: img }]).select();
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true, item: data[0] });
-});
-app.post('/api/admin/cases', authenticateUser, requireAdmin, async (req, res) => {
-  const { name, price, img } = req.body;
-  const { data, error } = await supabase.from('cases').insert([{ name, price, image_url: img }]).select();
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true, case: data[0] });
-});
-app.post('/api/admin/case-items', authenticateUser, requireAdmin, async (req, res) => {
-  const { case_id, item_id, regular_chance, stattrack_chance } = req.body;
-  const { data, error } = await supabase.from('case_items').insert([{ case_id, item_id, regular_chance, stattrack_chance }]);
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true, message: 'Скин успешно добавлен в кейс' });
 });
 
 app.listen(PORT, () => console.log(`Backend Server Live on port ${PORT}`));
