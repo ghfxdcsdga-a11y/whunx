@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Whunx Shop - Магазин игровой валюты</title>
     
-    <!-- Иконка сайта (Favicon) -->
     <link rel="icon" type="image/png" href="whunx_icon.png">
     <link rel="apple-touch-icon" href="whunx_icon.png">
     
@@ -13,7 +12,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Подключаем нативный скрипт Google -->
+    <script src="https://accounts.google.com/gsi/client" async></script>
 
     <style>
         /* =========================================
@@ -23,8 +25,8 @@
             --bg-body: #08090d;
             --bg-input: rgba(30, 34, 48, 0.6);
             --accent-gold: #f4c745; 
-            --accent-purple: #8b5cf6; /* Основной фиолетовый */
-            --accent-purple-hover: #7c3aed; /* Темно-фиолетовый для наведения */
+            --accent-purple: #8b5cf6; 
+            --accent-purple-hover: #7c3aed; 
             --accent-green: #10b981;
             --accent-red: #ef4444;
             --text-main: #ffffff;
@@ -37,7 +39,6 @@
         body { background: linear-gradient(135deg, #0a0c14 0%, #131622 50%, #0a0c14 100%); background-size: 200% 200%; animation: gradientBG 15s ease infinite; color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        /* Фоновые сферы теперь фиолетово-розовые */
         .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; pointer-events: none; opacity: 0.4; animation: floatOrb 20s infinite ease-in-out alternate; }
         .orb-1 { width: 400px; height: 400px; background: rgba(139, 92, 246, 0.5); top: -10%; left: -10%; }
         .orb-2 { width: 500px; height: 500px; background: rgba(244, 199, 69, 0.1); bottom: -20%; right: -10%; animation-delay: -5s; }
@@ -69,7 +70,7 @@
         .balance-module { display: none; align-items: center; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
         .balance-amount { padding: 0 15px; font-size: 16px; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); } .balance-amount span { color: var(--text-muted); font-size: 14px; margin-left: 4px; }
         .balance-add-btn { width: 40px; height: 40px; background: var(--accent-purple); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; transition: var(--transition); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); } .balance-add-btn:hover { background: var(--accent-purple-hover); transform: scale(1.05); box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); }
-        .login-btn { background: rgba(255,255,255,0.9); color: #000; height: 48px; padding: 0 25px; border-radius: 12px; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; transition: var(--transition); box-shadow: 0 0 20px rgba(255,255,255,0.1); } .login-btn:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 5px 25px rgba(255,255,255,0.3); }
+        
         .profile-module { display: none; position: relative; }
         .profile-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 12px; transition: 0.2s; } .profile-trigger:hover { background: rgba(255,255,255,0.05); } .profile-trigger img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
         .dropdown-menu { position: absolute; top: calc(100% + 15px); right: 0; width: 240px; background: rgba(16, 18, 26, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 15px; opacity: 0; visibility: hidden; transform: translateY(10px); transition: 0.2s; z-index: 200; box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.02); } .profile-module.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
@@ -152,7 +153,6 @@
         @media (max-width: 768px) {
             header { padding: 0 20px; height: 70px; }
             .logo { font-size: 20px; }
-            .login-btn { height: 40px; padding: 0 15px; font-size: 13px; }
             .balance-amount { padding: 0 10px; font-size: 14px; }
             .balance-add-btn { width: 35px; height: 35px; }
             main { padding: 30px 15px; }
@@ -185,7 +185,12 @@
     <header>
         <div class="logo">WHUNX<span>.SHOP</span></div>
         <div class="header-right">
-            <button class="login-btn" id="loginBtn" onclick="loginWithGoogle()"><i class="fa-brands fa-google" style="color:#DB4437;"></i> Войти</button>
+            
+            <!-- Обертка для нативной кнопки Google -->
+            <div id="googleLoginWrapper" style="display:flex; align-items:center;">
+                <div id="googleLoginBtn"></div>
+            </div>
+
             <div class="balance-module" id="balanceModule">
                 <div class="balance-amount" id="balanceText">0 <span>₸</span></div>
                 <button class="balance-add-btn" onclick="openModal('topupModal')"><i class="fa-solid fa-plus"></i></button>
@@ -349,6 +354,11 @@
     </div>
 
     <script>
+        // =========================================
+        // ВАЖНО: ВСТАВЬ СЮДА СВОЙ GOOGLE CLIENT ID
+        // =========================================
+        const GOOGLE_CLIENT_ID = 'ВСТАВЬ_СЮДА_СВОЙ_CLIENT_ID_ИЗ_GOOGLE_CLOUD';
+
         const BACKEND_URL = 'https://whunx-backend.onrender.com';
         const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhucGJibXl0dGV4cW10YnR5YmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2OTc4NDcsImV4cCI6MjEwMjI3Mzg0N30.7x3UDegy7zCeT88-2Fps-uF2nMR-PDAnnXcLt5we0zw';
@@ -363,9 +373,9 @@
 
         const shopItems = [
             { id: 1, gold: 100, price: 590, img: '100.png' },
-            { id: 2, gold: 500, price: 2590, img: '500.png' },
-            { id: 3, gold: 1000, price: 4490, img: '1000.png' },
-            { id: 4, gold: 3000, price: 9990, img: '3000.png' }
+            { id: 2, gold: 500, price: 2790, img: '500.png' },
+            { id: 3, gold: 1000, price: 4990, img: '1000.png' },
+            { id: 4, gold: 3000, price: 10990, img: '3000.png' }
         ];
 
         document.addEventListener("wheel", function(event){ if(document.activeElement.type === "number") document.activeElement.blur(); });
@@ -392,7 +402,19 @@
             }
 
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) handleUserLogin(session);
+            if (session) {
+                handleUserLogin(session);
+            } else {
+                // ИНИЦИАЛИЗАЦИЯ НАТИВНОГО ВХОДА GOOGLE
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleLogin
+                });
+                google.accounts.id.renderButton(
+                    document.getElementById("googleLoginBtn"),
+                    { theme: "filled_black", size: "large", shape: "pill", type: "standard" }
+                );
+            }
 
             supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_IN' && session) handleUserLogin(session);
@@ -400,20 +422,30 @@
             });
         });
 
-        function resetGameAvatar() {
-            document.getElementById('gameAvatarPreview').src = DEFAULT_GAME_AVATAR;
-            document.getElementById('gameAvatarInput').value = '';
-            document.getElementById('gameAvatarBtn').innerHTML = `Загрузить файл <i class="fa-solid fa-check"></i>`;
-            localStorage.removeItem('gameAvatarTemp');
+        // НОВЫЙ ОБРАБОТЧИК ЛОГИНА ЧЕРЕЗ GOOGLE БЕЗ РЕДИРЕКТОВ
+        async function handleGoogleLogin(response) {
+            const id_token = response.credential;
+            const { data, error } = await supabaseClient.auth.signInWithIdToken({
+                provider: 'google',
+                token: id_token
+            });
+
+            if (error) {
+                showToast('Ошибка', 'Не удалось авторизоваться', 'error');
+            } else {
+                showToast('Успех', 'Успешный вход!', 'success');
+                handleUserLogin(data.session);
+            }
         }
 
-        async function loginWithGoogle() { await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } }); }
         async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); }
 
         async function handleUserLogin(session) {
             currentSessionToken = session.access_token;
             const userAuth = session.user;
-            document.getElementById('loginBtn').style.display = 'none';
+            
+            // Скрываем нативную кнопку гугла
+            document.getElementById('googleLoginWrapper').style.display = 'none';
             document.getElementById('balanceModule').style.display = 'flex';
             document.getElementById('profileModule').style.display = 'block';
 
@@ -427,9 +459,7 @@
             currentDbUser = dbUser;
             updateUI();
             
-            if (!window.syncInterval) {
-                window.syncInterval = setInterval(syncUserData, 5000);
-            }
+            if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
         }
 
         async function syncUserData() {
@@ -488,7 +518,7 @@
 
         function handleUserLogout() {
             currentDbUser = null; currentSessionToken = null;
-            document.getElementById('loginBtn').style.display = 'flex';
+            document.getElementById('googleLoginWrapper').style.display = 'block';
             document.getElementById('balanceModule').style.display = 'none';
             document.getElementById('profileModule').style.display = 'none';
             if (window.syncInterval) {
@@ -527,6 +557,13 @@
                 }
                 reader.readAsDataURL(file);
             }
+        }
+
+        function resetGameAvatar() {
+            document.getElementById('gameAvatarPreview').src = DEFAULT_GAME_AVATAR;
+            document.getElementById('gameAvatarInput').value = '';
+            document.getElementById('gameAvatarBtn').innerHTML = `Загрузить файл <i class="fa-solid fa-check"></i>`;
+            localStorage.removeItem('gameAvatarTemp');
         }
 
         async function saveSettings() {
