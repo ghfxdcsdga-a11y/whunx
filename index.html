@@ -124,9 +124,6 @@
         .tg-bind-btn { background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 12px; padding: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; box-shadow: 0 5px 15px rgba(36, 161, 222, 0.1); } .tg-bind-btn:hover { background: rgba(36, 161, 222, 0.2); box-shadow: 0 10px 20px rgba(36, 161, 222, 0.2); transform: translateY(-2px); }
         .tg-info { display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 700; } .tg-info i { font-size: 24px; color: #24A1DE; text-shadow: 0 0 15px rgba(36,161,222,0.5); }
 
-        /* =========================================
-           ОБНОВЛЕННАЯ ТАБЛИЦА ИСТОРИИ
-        ========================================= */
         .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 600px; }
         .history-table th { color: var(--text-muted); font-weight: 700; text-align: left; padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
         .history-table td { padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.02); color: #fff; font-weight: 600; font-size: 14px; vertical-align: middle; }
@@ -141,7 +138,7 @@
         .h-status.cancelled { background: rgba(239, 68, 68, 0.08); color: var(--accent-red); }
 
         /* =========================================
-           MOBILE RESPONSIVENESS (Для телефонов)
+           MOBILE RESPONSIVENESS
         ========================================= */
         @media (max-width: 768px) {
             header { padding: 0 20px; height: 70px; }
@@ -152,7 +149,6 @@
             main { padding: 30px 15px; }
             .shop-header h1 { font-size: 26px; }
             
-            /* Сетка в 2 колонки на телефоне */
             .products-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
             .product-card { padding: 20px 15px; }
             .product-img-wrapper { width: 90px; height: 90px; margin-bottom: 15px; }
@@ -229,22 +225,42 @@
         </div>
     </div>
 
-    <!-- МОДАЛКИ (Пополнение, Настройки) -->
+    <!-- МОДАЛКА: ПОПОЛНЕНИЕ (С ОПЛАТОЙ НА KASPI) -->
     <div class="modal-overlay" id="topupModal">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('topupModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">Пополнить баланс</div>
-            <div class="f-input-group">
-                <label class="f-input-label">Сумма пополнения (Минимум 100 ₸)</label>
-                <div class="f-input-wrapper">
-                    <input type="number" id="topupAmountInput" class="f-input" placeholder="500">
-                    <span class="f-input-suffix">₸</span>
+            
+            <div id="topupStep1">
+                <div class="f-input-group">
+                    <label class="f-input-label">Сумма пополнения (Минимум 100 ₸)</label>
+                    <div class="f-input-wrapper">
+                        <input type="number" id="topupAmountInput" class="f-input" placeholder="500">
+                        <span class="f-input-suffix">₸</span>
+                    </div>
                 </div>
+                <button class="btn-submit" onclick="goToTopupStep2()">Перейти к оплате</button>
             </div>
-            <button class="btn-submit" onclick="processTopup()">Перейти к оплате</button>
+
+            <div id="topupStep2" style="display:none;">
+                <div style="text-align:center; margin-bottom:15px;">
+                    <span style="color:#f14635; font-weight:900; font-size:24px; display:block; margin-bottom:10px;">Kaspi<span style="color:#fff;">.kz</span></span>
+                    <p style="font-size:14px; color:var(--text-muted);">Переведите ровно <strong id="topupAmountDisplay" style="color:var(--accent-gold); font-size:16px;">0 ₸</strong> по номеру карты:</p>
+                </div>
+                <div class="market-price-tag" style="justify-content:space-between;">
+                    <span style="font-family:monospace; font-size:18px; letter-spacing:1px;">4400 4302 8123 4671</span> 
+                    <i class="fa-regular fa-copy" onclick="copyCard()" style="cursor:pointer; color:var(--text-muted);"></i>
+                </div>
+                <div class="f-warning-text" style="color:var(--text-muted); justify-content:center; margin-bottom:15px;">
+                    <i class="fa-solid fa-circle-info"></i> Получатель: Сергей
+                </div>
+                <button class="btn-submit" style="background:var(--accent-green);" onclick="processTopup()">Я оплатил</button>
+                <button class="btn-submit" style="background:transparent; color:var(--text-muted); box-shadow:none; margin-top:0;" onclick="resetTopupModal()">Отмена</button>
+            </div>
         </div>
     </div>
 
+    <!-- МОДАЛКИ (Настройки, История, Вывод) -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal-box" style="max-width: 550px;">
             <button class="modal-close" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
@@ -270,7 +286,6 @@
         </div>
     </div>
 
-    <!-- ШИРОКАЯ МОДАЛКА: ИСТОРИЯ ПОКУПОК -->
     <div class="modal-overlay" id="historyModal">
         <div class="modal-box" style="max-width: 1000px;">
             <button class="modal-close" onclick="closeModal('historyModal')"><i class="fa-solid fa-xmark"></i></button>
@@ -293,27 +308,12 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА: ПОКУПКА / ВЫВОД ГОЛДЫ -->
     <div class="modal-overlay" id="purchaseWithdrawModal">
         <div class="modal-box" style="max-width: 550px;">
             <button class="modal-close" onclick="closeModal('purchaseWithdrawModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">Получение голды</div>
-            
-            <div class="f-input-group">
-                <label class="f-input-label">Сумма к получению:</label>
-                <div class="f-input-wrapper">
-                    <input type="text" id="pwGoldAmount" class="f-input" value="1000 G" readonly style="color:var(--accent-gold); opacity:0.8;">
-                </div>
-            </div>
-            
-            <div class="f-input-group">
-                <label class="f-input-label">Игровой ID:</label>
-                <div class="f-input-wrapper">
-                    <input type="number" id="pwIdInput" class="f-input" placeholder="253388288">
-                    <i class="fa-solid fa-xmark clear-icon" onclick="document.getElementById('pwIdInput').value=''"></i>
-                </div>
-            </div>
-
+            <div class="f-input-group"><label class="f-input-label">Сумма к получению:</label><div class="f-input-wrapper"><input type="text" id="pwGoldAmount" class="f-input" value="1000 G" readonly style="color:var(--accent-gold); opacity:0.8;"></div></div>
+            <div class="f-input-group"><label class="f-input-label">Игровой ID:</label><div class="f-input-wrapper"><input type="number" id="pwIdInput" class="f-input" placeholder="253388288"><i class="fa-solid fa-xmark clear-icon" onclick="document.getElementById('pwIdInput').value=''"></i></div></div>
             <label class="f-input-label" style="margin-bottom:10px;">Загрузите ваш аватар в игре:</label>
             <div class="upload-area" style="background:transparent; border-color:transparent; padding:0; text-align:left; display:flex; align-items:center; gap:15px; margin-bottom:15px; cursor:default; box-shadow:none;">
                 <img id="gameAvatarPreview" src="" style="width:50px; height:50px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover;">
@@ -321,17 +321,11 @@
             </div>
             <input type="file" id="gameAvatarInput" style="display:none;" accept="image/*" onchange="previewGameAvatar(event)">
             <div class="upload-area" id="gameAvatarBtn" onclick="document.getElementById('gameAvatarInput').click()">Загрузить файл <i class="fa-solid fa-check"></i></div>
-            <div class="f-warning-text" style="color:var(--text-muted);"><i class="fa-solid fa-circle-exclamation"></i> Загрузи аватарку из личных файлов без текста и символов. Убедись, что фото совпадает с твоим игровым профилем</div>
-
+            <div class="f-warning-text" style="color:var(--text-muted);"><i class="fa-solid fa-circle-exclamation"></i> Загрузи аватарку из личных файлов без текста и символов. Убедись, что фото совпадает с твоим профилем</div>
             <label class="f-input-label" style="margin-bottom:10px;">Выставьте указанный скин за:</label>
             <div class="market-price-tag"><span id="pwListingPrice">1250.00 G</span> <i class="fa-regular fa-copy" onclick="showToast('Копирование', 'Цена скопирована!', 'info')" style="cursor:pointer; color:var(--text-muted); margin-left:auto;"></i></div>
-            
-            <div class="market-item-target">
-                <img src="USP_G.png" alt="USP Ghosts">
-                <div class="market-item-info"><h5>USP "Ghosts"</h5><span>НЕ СТАТТРЕК</span></div>
-            </div>
+            <div class="market-item-target"><img src="USP_G.png" alt="USP Ghosts"><div class="market-item-info"><h5>USP "Ghosts"</h5><span>НЕ СТАТТРЕК</span></div></div>
             <div class="f-warning-text" style="color:var(--text-muted);"><i class="fa-solid fa-circle-info" style="color:var(--text-muted);"></i> Выстави скин на рынок Standoff2 ровно за эту цену, в точности до копеек</div>
-
             <div class="f-input-group" style="margin-top:20px;">
                 <label class="f-input-label">Укажи Pattern скина:</label>
                 <div class="f-input-wrapper">
@@ -340,8 +334,6 @@
                     <i class="fa-solid fa-xmark clear-icon" onclick="document.getElementById('pwPatternInput').value=''"></i>
                 </div>
             </div>
-            <div class="f-warning-text" style="color:var(--text-muted);"><i class="fa-solid fa-circle-exclamation"></i> Введи 3 уникальные цифры скина от 000 до 999</div>
-
             <button class="btn-submit" id="pwBtnAction" onclick="executePurchaseWithdraw()">Списать ₸ и получить голду</button>
             <div class="f-warning-text" style="justify-content:center; color:var(--text-muted);"><i class="fa-solid fa-clock"></i> Средства придут в игру в течение 24 часов</div>
         </div>
@@ -434,17 +426,38 @@
                 const response = await fetch(`${BACKEND_URL}/api/notifications`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
                 const result = await response.json();
                 
-                if (result.success && result.notifications.length > 0) {
-                    const idsToMark = [];
-                    result.notifications.forEach(n => {
-                        idsToMark.push(n.id);
-                        if (n.status === 'completed') {
-                            showToast('Заказ выполнен', `Ваш заказ на ${n.amount} G успешно выведен в игру!`, 'success');
-                        } else if (n.status === 'cancelled') {
-                            showToast('Заказ отменен', `Вывод ${n.amount} G отменен. ${n.spent_rubles} ₸ возвращены на баланс. Уточните причину в поддержке.`, 'error');
-                        }
-                    });
-                    await fetch(`${BACKEND_URL}/api/notifications/read`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ ids: idsToMark }) });
+                if (result.success) {
+                    const wIds = [];
+                    const tIds = [];
+                    
+                    if (result.notifications.withdrawals) {
+                        result.notifications.withdrawals.forEach(n => {
+                            wIds.push(n.id);
+                            if (n.status === 'completed') showToast('Заказ выполнен', `Ваш заказ на ${n.amount} G успешно выведен в игру!`, 'success');
+                            else if (n.status === 'cancelled') showToast('Заказ отменен', `Вывод ${n.amount} G отменен. ${n.spent_rubles} ₸ возвращены на баланс.`, 'error');
+                        });
+                    }
+
+                    if (result.notifications.topups) {
+                        result.notifications.topups.forEach(n => {
+                            tIds.push(n.id);
+                            if (n.status === 'approved') {
+                                showToast('Баланс пополнен', `Платеж ${n.amount} ₸ успешно зачислен!`, 'success');
+                                currentDbUser.balance = Number(currentDbUser.balance) + Number(n.amount);
+                                updateUI();
+                            } else if (n.status === 'rejected') {
+                                showToast('Платеж отклонен', `Пополнение на ${n.amount} ₸ не найдено. Напишите в поддержку.`, 'error');
+                            }
+                        });
+                    }
+                    
+                    if (wIds.length > 0 || tIds.length > 0) {
+                        await fetch(`${BACKEND_URL}/api/notifications/read`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                            body: JSON.stringify({ withdrawalIds: wIds, topupIds: tIds })
+                        });
+                    }
                 }
             } catch(e) {}
         }
@@ -474,7 +487,6 @@
             }
         }
 
-        // ИСПРАВЛЕНИЕ: Снял сжатие. Картинка грузится в оригинальном качестве!
         function previewGameAvatar(event) {
             const file = event.target.files[0];
             if(file) {
@@ -523,6 +535,44 @@
             document.getElementById('pwBtnAction').disabled = false;
         }
 
+        // === ОПЛАТА KASPI ===
+        function copyCard() {
+            navigator.clipboard.writeText("4400430281234671");
+            showToast("Копирование", "Номер карты скопирован!", "info");
+        }
+
+        function goToTopupStep2() {
+            const amount = parseFloat(document.getElementById('topupAmountInput').value);
+            if (!amount || amount < 100) return showToast('Ошибка', 'Минимальная сумма 100 ₸', 'error');
+            document.getElementById('topupAmountDisplay').innerText = amount + ' ₸';
+            document.getElementById('topupStep1').style.display = 'none';
+            document.getElementById('topupStep2').style.display = 'block';
+        }
+
+        function resetTopupModal() {
+            document.getElementById('topupStep1').style.display = 'block';
+            document.getElementById('topupStep2').style.display = 'none';
+        }
+
+        async function processTopup() {
+            const amount = parseFloat(document.getElementById('topupAmountInput').value);
+            closeModal('topupModal');
+            resetTopupModal();
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/finance/topup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                    body: JSON.stringify({ amount })
+                });
+                const result = await response.json();
+                if(result.success) showToast('Заявка отправлена', 'Администратор проверяет платеж. Ожидайте...', 'success');
+                else showToast('Ошибка', result.error, 'error');
+            } catch(e) {
+                showToast('Ошибка', 'Сбой связи с сервером', 'error');
+            }
+        }
+
         async function executePurchaseWithdraw() {
             const gameId = document.getElementById('pwIdInput').value;
             const pattern = document.getElementById('pwPatternInput').value;
@@ -558,20 +608,6 @@
                 showToast('Ошибка', 'Сбой соединения. Деньги НЕ списаны.', 'error');
                 document.getElementById('pwBtnAction').disabled = false; document.getElementById('pwBtnAction').innerText = `Списать ${pendingPurchaseItem.price} ₸`;
             }
-        }
-
-        async function processTopup() {
-            const amount = parseFloat(document.getElementById('topupAmountInput').value);
-            if (!amount || amount < 100) { showToast('Ошибка', 'Минимальная сумма пополнения 100 ₸', 'error'); return; }
-            closeModal('topupModal'); showToast('Оплата', `Переход на платежный шлюз для оплаты ${amount} ₸...`, 'info');
-            
-            setTimeout(async () => {
-                currentDbUser.balance += amount;
-                currentDbUser.weekly_deposit += amount; 
-                updateUI();
-                await supabaseClient.from('users').update({ balance: currentDbUser.balance, weekly_deposit: currentDbUser.weekly_deposit }).eq('email', currentDbUser.email);
-                showToast('Баланс пополнен', `Баланс успешно пополнен на ${amount} ₸!`, 'success');
-            }, 1000);
         }
 
         async function openHistoryModal() {
@@ -674,8 +710,20 @@
 
         function toggleDropdown() { document.getElementById('profileModule').classList.toggle('active'); }
         document.addEventListener('click', (e) => { const module = document.getElementById('profileModule'); if (module.classList.contains('active') && !module.contains(e.target)) module.classList.remove('active'); });
-        function openModal(id) { document.getElementById('profileDropdown').classList.remove('active'); const modal = document.getElementById(id); modal.style.display = 'flex'; setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); }
-        function closeModal(id) { const modal = document.getElementById(id); modal.style.opacity = '0'; modal.querySelector('.modal-box').style.transform = 'scale(0.9)'; setTimeout(() => { modal.style.display = 'none'; }, 300); }
+        
+        function openModal(id) { 
+            document.getElementById('profileDropdown').classList.remove('active'); 
+            if (id === 'topupModal') resetTopupModal();
+            const modal = document.getElementById(id); 
+            modal.style.display = 'flex'; 
+            setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
+        }
+        function closeModal(id) { 
+            const modal = document.getElementById(id); 
+            modal.style.opacity = '0'; 
+            modal.querySelector('.modal-box').style.transform = 'scale(0.9)'; 
+            setTimeout(() => { modal.style.display = 'none'; }, 300); 
+        }
     </script>
 </body>
 </html>
