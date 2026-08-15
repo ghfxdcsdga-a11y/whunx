@@ -33,7 +33,6 @@
         body { background: linear-gradient(135deg, #0a0c14 0%, #131622 50%, #0a0c14 100%); background-size: 200% 200%; animation: gradientBG 15s ease infinite; color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        /* Анимированные неоновые сферы на фоне */
         .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; pointer-events: none; opacity: 0.4; animation: floatOrb 20s infinite ease-in-out alternate; }
         .orb-1 { width: 400px; height: 400px; background: rgba(59, 130, 246, 0.5); top: -10%; left: -10%; }
         .orb-2 { width: 500px; height: 500px; background: rgba(244, 199, 69, 0.2); bottom: -20%; right: -10%; animation-delay: -5s; }
@@ -46,7 +45,7 @@
         input[type="number"] { -moz-appearance: textfield; }
 
         /* =========================================
-           CUSTOM TOAST ALERTS (Уведомления)
+           CUSTOM TOAST ALERTS
         ========================================= */
         #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; pointer-events: none; }
         .toast { background: rgba(16, 18, 26, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 15px 20px; border-radius: 12px; color: #fff; box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,255,255,0.05); display: flex; align-items: center; gap: 15px; min-width: 320px; animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; pointer-events: all; }
@@ -84,7 +83,6 @@
         .product-img-wrapper { position: relative; width: 140px; height: 140px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; z-index: 1; }
         .product-img-wrapper::before { content: ''; position: absolute; width: 90px; height: 90px; background: var(--accent-gold); filter: blur(35px); opacity: 0.4; border-radius: 50%; animation: pulseGlow 3s infinite alternate; z-index: -1; transition: 0.4s; }
         @keyframes pulseGlow { 0% { transform: scale(0.8); opacity: 0.2; } 100% { transform: scale(1.3); opacity: 0.6; } }
-        /* mix-blend-mode оставлен для эффекта прозрачности, даже если картинки стали png */
         .product-img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); filter: contrast(1.2) saturate(1.1); }
         .product-card:hover .product-img-wrapper::before { background: #fff; opacity: 0.8; filter: blur(40px); transform: scale(1.5); }
         .product-card:hover .product-img { transform: scale(1.2) translateY(-10px); filter: contrast(1.3) saturate(1.2) drop-shadow(0 15px 15px rgba(244,199,69,0.3)); }
@@ -140,10 +138,8 @@
     <div class="bg-orb orb-2"></div>
     <div class="bg-orb orb-3"></div>
 
-    <!-- УВЕДОМЛЕНИЯ -->
     <div id="toastContainer"></div>
 
-    <!-- ШАПКА -->
     <header>
         <div class="logo">WHUNX<span>.SHOP</span></div>
         <div class="header-right">
@@ -167,7 +163,6 @@
         </div>
     </header>
 
-    <!-- ГЛАВНАЯ: МАГАЗИН -->
     <main>
         <div class="shop-header">
             <h1>Покупка игровой валюты</h1>
@@ -176,7 +171,6 @@
         <div class="products-grid" id="productsGrid"></div>
     </main>
 
-    <!-- ФУТЕР И КНОПКИ -->
     <footer>
         <button class="btn-donate" onclick="showToast('Донат', 'Спасибо за поддержку! Реквизиты скоро будут добавлены.', 'info')">
             <i class="fa-solid fa-heart"></i> Пожертвовать проекту
@@ -192,16 +186,14 @@
             <h4><i class="fa-solid fa-headset" style="color:var(--accent-blue);"></i> Поддержка онлайн</h4>
             <i class="fa-solid fa-xmark" style="cursor:pointer; color:var(--text-muted);" onclick="toggleChat()"></i>
         </div>
-        <div class="chat-messages" id="chatMessages">
-            <!-- История подгрузится сюда -->
-        </div>
+        <div class="chat-messages" id="chatMessages"></div>
         <div class="chat-input-area">
             <input type="text" id="chatInput" class="chat-input" placeholder="Введите сообщение..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
             <button class="chat-send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
 
-    <!-- МОДАЛКА: ПОПОЛНЕНИЕ БАЛАНСА -->
+    <!-- МОДАЛКИ (Пополнение, История, Настройки) -->
     <div class="modal-overlay" id="topupModal">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('topupModal')"><i class="fa-solid fa-xmark"></i></button>
@@ -217,7 +209,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА: ИСТОРИЯ ПОКУПОК -->
     <div class="modal-overlay" id="historyModal">
         <div class="modal-box" style="max-width: 800px;">
             <button class="modal-close" onclick="closeModal('historyModal')"><i class="fa-solid fa-xmark"></i></button>
@@ -231,7 +222,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА: НАСТРОЙКИ -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal-box" style="max-width: 550px;">
             <button class="modal-close" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
@@ -280,8 +270,8 @@
 
             <label class="f-input-label" style="margin-bottom:10px;">Загрузите ваш аватар в игре:</label>
             <div class="upload-area" style="background:transparent; border-color:transparent; padding:0; text-align:left; display:flex; align-items:center; gap:15px; margin-bottom:15px; cursor:default; box-shadow:none;">
-                <img id="gameAvatarPreview" src="https://via.placeholder.com/80/1b1d29/ffffff?text=?" style="width:50px; height:50px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover;">
-                <span style="color:var(--accent-blue); font-size:13px; cursor:pointer;" onclick="document.getElementById('gameAvatarPreview').src='https://via.placeholder.com/80/1b1d29/ffffff?text=?'; document.getElementById('gameAvatarInput').value=''; localStorage.removeItem('gameAvatarTemp');">Удалить аватар <i class="fa-solid fa-xmark"></i></span>
+                <img id="gameAvatarPreview" src="" style="width:50px; height:50px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); object-fit:cover;">
+                <span style="color:var(--accent-blue); font-size:13px; cursor:pointer;" onclick="resetGameAvatar()">Удалить аватар <i class="fa-solid fa-xmark"></i></span>
             </div>
             <input type="file" id="gameAvatarInput" style="display:none;" accept="image/*" onchange="previewGameAvatar(event)">
             <div class="upload-area" id="gameAvatarBtn" onclick="document.getElementById('gameAvatarInput').click()">Загрузить файл <i class="fa-solid fa-check"></i></div>
@@ -311,9 +301,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT -->
     <script>
-        // === ВАЖНО: ВСТАВЬ СЮДА СВОЙ URL БЭКЕНДА ===
         const BACKEND_URL = 'https://whunx-backend.onrender.com';
 
         const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
@@ -323,6 +311,10 @@
         let currentDbUser = null; 
         let currentSessionToken = null;
         let pendingPurchaseItem = null;
+        let chatInterval = null;
+
+        // Встроенная SVG-заглушка с серым вопросительным знаком (точь-в-точь как на твоем скриншоте)
+        const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
         const shopItems = [
             { id: 1, gold: 100, price: 490, img: '100.png' },
@@ -345,11 +337,16 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             renderShop();
+            
+            // Восстановление аватара из памяти или установка дефолтного вопросика
             const savedGameAvatar = localStorage.getItem('gameAvatarTemp');
             if (savedGameAvatar) {
                 document.getElementById('gameAvatarPreview').src = savedGameAvatar;
                 document.getElementById('gameAvatarBtn').innerHTML = `Файл загружен <i class="fa-solid fa-check-double" style="color:var(--accent-green);"></i>`;
+            } else {
+                document.getElementById('gameAvatarPreview').src = DEFAULT_GAME_AVATAR;
             }
+
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) handleUserLogin(session);
 
@@ -358,6 +355,13 @@
                 else if (event === 'SIGNED_OUT') handleUserLogout();
             });
         });
+
+        function resetGameAvatar() {
+            document.getElementById('gameAvatarPreview').src = DEFAULT_GAME_AVATAR;
+            document.getElementById('gameAvatarInput').value = '';
+            document.getElementById('gameAvatarBtn').innerHTML = `Загрузить файл <i class="fa-solid fa-check"></i>`;
+            localStorage.removeItem('gameAvatarTemp');
+        }
 
         async function loginWithGoogle() { await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } }); }
         async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); }
@@ -405,15 +409,29 @@
             }
         }
 
+        // === ВШИТОЕ АВТО-СЖАТИЕ АВАТАРКИ ДЛЯ ИЗБЕЖАНИЯ ОШИБКИ 413 ===
         function previewGameAvatar(event) {
             const file = event.target.files[0];
             if(file) {
                 const reader = new FileReader();
                 reader.onload = function(e) { 
-                    const b64 = e.target.result;
-                    document.getElementById('gameAvatarPreview').src = b64; 
-                    document.getElementById('gameAvatarBtn').innerHTML = `Файл загружен <i class="fa-solid fa-check-double" style="color:var(--accent-green);"></i>`;
-                    localStorage.setItem('gameAvatarTemp', b64);
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const MAX_SIZE = 150; // Сжимаем до 150px
+                        let width = img.width; let height = img.height;
+                        if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
+                        else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
+                        canvas.width = width; canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const b64 = canvas.toDataURL('image/jpeg', 0.8); // Ужали размер до микроскопического
+
+                        document.getElementById('gameAvatarPreview').src = b64; 
+                        document.getElementById('gameAvatarBtn').innerHTML = `Файл загружен <i class="fa-solid fa-check-double" style="color:var(--accent-green);"></i>`;
+                        localStorage.setItem('gameAvatarTemp', b64);
+                    }
+                    img.src = e.target.result;
                 }
                 reader.readAsDataURL(file);
             }
@@ -456,8 +474,10 @@
         async function executePurchaseWithdraw() {
             const gameId = document.getElementById('pwIdInput').value;
             const pattern = document.getElementById('pwPatternInput').value;
-            const gameAvatar = localStorage.getItem('gameAvatarTemp') || '';
             const targetSkin = document.getElementById('pwListingPrice').innerText;
+            
+            // Если аватарка не установлена, передаем 'default', чтобы бэкенд понял
+            const gameAvatar = localStorage.getItem('gameAvatarTemp') || 'default';
             
             if(!gameId || !pattern) { showToast('Ошибка', 'Заполните Игровой ID и Паттерн скина!', 'error'); return; }
             if(!currentSessionToken) return;
@@ -477,16 +497,16 @@
                     currentDbUser.balance = result.balance; updateUI();
                     closeModal('purchaseWithdrawModal');
                     showToast('Успех', `Заказ создан! На ваш аккаунт скоро будет зачислено ${pendingPurchaseItem.gold} G.`, 'success');
+                    
                     document.getElementById('pwIdInput').value = ''; document.getElementById('pwPatternInput').value = '';
-                    document.getElementById('gameAvatarPreview').src = 'https://via.placeholder.com/80/1b1d29/ffffff?text=?';
-                    document.getElementById('gameAvatarBtn').innerHTML = `Загрузить файл <i class="fa-solid fa-check"></i>`;
-                    localStorage.removeItem('gameAvatarTemp'); pendingPurchaseItem = null;
+                    // МЫ БОЛЬШЕ НЕ ОЧИЩАЕМ АВАТАР ЗДЕСЬ! ОН СОХРАНЯЕТСЯ НАВСЕГДА.
+                    pendingPurchaseItem = null;
                 } else {
-                    showToast('Ошибка', result.error || 'Ошибка при покупке', 'error');
+                    showToast('Ошибка', result.error || 'Сбой. Деньги НЕ списаны.', 'error');
                     document.getElementById('pwBtnAction').disabled = false; document.getElementById('pwBtnAction').innerText = `Списать ${pendingPurchaseItem.price} ₸`;
                 }
             } catch (err) {
-                showToast('Ошибка', 'Не удалось связаться с сервером.', 'error');
+                showToast('Ошибка', 'Сбой соединения. Деньги НЕ списаны.', 'error');
                 document.getElementById('pwBtnAction').disabled = false; document.getElementById('pwBtnAction').innerText = `Списать ${pendingPurchaseItem.price} ₸`;
             }
         }
@@ -518,11 +538,6 @@
             });
         }
 
-        /* =========================================
-           ЛОГИКА ЧАТА С ИСТОРИЕЙ ИЗ БД
-        ========================================= */
-        let chatInterval = null;
-
         function toggleChat() { 
             const widget = document.getElementById('chatWidget');
             widget.classList.toggle('active'); 
@@ -540,15 +555,11 @@
             const chatBox = document.getElementById('chatMessages');
             
             try {
-                const response = await fetch(`${BACKEND_URL}/api/chat/history`, {
-                    headers: { 'Authorization': `Bearer ${currentSessionToken}` }
-                });
-                
+                const response = await fetch(`${BACKEND_URL}/api/chat/history`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
                 const result = await response.json();
 
                 if (result.success && result.messages) {
                     const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
-
                     chatBox.innerHTML = '<div class="msg admin">Привет! Если есть вопросы по пополнению или выводу — пиши сюда.</div>';
                     
                     result.messages.forEach(msg => {
@@ -558,13 +569,9 @@
                         chatBox.appendChild(div);
                     });
 
-                    if (isScrolledToBottom) {
-                        chatBox.scrollTop = chatBox.scrollHeight;
-                    }
+                    if (isScrolledToBottom) { chatBox.scrollTop = chatBox.scrollHeight; }
                 }
-            } catch (err) {
-                console.log('Не удалось загрузить историю чата');
-            }
+            } catch (err) { console.log('Ожидание чата...'); }
         }
 
         async function sendChatMessage() {
