@@ -6,8 +6,9 @@ const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// Подняли лимит до 50 мегабайт для качественных аватарок
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const PORT = process.env.PORT || 10000;
@@ -18,16 +19,13 @@ const PORT = process.env.PORT || 10000;
 const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 const ADMIN_CHAT_ID = 1210777759;
 
-// Команда /checkbal
 bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
   if (msg.chat.id !== ADMIN_CHAT_ID) return;
   const secretId = match[1].trim();
 
-  // Ищем юзера по ID
   const { data: user } = await supabase.from('users').select('*').eq('secret_id', secretId).single();
   if (!user) return bot.sendMessage(ADMIN_CHAT_ID, '❌ Пользователь с таким ID не найден.');
 
-  // Достаем его транзакции
   const { data: txs } = await supabase.from('transactions').select('*').eq('user_email', user.email).order('created_at', { ascending: true });
 
   let response = `👤 **Пользователь:** ${user.username}\n📧 **Почта:** ${user.email}\n💰 **Текущий баланс:** ${user.balance} ₸\n\n**📊 История изменений баланса:**\n`;
@@ -40,7 +38,6 @@ bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
       const time = d.toLocaleTimeString('ru-RU', { timeZone: 'Asia/Almaty', hour: '2-digit', minute: '2-digit' });
       const date = d.toLocaleDateString('ru-RU', { timeZone: 'Asia/Almaty' });
       const sign = (tx.type === 'deposit' || tx.type === 'refund') ? '+' : '-';
-      
       response += `[${date} ${time}] ${sign}${tx.amount} ₸ (${tx.description})\n`;
     });
   }
@@ -48,7 +45,6 @@ bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
   bot.sendMessage(ADMIN_CHAT_ID, response, { parse_mode: 'Markdown' });
 });
 
-// Ответ в чат техподдержки
 bot.on('message', async (msg) => {
   if (msg.chat.id === ADMIN_CHAT_ID && msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes('Почта:')) {
     const replyText = msg.text;
@@ -62,7 +58,6 @@ bot.on('message', async (msg) => {
   }
 });
 
-// Кнопки "Выведено" / "Отменено"
 bot.on('callback_query', async (query) => {
   if (query.from.id !== ADMIN_CHAT_ID) {
     return bot.answerCallbackQuery(query.id, { text: 'Доступ запрещен!', show_alert: true });
@@ -77,26 +72,30 @@ bot.on('callback_query', async (query) => {
 
   const newStatus = action === 'complete' ? 'completed' : 'cancelled';
 
-  // Логика отмены и ВОЗВРАТА СРЕДСТВ
   if (action === 'cancel') {
     const { data: user } = await supabase.from('users').select('balance').eq('email', order.user_email).single();
     if (user) {
       const newBalance = Number(user.balance) + Number(order.spent_rubles);
       await supabase.from('users').update({ balance: newBalance }).eq('email', order.user_email);
-      // Записываем возврат в логи
-      await supabase.from('transactions').insert([{
-        user_email: order.user_email,
-        type: 'refund',
-        amount: order.spent_rubles,
-        description: `Возврат за отмену заказа #${order.id}`
-      }]);
+      await supabase.from('transactions').insert([{ user_email: order.user_email, type: 'refund', amount: order.spent_rubles, description: `Возврат за отмену заказа #${order.id}` }]);
     }
   }
 
   await supabase.from('withdrawals').update({ status: newStatus }).eq('id', orderId);
 
   const statusText = action === 'complete' ? '✅ ВЫВЕДЕНО' : '❌ ОТМЕНЕНО';
-  bot.editMessageText(`${query.message.text}\n\nСтатус заказа: ${statusText}`, { chat_id: query.message.chat.id, message_id: query.message.message_id });
+  const originalText = query.message.caption || query.message.text;
+  const newText = `${originalText}\n\nСтатус заказа: ${statusText}`;
+
+  // ИСПРАВЛЕНИЕ: Если это фото - меняем Caption, если текст - Text. И убираем кнопки!
+  const opts = { chat_id: query.message.chat.id, message_id: query.message.message_id, reply_markup: { inline_keyboard: [] } };
+  
+  if (query.message.photo) {
+    bot.editMessageCaption(newText, opts).catch(err => console.error(err));
+  } else {
+    bot.editMessageText(newText, opts).catch(err => console.error(err));
+  }
+
   bot.answerCallbackQuery(query.id, { text: 'Статус успешно обновлен!' });
 });
 
@@ -114,6 +113,11 @@ const authenticateUser = async (req, res, next) => {
   next();
 };
 
+const requireAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Доступ запрещен' });
+  next();
+};
+
 app.get('/api/me', authenticateUser, (req, res) => { res.json(req.user); });
 
 app.post('/api/me/update', authenticateUser, async (req, res) => {
@@ -123,13 +127,11 @@ app.post('/api/me/update', authenticateUser, async (req, res) => {
   res.json({ success: true, user: data });
 });
 
-// Получение отложенных уведомлений (Статусы заказов)
 app.get('/api/notifications', authenticateUser, async (req, res) => {
   const { data } = await supabase.from('withdrawals').select('*').eq('user_email', req.user.email).neq('status', 'pending').eq('is_notified', false);
   res.json({ success: true, notifications: data || [] });
 });
 
-// Пометка уведомлений как прочитанных
 app.post('/api/notifications/read', authenticateUser, async (req, res) => {
   const { ids } = req.body;
   if (ids && ids.length > 0) {
@@ -158,10 +160,7 @@ app.post('/api/finance/topup', authenticateUser, async (req, res) => {
 
   const newBalance = Number(req.user.balance) + amount;
   await supabase.from('users').update({ balance: newBalance, weekly_deposit: Number(req.user.weekly_deposit) + amount }).eq('id', req.user.id);
-  
-  // Логируем пополнение
   await supabase.from('transactions').insert([{ user_email: req.user.email, type: 'deposit', amount: amount, description: 'Пополнение баланса' }]);
-  
   res.json({ success: true, balance: newBalance });
 });
 
@@ -186,8 +185,6 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
 
   const newBalance = Number(req.user.balance) - Number(spentTenge);
   await supabase.from('users').update({ balance: newBalance }).eq('id', req.user.id);
-
-  // Логируем вывод
   await supabase.from('transactions').insert([{ user_email: req.user.email, type: 'withdrawal', amount: spentTenge, description: `Покупка ${withdrawAmount} G` }]);
 
   if (order) {
@@ -195,29 +192,42 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
     
     const tgOptions = {
       parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [[ { text: '✅ Выведено', callback_data: `complete_${order.id}` }, { text: '❌ Отменено', callback_data: `cancel_${order.id}` } ]]
-      }
+      reply_markup: { inline_keyboard: [[ { text: '✅ Выведено', callback_data: `complete_${order.id}` }, { text: '❌ Отменено', callback_data: `cancel_${order.id}` } ]] }
     };
 
-    // Если пользователь загрузил аватар, отправляем фото с подписью
     if (gameAvatar && gameAvatar !== 'default' && gameAvatar.startsWith('data:image')) {
       const base64Data = gameAvatar.replace(/^data:image\/\w+;base64,/, "");
       const imageBuffer = Buffer.from(base64Data, 'base64');
-      
       tgOptions.caption = tgMessage;
-      bot.sendPhoto(ADMIN_CHAT_ID, imageBuffer, tgOptions).catch(err => {
-          console.error('Ошибка отправки фото:', err);
-          // Если фото не отправилось, шлем хотя бы текст
-          bot.sendMessage(ADMIN_CHAT_ID, tgMessage, tgOptions);
-      });
+      bot.sendPhoto(ADMIN_CHAT_ID, imageBuffer, tgOptions).catch(() => bot.sendMessage(ADMIN_CHAT_ID, tgMessage, tgOptions));
     } else {
-      // Если аватара нет (остался дефолтный), шлем просто текст
       bot.sendMessage(ADMIN_CHAT_ID, tgMessage, tgOptions);
     }
   }
 
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
+});
+
+// ==========================================
+// СЕКРЕТНАЯ АДМИН-ПАНЕЛЬ
+// ==========================================
+app.post('/api/admin/items', authenticateUser, requireAdmin, async (req, res) => {
+  const { name, weapon, price, rarity, img } = req.body;
+  const { data, error } = await supabase.from('items').insert([{ name, weapon, price, rarity, image_url: img }]).select();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true, item: data[0] });
+});
+app.post('/api/admin/cases', authenticateUser, requireAdmin, async (req, res) => {
+  const { name, price, img } = req.body;
+  const { data, error } = await supabase.from('cases').insert([{ name, price, image_url: img }]).select();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true, case: data[0] });
+});
+app.post('/api/admin/case-items', authenticateUser, requireAdmin, async (req, res) => {
+  const { case_id, item_id, regular_chance, stattrack_chance } = req.body;
+  const { data, error } = await supabase.from('case_items').insert([{ case_id, item_id, regular_chance, stattrack_chance }]);
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true, message: 'Скин успешно добавлен в кейс' });
 });
 
 app.listen(PORT, () => console.log(`Backend Server Live on port ${PORT}`));
