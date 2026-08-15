@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Whunx Shop - Магазин игровой валюты</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -91,7 +91,7 @@
         .btn-buy { width: 100%; background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.2); padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 800; transition: 0.2s; position: relative; z-index: 2; } .product-card:hover .btn-buy { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); box-shadow: 0 0 20px rgba(59,130,246,0.4); }
 
         /* =========================================
-           FOOTER, CHAT
+           FOOTER & CHAT
         ========================================= */
         footer { background: rgba(16, 18, 26, 0.4); backdrop-filter: blur(20px); padding: 40px 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto; z-index: 10; position: relative; display: flex; justify-content: center; gap: 15px; }
         .btn-donate { background: rgba(244, 199, 69, 0.05); color: var(--accent-gold); border: 1px solid rgba(244, 199, 69, 0.3); padding: 12px 30px; border-radius: 8px; font-size: 14px; font-weight: 800; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; } .btn-donate:hover { background: rgba(244, 199, 69, 0.2); box-shadow: 0 0 20px rgba(244,199,69,0.2); transform: translateY(-2px); }
@@ -108,7 +108,7 @@
            GLASSMORPHISM MODALS
         ========================================= */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5, 6, 8, 0.85); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: 0.3s; padding: 20px; overflow-y: auto; }
-        .modal-box { background: rgba(20, 22, 30, 0.5); backdrop-filter: blur(35px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px; width: 100%; max-width: 500px; transform: scale(0.9); transition: 0.3s; position: relative; margin: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,255,255,0.03); }
+        .modal-box { background: rgba(20, 22, 30, 0.5); backdrop-filter: blur(35px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px; width: 100%; max-width: 500px; transform: scale(0.9); transition: 0.3s; position: relative; margin: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,255,255,0.03); max-height: 90vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 20px; right: 20px; background: transparent; color: var(--text-muted); font-size: 24px; transition: 0.2s; z-index: 10; } .modal-close:hover { color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); transform: rotate(90deg); }
         .modal-title { font-size: 24px; font-weight: 900; margin-bottom: 25px; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
         
@@ -125,23 +125,48 @@
         .tg-info { display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 700; } .tg-info i { font-size: 24px; color: #24A1DE; text-shadow: 0 0 15px rgba(36,161,222,0.5); }
 
         /* =========================================
-           ОБНОВЛЕННАЯ ТАБЛИЦА ИСТОРИИ (ПО СКРИНШОТУ)
+           ОБНОВЛЕННАЯ ТАБЛИЦА ИСТОРИИ
         ========================================= */
-        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 600px; }
         .history-table th { color: var(--text-muted); font-weight: 700; text-align: left; padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
         .history-table td { padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.02); color: #fff; font-weight: 600; font-size: 14px; vertical-align: middle; }
-        
         .h-skin-badge { display: inline-flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.04); padding: 8px 20px 8px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .h-skin-badge img { height: 28px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
-        .h-skin-badge span { font-weight: 800; font-size: 14px; }
-        
+        .h-skin-badge span { font-weight: 800; font-size: 14px; white-space: nowrap; }
         .h-pattern { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; }
         .h-pattern i { font-size: 16px; background: linear-gradient(135deg, #f59e0b, #ef4444, #8b5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
         .h-status { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; min-width: 120px; }
         .h-status.pending { background: rgba(244, 199, 69, 0.08); color: var(--accent-gold); }
         .h-status.completed { background: rgba(16, 185, 129, 0.08); color: var(--accent-green); }
         .h-status.cancelled { background: rgba(239, 68, 68, 0.08); color: var(--accent-red); }
+
+        /* =========================================
+           MOBILE RESPONSIVENESS (Для телефонов)
+        ========================================= */
+        @media (max-width: 768px) {
+            header { padding: 0 20px; height: 70px; }
+            .logo { font-size: 20px; }
+            .login-btn { height: 40px; padding: 0 15px; font-size: 13px; }
+            .balance-amount { padding: 0 10px; font-size: 14px; }
+            .balance-add-btn { width: 35px; height: 35px; }
+            main { padding: 30px 15px; }
+            .shop-header h1 { font-size: 26px; }
+            
+            /* Сетка в 2 колонки на телефоне */
+            .products-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .product-card { padding: 20px 15px; }
+            .product-img-wrapper { width: 90px; height: 90px; margin-bottom: 15px; }
+            .product-img-wrapper::before { width: 60px; height: 60px; }
+            .product-gold { font-size: 18px; }
+            .product-price { font-size: 14px; margin-bottom: 15px; }
+            .btn-buy { padding: 10px; font-size: 14px; }
+
+            .modal-box { padding: 25px 20px; margin: 10px; width: calc(100% - 20px); }
+            .modal-title { font-size: 20px; margin-bottom: 20px; }
+            #chatWidget { width: calc(100% - 40px); bottom: 20px; right: 20px; border-radius: 16px; }
+            footer { flex-direction: column; align-items: stretch; gap: 10px; padding: 30px 20px; }
+            .btn-donate { justify-content: center; width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -351,7 +376,7 @@
             let iconClass = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info');
             toast.innerHTML = `<i class="fa-solid ${iconClass} toast-icon"></i><div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`;
             container.appendChild(toast);
-            setTimeout(() => { toast.style.animation = 'slideOutRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'; setTimeout(() => toast.remove(), 400); }, 7000); // 7 секунд для важных уведомлений
+            setTimeout(() => { toast.style.animation = 'slideOutRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'; setTimeout(() => toast.remove(), 400); }, 7000);
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -400,8 +425,6 @@
             }
             currentDbUser = dbUser;
             updateUI();
-            
-            // Проверка непрочитанных уведомлений об отмене/выводе
             checkNotifications();
         }
 
@@ -413,7 +436,6 @@
                 
                 if (result.success && result.notifications.length > 0) {
                     const idsToMark = [];
-                    
                     result.notifications.forEach(n => {
                         idsToMark.push(n.id);
                         if (n.status === 'completed') {
@@ -422,13 +444,7 @@
                             showToast('Заказ отменен', `Вывод ${n.amount} G отменен. ${n.spent_rubles} ₸ возвращены на баланс. Уточните причину в поддержке.`, 'error');
                         }
                     });
-                    
-                    // Помечаем как прочитанные
-                    await fetch(`${BACKEND_URL}/api/notifications/read`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
-                        body: JSON.stringify({ ids: idsToMark })
-                    });
+                    await fetch(`${BACKEND_URL}/api/notifications/read`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ ids: idsToMark }) });
                 }
             } catch(e) {}
         }
@@ -458,28 +474,16 @@
             }
         }
 
+        // ИСПРАВЛЕНИЕ: Снял сжатие. Картинка грузится в оригинальном качестве!
         function previewGameAvatar(event) {
             const file = event.target.files[0];
             if(file) {
                 const reader = new FileReader();
                 reader.onload = function(e) { 
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        const MAX_SIZE = 150; 
-                        let width = img.width; let height = img.height;
-                        if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
-                        else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
-                        canvas.width = width; canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        const b64 = canvas.toDataURL('image/jpeg', 0.8);
-
-                        document.getElementById('gameAvatarPreview').src = b64; 
-                        document.getElementById('gameAvatarBtn').innerHTML = `Файл загружен <i class="fa-solid fa-check-double" style="color:var(--accent-green);"></i>`;
-                        localStorage.setItem('gameAvatarTemp', b64);
-                    }
-                    img.src = e.target.result;
+                    const b64 = e.target.result;
+                    document.getElementById('gameAvatarPreview').src = b64; 
+                    document.getElementById('gameAvatarBtn').innerHTML = `Файл загружен <i class="fa-solid fa-check-double" style="color:var(--accent-green);"></i>`;
+                    localStorage.setItem('gameAvatarTemp', b64);
                 }
                 reader.readAsDataURL(file);
             }
