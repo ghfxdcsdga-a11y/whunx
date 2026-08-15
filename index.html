@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Подключаем нативный скрипт Google -->
     <script src="https://accounts.google.com/gsi/client" async></script>
 
     <style>
@@ -62,11 +61,17 @@
         @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
 
         /* =========================================
-           HEADER
+           HEADER & GOOGLE LOGIN TRICK
         ========================================= */
         header { height: 80px; background: rgba(16, 18, 26, 0.4); backdrop-filter: blur(30px); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 50px; position: sticky; top: 0; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .logo { font-size: 24px; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; text-shadow: 0 0 20px rgba(139, 92, 246, 0.2); } .logo span { color: var(--accent-purple); }
         .header-right { display: flex; align-items: center; gap: 20px; }
+        
+        .custom-google-wrapper { position: relative; display: inline-block; cursor: pointer; border-radius: 12px; }
+        .login-btn { background: rgba(255,255,255,0.9); color: #000; height: 48px; padding: 0 25px; border-radius: 12px; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; transition: var(--transition); box-shadow: 0 0 20px rgba(255,255,255,0.1); pointer-events: none; } 
+        .custom-google-wrapper:hover .login-btn { background: #fff; transform: translateY(-2px); box-shadow: 0 5px 25px rgba(255,255,255,0.3); }
+        .invisible-google-btn { position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; opacity: 0.01; z-index: 10; overflow: hidden; }
+
         .balance-module { display: none; align-items: center; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
         .balance-amount { padding: 0 15px; font-size: 16px; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); } .balance-amount span { color: var(--text-muted); font-size: 14px; margin-left: 4px; }
         .balance-add-btn { width: 40px; height: 40px; background: var(--accent-purple); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; transition: var(--transition); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); } .balance-add-btn:hover { background: var(--accent-purple-hover); transform: scale(1.05); box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); }
@@ -186,9 +191,12 @@
         <div class="logo">WHUNX<span>.SHOP</span></div>
         <div class="header-right">
             
-            <!-- Обертка для нативной кнопки Google -->
-            <div id="googleLoginWrapper" style="display:flex; align-items:center;">
-                <div id="googleLoginBtn"></div>
+            <!-- Обертка для хитрого трюка с кнопкой -->
+            <div id="googleLoginWrapper" class="custom-google-wrapper">
+                <button class="login-btn">
+                    <i class="fa-brands fa-google" style="color:#DB4437;"></i> Войти
+                </button>
+                <div id="googleLoginBtn" class="invisible-google-btn"></div>
             </div>
 
             <div class="balance-module" id="balanceModule">
@@ -354,9 +362,6 @@
     </div>
 
     <script>
-        // =========================================
-        // ВАЖНО: ВСТАВЬ СЮДА СВОЙ GOOGLE CLIENT ID
-        // =========================================
         const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
 
         const BACKEND_URL = 'https://whunx-backend.onrender.com';
@@ -405,14 +410,13 @@
             if (session) {
                 handleUserLogin(session);
             } else {
-                // ИНИЦИАЛИЗАЦИЯ НАТИВНОГО ВХОДА GOOGLE
                 google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
                     callback: handleGoogleLogin
                 });
                 google.accounts.id.renderButton(
                     document.getElementById("googleLoginBtn"),
-                    { theme: "filled_black", size: "large", shape: "pill", type: "standard" }
+                    { theme: "outline", size: "large", type: "standard", width: 200 }
                 );
             }
 
@@ -422,7 +426,6 @@
             });
         });
 
-        // НОВЫЙ ОБРАБОТЧИК ЛОГИНА ЧЕРЕЗ GOOGLE БЕЗ РЕДИРЕКТОВ
         async function handleGoogleLogin(response) {
             const id_token = response.credential;
             const { data, error } = await supabaseClient.auth.signInWithIdToken({
@@ -444,7 +447,6 @@
             currentSessionToken = session.access_token;
             const userAuth = session.user;
             
-            // Скрываем нативную кнопку гугла
             document.getElementById('googleLoginWrapper').style.display = 'none';
             document.getElementById('balanceModule').style.display = 'flex';
             document.getElementById('profileModule').style.display = 'block';
