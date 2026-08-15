@@ -3,6 +3,7 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
 const TelegramBot = require('node-telegram-bot-api');
+const https = require('https'); // Встроенный модуль Node.js для пинга
 
 const app = express();
 app.use(cors());
@@ -65,7 +66,6 @@ bot.on('callback_query', async (query) => {
   const action = query.data.split('_')[0]; 
   const orderId = query.data.split('_')[1];
 
-  // === ОБРАБОТКА ПОПОЛНЕНИЙ БАЛАНСА KASPI ===
   if (action === 'approvetopup' || action === 'rejecttopup') {
     const { data: request } = await supabase.from('topup_requests').select('*').eq('id', orderId).single();
     if (!request) return bot.answerCallbackQuery(query.id, { text: 'Заявка не найдена', show_alert: true });
@@ -88,7 +88,6 @@ bot.on('callback_query', async (query) => {
     return bot.answerCallbackQuery(query.id, { text: 'Заявка обработана!' });
   }
 
-  // === ОБРАБОТКА ВЫВОДА ГОЛДЫ ===
   const { data: order } = await supabase.from('withdrawals').select('*').eq('id', orderId).single();
   if (!order) return bot.answerCallbackQuery(query.id, { text: 'Заказ не найден', show_alert: true });
   if (order.status !== 'pending') return bot.answerCallbackQuery(query.id, { text: 'Заказ уже обработан!', show_alert: true });
@@ -111,11 +110,13 @@ bot.on('callback_query', async (query) => {
   const newText = `${originalText}\n\nСтатус заказа: ${statusText}`;
 
   const opts = { chat_id: query.message.chat.id, message_id: query.message.message_id, reply_markup: { inline_keyboard: [] } };
+  
   if (query.message.photo) {
     bot.editMessageCaption(newText, opts).catch(err => console.error(err));
   } else {
     bot.editMessageText(newText, opts).catch(err => console.error(err));
   }
+
   bot.answerCallbackQuery(query.id, { text: 'Статус обновлен!' });
 });
 
@@ -133,7 +134,13 @@ const authenticateUser = async (req, res, next) => {
   next();
 };
 
+const requireAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Доступ запрещен' });
+  next();
+};
+
 app.get('/api/me', authenticateUser, (req, res) => { res.json(req.user); });
+
 app.post('/api/me/update', authenticateUser, async (req, res) => {
   const { username, avatar_url } = req.body;
   const { data, error } = await supabase.from('users').update({ username, avatar_url }).eq('email', req.user.email).select().single();
@@ -141,7 +148,6 @@ app.post('/api/me/update', authenticateUser, async (req, res) => {
   res.json({ success: true, user: data });
 });
 
-// Уведомления теперь собирают и статусы голды, и статусы пополнения Kaspi
 app.get('/api/notifications', authenticateUser, async (req, res) => {
   const { data: withdrawals } = await supabase.from('withdrawals').select('*').eq('user_email', req.user.email).neq('status', 'pending').eq('is_notified', false);
   const { data: topups } = await supabase.from('topup_requests').select('*').eq('user_email', req.user.email).neq('status', 'pending').eq('is_notified', false);
@@ -172,7 +178,6 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
   res.json({ success: true });
 });
 
-// НОВАЯ ЛОГИКА ПОПОЛНЕНИЯ БАЛАНСА KASPI
 app.post('/api/finance/topup', authenticateUser, async (req, res) => {
   let { amount } = req.body;
   amount = Number(amount);
@@ -192,10 +197,7 @@ app.post('/api/finance/topup', authenticateUser, async (req, res) => {
     parse_mode: 'Markdown',
     reply_markup: {
       inline_keyboard: [
-        [ 
-          { text: '✅ Зачислить', callback_data: `approvetopup_${request.id}` }, 
-          { text: '❌ Не пришли', callback_data: `rejecttopup_${request.id}` } 
-        ]
+        [ { text: '✅ Зачислить', callback_data: `approvetopup_${request.id}` }, { text: '❌ Не пришли', callback_data: `rejecttopup_${request.id}` } ]
       ]
     }
   });
@@ -246,5 +248,40 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
 
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
 });
+
+// ==========================================
+// СЕКРЕТНАЯ АДМИН-ПАНЕЛЬ
+// ==========================================
+app.post('/api/admin/items', authenticateUser, requireAdmin, async (req, res) => {
+  const { name, weapon, price, rarity, img } = req.body;
+  const { data, error } = await supabase.from('items').insert([{ name, weapon, price, rarity, image_url: img }]).select();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true, item: data[0] });
+});
+app.post('/api/admin/cases', authenticateUser, requireAdmin, async (req, res) => {
+  const { name, price, img } = req.body;
+  const { data, error } = await supabase.from('cases').insert([{ name, price, image_url: img }]).select();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true, case: data[0] });
+});
+app.post('/api/admin/case-items', authenticateUser, requireAdmin, async (req, res) => {
+  const { case_id, item_id, regular_chance, stattrack_chance } = req.body;
+  const { data, error } = await supabase.from('case_items').insert([{ case_id, item_id, regular_chance, stattrack_chance }]);
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true, message: 'Скин успешно добавлен в кейс' });
+});
+
+// ==========================================
+// АВТОПИНГ (АНТИ-СОН RENDER)
+// ==========================================
+app.get('/api/ping', (req, res) => res.send('Сервер не спит!'));
+
+setInterval(() => {
+  https.get('https://whunx-backend.onrender.com/api/ping', (resp) => {
+    console.log(`[Auto-Ping] Статус: ${resp.statusCode}`);
+  }).on('error', (err) => {
+    console.error(`[Auto-Ping] Ошибка: ${err.message}`);
+  });
+}, 14 * 60 * 1000); // 14 минут
 
 app.listen(PORT, () => console.log(`Backend Server Live on port ${PORT}`));
