@@ -417,7 +417,26 @@
             }
             currentDbUser = dbUser;
             updateUI();
-            checkNotifications();
+            
+            // Запускаем фоновую синхронизацию каждые 5 секунд!
+            if (!window.syncInterval) {
+                window.syncInterval = setInterval(syncUserData, 5000);
+            }
+        }
+
+        // Эта функция тихонько обновляет баланс и ищет уведомления (без перезагрузки страницы)
+        async function syncUserData() {
+            if (!currentSessionToken || !currentDbUser) return;
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/me`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
+                const freshUser = await response.json();
+                
+                if (freshUser && !freshUser.error) {
+                    currentDbUser = freshUser;
+                    updateUI(); // Обновляет цифру баланса в шапке
+                }
+                checkNotifications(); // Проверяет, не появились ли уведомления
+            } catch(e) {}
         }
 
         async function checkNotifications() {
@@ -443,8 +462,7 @@
                             tIds.push(n.id);
                             if (n.status === 'approved') {
                                 showToast('Баланс пополнен', `Платеж ${n.amount} ₸ успешно зачислен!`, 'success');
-                                currentDbUser.balance = Number(currentDbUser.balance) + Number(n.amount);
-                                updateUI();
+                                // УБРАНА МАТЕМАТИКА. Баланс уже актуален из БД через syncUserData!
                             } else if (n.status === 'rejected') {
                                 showToast('Платеж отклонен', `Пополнение на ${n.amount} ₸ не найдено. Напишите в поддержку.`, 'error');
                             }
@@ -467,6 +485,10 @@
             document.getElementById('loginBtn').style.display = 'flex';
             document.getElementById('balanceModule').style.display = 'none';
             document.getElementById('profileModule').style.display = 'none';
+            if (window.syncInterval) {
+                clearInterval(window.syncInterval);
+                window.syncInterval = null;
+            }
         }
 
         function updateUI() {
@@ -535,7 +557,6 @@
             document.getElementById('pwBtnAction').disabled = false;
         }
 
-        // === ОПЛАТА KASPI ===
         function copyCard() {
             navigator.clipboard.writeText("4400430281234671");
             showToast("Копирование", "Номер карты скопирован!", "info");
