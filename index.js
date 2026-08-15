@@ -192,12 +192,29 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
 
   if (order) {
     const tgMessage = `🔥 **НОВЫЙ ЗАКАЗ ГОЛДЫ!**\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID на сайте:** \`${req.user.secret_id}\`\n💰 **Количество:** ${withdrawAmount} G\n💵 **Списано:** ${spentTenge} ₸\n🔫 **Выставить скин за:** ${targetSkin}\n🎮 **Игровой ID:** ${gameId}\n🎲 **Паттерн:** ${pattern}`;
-    bot.sendMessage(ADMIN_CHAT_ID, tgMessage, {
+    
+    const tgOptions = {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [[ { text: '✅ Выведено', callback_data: `complete_${order.id}` }, { text: '❌ Отменено', callback_data: `cancel_${order.id}` } ]]
       }
-    });
+    };
+
+    // Если пользователь загрузил аватар, отправляем фото с подписью
+    if (gameAvatar && gameAvatar !== 'default' && gameAvatar.startsWith('data:image')) {
+      const base64Data = gameAvatar.replace(/^data:image\/\w+;base64,/, "");
+      const imageBuffer = Buffer.from(base64Data, 'base64');
+      
+      tgOptions.caption = tgMessage;
+      bot.sendPhoto(ADMIN_CHAT_ID, imageBuffer, tgOptions).catch(err => {
+          console.error('Ошибка отправки фото:', err);
+          // Если фото не отправилось, шлем хотя бы текст
+          bot.sendMessage(ADMIN_CHAT_ID, tgMessage, tgOptions);
+      });
+    } else {
+      // Если аватара нет (остался дефолтный), шлем просто текст
+      bot.sendMessage(ADMIN_CHAT_ID, tgMessage, tgOptions);
+    }
   }
 
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
