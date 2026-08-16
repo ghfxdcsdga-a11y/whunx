@@ -28,8 +28,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Подключение Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Скрипт Гугла. Загружается параллельно, без багованных onload -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
         /* =========================================
@@ -376,9 +378,6 @@
         </div>
     </div>
 
-    <!-- Загружаем скрипт Гугла в самом конце, когда HTML уже готов -->
-    <script src="https://accounts.google.com/gsi/client?onload=initGoogle" async defer></script>
-    
     <script>
         const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
 
@@ -394,6 +393,7 @@
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
+        // === НОВЫЕ ЦЕНЫ ===
         const shopItems = [
             { id: 1, gold: 100, price: 590, img: '100.png' },
             { id: 2, gold: 500, price: 2490, img: '500.png' },
@@ -414,40 +414,39 @@
         }
 
         // ==========================================
-        // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ GOOGLE
+        // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ GOOGLE (УМНЫЙ ЖДУН)
         // ==========================================
-        window.initGoogle = function() {
+        function initGoogleAuth() {
             const btn = document.getElementById("googleLoginBtn");
             const fakeText = document.getElementById('fakeGoogleText');
-
-            // Если HTML-элементы еще не появились, ждем 50мс и пробуем снова (защита от багов)
-            if (!btn || !fakeText) {
-                setTimeout(window.initGoogle, 50);
-                return;
-            }
 
             // Если юзер уже залогинен, скрытая кнопка нам не нужна
             if (currentSessionToken) return;
 
-            try {
-                google.accounts.id.initialize({
-                    client_id: GOOGLE_CLIENT_ID,
-                    callback: handleGoogleLogin
-                });
-                
-                // Рендерим широкую кнопку, чтобы 100% перекрыть всю зону клика на телефоне
-                google.accounts.id.renderButton(
-                    btn,
-                    { theme: "outline", size: "large", type: "standard", width: 250 }
-                );
+            // Проверяем, загрузился ли скрипт гугла и HTML элементы
+            if (window.google && window.google.accounts && btn && fakeText) {
+                try {
+                    google.accounts.id.initialize({
+                        client_id: GOOGLE_CLIENT_ID,
+                        callback: handleGoogleLogin
+                    });
+                    
+                    // Рендерим широкую кнопку
+                    google.accounts.id.renderButton(
+                        btn,
+                        { theme: "outline", size: "large", type: "standard", width: 250 }
+                    );
 
-                // Всё загрузилось успешно, меняем текст!
-                fakeText.innerText = 'Войти';
-            } catch (e) {
-                console.error("Ошибка загрузки Google Auth:", e);
-                fakeText.innerText = 'Ошибка';
+                    fakeText.innerText = 'Войти';
+                } catch (e) {
+                    console.error("Ошибка загрузки Google Auth:", e);
+                    fakeText.innerText = 'Ошибка';
+                }
+            } else {
+                // Если Гугл еще не успел подгрузиться из интернета — ждем 100мс и пробуем снова
+                setTimeout(initGoogleAuth, 100);
             }
-        };
+        }
 
         window.addEventListener('DOMContentLoaded', async () => {
             renderShop();
@@ -463,6 +462,9 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 handleUserLogin(session);
+            } else {
+                // Запускаем нашего ждуна
+                initGoogleAuth();
             }
 
             supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -573,7 +575,7 @@
                 window.syncInterval = null;
             }
             // Перерисовываем кнопку гугла при выходе
-            initGoogle();
+            initGoogleAuth();
         }
 
         function updateUI() {
