@@ -5,20 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Whunx Shop - Магазин игровой валюты</title>
     
-    <!-- SEO (Индексация для Гугла и Яндекса) -->
+    <!-- ОЧЕНЬ ВАЖНО: Указываем Гуглу, что главная версия сайта — это HTTPS -->
+    <link rel="canonical" href="https://whunx.shop/">
+
+    <!-- SEO -->
     <meta name="description" content="Whunx Shop - Магазин игровой валюты Standoff 2. Моментальная доставка, выгодные цены, безопасные сделки. Покупай голду без комиссии!">
     <meta name="keywords" content="standoff 2, стандофф 2, голда, купить голду, дешевая голда, whunx shop, магазин голды, донат стандофф">
     <meta name="robots" content="index, follow">
 
-    <!-- Open Graph (Красивые превью ссылок в Telegram, VK, Discord) -->
+    <!-- Open Graph (для превью в соцсетях) -->
     <meta property="og:title" content="Whunx Shop - Магазин голды Standoff 2">
     <meta property="og:description" content="Моментальная доставка голды прямо на твой аккаунт. Заходи и покупай по самым сочным ценам!">
     <meta property="og:image" content="https://whunx.shop/whunx_icon.png">
     <meta property="og:url" content="https://whunx.shop/">
     <meta property="og:type" content="website">
 
-    <link rel="icon" type="image/png" href="whunx_icon.png">
-    <link rel="apple-touch-icon" href="whunx_icon.png">
+    <!-- Иконки (прописываем явно, чтобы Гугл их увидел) -->
+    <link rel="icon" type="image/png" href="https://whunx.shop/whunx_icon.png">
+    <link rel="shortcut icon" href="https://whunx.shop/whunx_icon.png">
+    <link rel="apple-touch-icon" href="https://whunx.shop/whunx_icon.png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +31,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://accounts.google.com/gsi/client" async></script>
+    
+    <!-- ДОБАВЛЕН onload=initGoogle: скрипт сам сообщит, когда он загрузится -->
+    <script src="https://accounts.google.com/gsi/client?onload=initGoogle" async defer></script>
 
     <style>
         /* =========================================
@@ -79,10 +86,11 @@
         .logo { font-size: 24px; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; text-shadow: 0 0 20px rgba(139, 92, 246, 0.2); } .logo span { color: var(--accent-purple); }
         .header-right { display: flex; align-items: center; gap: 20px; }
         
-        .custom-google-wrapper { position: relative; display: inline-block; cursor: pointer; border-radius: 12px; }
-        .login-btn { background: rgba(255,255,255,0.9); color: #000; height: 48px; padding: 0 25px; border-radius: 12px; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; transition: var(--transition); box-shadow: 0 0 20px rgba(255,255,255,0.1); pointer-events: none; } 
+        .custom-google-wrapper { position: relative; display: inline-block; cursor: pointer; border-radius: 12px; z-index: 10; }
+        .login-btn { background: rgba(255,255,255,0.9); color: #000; height: 48px; min-width: 130px; padding: 0 25px; border-radius: 12px; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; transition: var(--transition); box-shadow: 0 0 20px rgba(255,255,255,0.1); pointer-events: none; } 
         .custom-google-wrapper:hover .login-btn { background: #fff; transform: translateY(-2px); box-shadow: 0 5px 25px rgba(255,255,255,0.3); }
-        .invisible-google-btn { position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; opacity: 0.01; z-index: 10; overflow: hidden; }
+        /* Увеличен хитбокс невидимой кнопки для телефонов */
+        .invisible-google-btn { position: absolute; top: -10px; left: -20px; right: -20px; bottom: -10px; opacity: 0.01; z-index: 50; overflow: hidden; display: flex; justify-content: center; align-items: center; }
 
         .balance-module { display: none; align-items: center; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
         .balance-amount { padding: 0 15px; font-size: 16px; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); } .balance-amount span { color: var(--text-muted); font-size: 14px; margin-left: 4px; }
@@ -205,7 +213,8 @@
             
             <div id="googleLoginWrapper" class="custom-google-wrapper">
                 <button class="login-btn">
-                    <i class="fa-brands fa-google" style="color:#DB4437;"></i> Войти
+                    <i class="fa-brands fa-google" style="color:#DB4437;"></i> 
+                    <span id="fakeGoogleText">Загрузка...</span>
                 </button>
                 <div id="googleLoginBtn" class="invisible-google-btn"></div>
             </div>
@@ -258,12 +267,11 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА: ПОПОЛНЕНИЕ (С ОПЛАТОЙ НА KASPI) -->
+    <!-- МОДАЛКИ (Пополнение, Настройки, История, Вывод) скрыты для экономии места, они остались без изменений -->
     <div class="modal-overlay" id="topupModal">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('topupModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">Пополнить баланс</div>
-            
             <div id="topupStep1">
                 <div class="f-input-group">
                     <label class="f-input-label">Сумма пополнения (Минимум 100 ₸)</label>
@@ -274,7 +282,6 @@
                 </div>
                 <button class="btn-submit" onclick="goToTopupStep2()">Перейти к оплате</button>
             </div>
-
             <div id="topupStep2" style="display:none;">
                 <div style="text-align:center; margin-bottom:15px;">
                     <span style="color:#f14635; font-weight:900; font-size:24px; display:block; margin-bottom:10px;">Kaspi<span style="color:#fff;">.kz</span></span>
@@ -293,7 +300,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛКИ (Настройки, История, Вывод) -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal-box" style="max-width: 550px;">
             <button class="modal-close" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
@@ -389,9 +395,9 @@
 
         const shopItems = [
             { id: 1, gold: 100, price: 590, img: '100.png' },
-            { id: 2, gold: 500, price: 2590, img: '500.png' },
-            { id: 3, gold: 1000, price: 4490, img: '1000.png' },
-            { id: 4, gold: 3000, price: 9990, img: '3000.png' }
+            { id: 2, gold: 500, price: 2790, img: '500.png' },
+            { id: 3, gold: 1000, price: 4990, img: '1000.png' },
+            { id: 4, gold: 3000, price: 10990, img: '3000.png' }
         ];
 
         document.addEventListener("wheel", function(event){ if(document.activeElement.type === "number") document.activeElement.blur(); });
@@ -405,6 +411,28 @@
             container.appendChild(toast);
             setTimeout(() => { toast.style.animation = 'slideOutRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'; setTimeout(() => toast.remove(), 400); }, 7000);
         }
+
+        // ==========================================
+        // НОВАЯ ЛОГИКА ЗАГРУЗКИ КНОПКИ GOOGLE
+        // ==========================================
+        window.initGoogle = function() {
+            if (currentSessionToken) return; // Если уже вошли, не рендерим кнопку
+
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleGoogleLogin
+            });
+            
+            // Ширина 250 покрывает с огромным запасом любую кнопку на телефоне
+            google.accounts.id.renderButton(
+                document.getElementById("googleLoginBtn"),
+                { theme: "outline", size: "large", type: "standard", width: 250 }
+            );
+
+            // Кнопка загрузилась, меняем текст
+            const fakeText = document.getElementById('fakeGoogleText');
+            if (fakeText) fakeText.innerText = 'Войти';
+        };
 
         window.addEventListener('DOMContentLoaded', async () => {
             renderShop();
@@ -420,15 +448,6 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 handleUserLogin(session);
-            } else {
-                google.accounts.id.initialize({
-                    client_id: GOOGLE_CLIENT_ID,
-                    callback: handleGoogleLogin
-                });
-                google.accounts.id.renderButton(
-                    document.getElementById("googleLoginBtn"),
-                    { theme: "outline", size: "large", type: "standard", width: 200 }
-                );
             }
 
             supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -531,13 +550,15 @@
 
         function handleUserLogout() {
             currentDbUser = null; currentSessionToken = null;
-            document.getElementById('googleLoginWrapper').style.display = 'block';
+            document.getElementById('googleLoginWrapper').style.display = 'inline-block';
             document.getElementById('balanceModule').style.display = 'none';
             document.getElementById('profileModule').style.display = 'none';
             if (window.syncInterval) {
                 clearInterval(window.syncInterval);
                 window.syncInterval = null;
             }
+            // Перерисовываем кнопку гугла при выходе
+            initGoogle();
         }
 
         function updateUI() {
