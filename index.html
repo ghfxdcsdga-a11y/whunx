@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Whunx Shop - Магазин игровой валюты</title>
     
-    <!-- ОЧЕНЬ ВАЖНО: Указываем Гуглу, что главная версия сайта — это HTTPS -->
     <link rel="canonical" href="https://whunx.shop/">
 
     <!-- SEO -->
@@ -13,14 +12,13 @@
     <meta name="keywords" content="standoff 2, стандофф 2, голда, купить голду, дешевая голда, whunx shop, магазин голды, донат стандофф">
     <meta name="robots" content="index, follow">
 
-    <!-- Open Graph (для превью в соцсетях) -->
+    <!-- Open Graph -->
     <meta property="og:title" content="Whunx Shop - Магазин голды Standoff 2">
     <meta property="og:description" content="Моментальная доставка голды прямо на твой аккаунт. Заходи и покупай по самым сочным ценам!">
     <meta property="og:image" content="https://whunx.shop/whunx_icon.png">
     <meta property="og:url" content="https://whunx.shop/">
     <meta property="og:type" content="website">
 
-    <!-- Иконки (прописываем явно, чтобы Гугл их увидел) -->
     <link rel="icon" type="image/png" href="https://whunx.shop/whunx_icon.png">
     <link rel="shortcut icon" href="https://whunx.shop/whunx_icon.png">
     <link rel="apple-touch-icon" href="https://whunx.shop/whunx_icon.png">
@@ -30,14 +28,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Подключение Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- ДОБАВЛЕН onload=initGoogle: скрипт сам сообщит, когда он загрузится -->
-    <script src="https://accounts.google.com/gsi/client?onload=initGoogle" async defer></script>
 
     <style>
         /* =========================================
-           GLOBAL VARIABLES & RESET (ФИОЛЕТОВАЯ ТЕМА)
+           GLOBAL VARIABLES & RESET
         ========================================= */
         :root {
             --bg-body: #08090d;
@@ -87,9 +83,8 @@
         .header-right { display: flex; align-items: center; gap: 20px; }
         
         .custom-google-wrapper { position: relative; display: inline-block; cursor: pointer; border-radius: 12px; z-index: 10; }
-        .login-btn { background: rgba(255,255,255,0.9); color: #000; height: 48px; min-width: 130px; padding: 0 25px; border-radius: 12px; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; transition: var(--transition); box-shadow: 0 0 20px rgba(255,255,255,0.1); pointer-events: none; } 
+        .login-btn { background: rgba(255,255,255,0.9); color: #000; height: 48px; min-width: 140px; padding: 0 25px; border-radius: 12px; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; transition: var(--transition); box-shadow: 0 0 20px rgba(255,255,255,0.1); pointer-events: none; } 
         .custom-google-wrapper:hover .login-btn { background: #fff; transform: translateY(-2px); box-shadow: 0 5px 25px rgba(255,255,255,0.3); }
-        /* Увеличен хитбокс невидимой кнопки для телефонов */
         .invisible-google-btn { position: absolute; top: -10px; left: -20px; right: -20px; bottom: -10px; opacity: 0.01; z-index: 50; overflow: hidden; display: flex; justify-content: center; align-items: center; }
 
         .balance-module { display: none; align-items: center; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
@@ -267,11 +262,12 @@
         </div>
     </div>
 
-    <!-- МОДАЛКИ (Пополнение, Настройки, История, Вывод) скрыты для экономии места, они остались без изменений -->
+    <!-- МОДАЛКА: ПОПОЛНЕНИЕ -->
     <div class="modal-overlay" id="topupModal">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('topupModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">Пополнить баланс</div>
+            
             <div id="topupStep1">
                 <div class="f-input-group">
                     <label class="f-input-label">Сумма пополнения (Минимум 100 ₸)</label>
@@ -282,6 +278,7 @@
                 </div>
                 <button class="btn-submit" onclick="goToTopupStep2()">Перейти к оплате</button>
             </div>
+
             <div id="topupStep2" style="display:none;">
                 <div style="text-align:center; margin-bottom:15px;">
                     <span style="color:#f14635; font-weight:900; font-size:24px; display:block; margin-bottom:10px;">Kaspi<span style="color:#fff;">.kz</span></span>
@@ -300,6 +297,7 @@
         </div>
     </div>
 
+    <!-- МОДАЛКИ (Настройки, История, Вывод) -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal-box" style="max-width: 550px;">
             <button class="modal-close" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
@@ -378,6 +376,9 @@
         </div>
     </div>
 
+    <!-- Загружаем скрипт Гугла в самом конце, когда HTML уже готов -->
+    <script src="https://accounts.google.com/gsi/client?onload=initGoogle" async defer></script>
+    
     <script>
         const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
 
@@ -395,9 +396,9 @@
 
         const shopItems = [
             { id: 1, gold: 100, price: 590, img: '100.png' },
-            { id: 2, gold: 500, price: 2790, img: '500.png' },
-            { id: 3, gold: 1000, price: 4990, img: '1000.png' },
-            { id: 4, gold: 3000, price: 10990, img: '3000.png' }
+            { id: 2, gold: 500, price: 2490, img: '500.png' },
+            { id: 3, gold: 1000, price: 4490, img: '1000.png' },
+            { id: 4, gold: 3000, price: 9990, img: '3000.png' }
         ];
 
         document.addEventListener("wheel", function(event){ if(document.activeElement.type === "number") document.activeElement.blur(); });
@@ -413,25 +414,39 @@
         }
 
         // ==========================================
-        // НОВАЯ ЛОГИКА ЗАГРУЗКИ КНОПКИ GOOGLE
+        // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ GOOGLE
         // ==========================================
         window.initGoogle = function() {
-            if (currentSessionToken) return; // Если уже вошли, не рендерим кнопку
-
-            google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleGoogleLogin
-            });
-            
-            // Ширина 250 покрывает с огромным запасом любую кнопку на телефоне
-            google.accounts.id.renderButton(
-                document.getElementById("googleLoginBtn"),
-                { theme: "outline", size: "large", type: "standard", width: 250 }
-            );
-
-            // Кнопка загрузилась, меняем текст
+            const btn = document.getElementById("googleLoginBtn");
             const fakeText = document.getElementById('fakeGoogleText');
-            if (fakeText) fakeText.innerText = 'Войти';
+
+            // Если HTML-элементы еще не появились, ждем 50мс и пробуем снова (защита от багов)
+            if (!btn || !fakeText) {
+                setTimeout(window.initGoogle, 50);
+                return;
+            }
+
+            // Если юзер уже залогинен, скрытая кнопка нам не нужна
+            if (currentSessionToken) return;
+
+            try {
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleLogin
+                });
+                
+                // Рендерим широкую кнопку, чтобы 100% перекрыть всю зону клика на телефоне
+                google.accounts.id.renderButton(
+                    btn,
+                    { theme: "outline", size: "large", type: "standard", width: 250 }
+                );
+
+                // Всё загрузилось успешно, меняем текст!
+                fakeText.innerText = 'Войти';
+            } catch (e) {
+                console.error("Ошибка загрузки Google Auth:", e);
+                fakeText.innerText = 'Ошибка';
+            }
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
