@@ -25,17 +25,11 @@
             --success: #10b981;
         }
 
-        /* Убрали font-family из звездочки, чтобы не ломать FontAwesome */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { scrollbar-width: none; -ms-overflow-style: none; overflow-x: hidden; }
         html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 
-        body { 
-            font-family: 'Montserrat', sans-serif; 
-            width: 100%; min-height: 100vh; background-color: var(--bg-body); color: var(--text-main); display: flex; 
-        }
-
-        /* Принудительно задаем шрифт для инпутов и кнопок */
+        body { width: 100%; min-height: 100vh; background-color: var(--bg-body); color: var(--text-main); display: flex; font-family: 'Montserrat', sans-serif; }
         input, button, textarea, select { font-family: 'Montserrat', sans-serif; }
 
         /* ── ФОН ── */
@@ -67,9 +61,33 @@
         .loader-fill { height: 100%; width: 50%; background: var(--accent-gold); border-radius: 10px; animation: loadIndeterminate 1.5s infinite ease-in-out; box-shadow: 0 0 15px var(--accent-gold-glow); }
         @keyframes loadIndeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
 
-        /* Нарисованная кнопка Google */
-        .google-login-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); color: #fff; font-weight: 800; font-size: 1.05rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;}
-        .google-login-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+        /* НАРИСОВАННАЯ КНОПКА GOOGLE + КОНТЕЙНЕР ДЛЯ ХИТРОСТИ */
+        .auth-btn-container {
+            display: none; /* Изначально скрыто */
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .auth-btn-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(244, 199, 69, 0.15);
+            border-radius: 14px;
+        }
+        .google-login-visual-btn { 
+            display: flex; align-items: center; justify-content: center; gap: 12px; 
+            width: 100%; padding: 16px; border-radius: 14px; 
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(244, 199, 69, 0.4); 
+            color: #fff; font-weight: 800; font-size: 1.05rem; 
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        /* ПРОЗРАЧНЫЙ СЛОЙ ДЛЯ GIS */
+        .gis-wrapper {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            opacity: 0.01; z-index: 10; overflow: hidden; 
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+        }
         
         .btn-back { display: none; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 14px 30px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: 0.3s; margin-top: 15px; align-items: center; gap: 10px;}
         .btn-back:hover { background: rgba(239, 68, 68, 0.15); border-color: var(--error); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); color: var(--error); }
@@ -97,7 +115,7 @@
         .table-container { background: rgba(15, 15, 20, 0.6); border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px; backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-x: auto; margin-bottom: 30px; }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
         .table-header h3 { font-size: 1.2rem; font-weight: 800; color: #fff; text-transform: uppercase; }
-        .action-btn { background: var(--accent-gold); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; }
+        .action-btn { background: var(--accent-gold); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; font-family: 'Montserrat', sans-serif;}
         .action-btn:hover { filter: brightness(1.15); box-shadow: 0 5px 15px var(--accent-gold-glow); transform: translateY(-2px); }
 
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
@@ -128,13 +146,13 @@
         
         .form-group { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 15px; }
         .form-label { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-        .form-input { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: #fff; outline: none; transition: 0.3s; font-weight: 600;}
+        .form-input { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: #fff; outline: none; transition: 0.3s; font-weight: 600; font-family: 'Montserrat', sans-serif;}
         .form-input:focus { border-color: var(--accent-gold); box-shadow: inset 0 0 10px var(--accent-gold-glow); }
         
         .checkbox-label { cursor: pointer; color: #fff; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 15px;}
 
         .modal-btns { display: flex; gap: 15px; margin-top: 25px; }
-        .m-btn { padding: 14px 25px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; border: none; transition: 0.3s; flex: 1;}
+        .m-btn { padding: 14px 25px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; border: none; transition: 0.3s; flex: 1; font-family: 'Montserrat', sans-serif;}
         .m-btn-cancel { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); }
         .m-btn-cancel:hover { background: rgba(255,255,255,0.1); }
         .m-btn-confirm { background: var(--accent-gold); color: #000; box-shadow: 0 5px 15px var(--accent-gold-glow); }
@@ -162,12 +180,15 @@
             
             <div class="loader-bar" id="authLoader"><div class="loader-fill"></div></div>
 
-            <!-- БЛОК АВТОРИЗАЦИИ (с прозрачной кнопкой) -->
-            <div id="authButtonWrapper" style="display: none; position: relative; width: 100%; justify-content: center; overflow: hidden; border-radius: 14px; margin-top: 5px;">
-                <button class="google-login-btn">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 24px;"> Войти через Google
-                </button>
-                <div id="google-btn-wrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 10; cursor: pointer;"></div>
+            <!-- ИДЕАЛЬНАЯ КНОПКА АВТОРИЗАЦИИ (Отрисована + Прозрачный GIS поверх) -->
+            <div class="auth-btn-container" id="authButtonWrapper">
+                <div class="google-login-visual-btn">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 24px;"> ВОЙТИ В СИСТЕМУ
+                </div>
+                <div class="gis-wrapper">
+                    <!-- Увеличили scale(2), чтобы iframe гугла 100% перекрыл кнопку -->
+                    <div id="google-btn-wrapper" style="transform: scale(2); transform-origin: center;"></div>
+                </div>
             </div>
 
             <!-- Кнопка возврата в магазин -->
@@ -273,6 +294,8 @@
         </section>
     </main>
 
+    <!-- МОДАЛКИ УПРАВЛЕНИЯ -->
+
     <!-- Модал: Товар -->
     <div class="modal-overlay" id="shopModal">
         <div class="modal-box">
@@ -301,7 +324,7 @@
         </div>
     </div>
 
-    <!-- Модал: История Юзера -->
+    <!-- Модал: История Юзера (Детальная) -->
     <div class="modal-overlay" id="userHistoryModal">
         <div class="modal-box" style="max-width: 800px;">
             <h3 id="historyModalTitle">История пользователя</h3>
@@ -397,18 +420,75 @@
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // --- АВТОРИЗАЦИЯ GOOGLE (С ПРОЗРАЧНОЙ КНОПКОЙ) ---
+        // --- ЛОГИКА АВТОРИЗАЦИИ (БЕЗ ВЕЧНОЙ ЗАГРУЗКИ) ---
         window.addEventListener('DOMContentLoaded', () => {
             checkSession();
         });
 
-        // Функция инициализации прозрачной кнопки Google
+        async function checkSession() {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (session) {
+                    const user = session.user;
+                    document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
+                    document.getElementById('authDesc').innerText = 'Сверка полномочий...';
+                    
+                    const { data: dbUser } = await supabase.from('users').select('is_admin').eq('email', user.email).single();
+                    
+                    if (dbUser && dbUser.is_admin === true) {
+                        // ЮЗЕР АДМИН - ОТКРЫВАЕМ ПАНЕЛЬ
+                        document.getElementById('authOverlay').style.display = 'none';
+                        document.getElementById('mainSidebar').style.display = 'flex';
+                        document.getElementById('mainContent').style.display = 'flex';
+                        loadShop();
+                    } else {
+                        // ЮЗЕР НЕ АДМИН
+                        setAuthError('У вас нет прав администратора!');
+                    }
+                } else {
+                    // НЕТ СЕССИИ - ПОКАЗЫВАЕМ КНОПКУ ВХОДА
+                    showLoginScreen();
+                }
+            } catch (err) {
+                // ПРИ ЛЮБОЙ ОШИБКЕ ТОЖЕ ПОКАЗЫВАЕМ КНОПКУ ВХОДА
+                showLoginScreen();
+            }
+        }
+
+        function showLoginScreen() {
+            document.getElementById('authIcon').className = 'fa-solid fa-user-shield auth-icon';
+            document.getElementById('authIcon').style.color = 'var(--accent-gold)';
+            document.getElementById('authTitle').innerText = 'АВТОРИЗАЦИЯ';
+            document.getElementById('authDesc').innerText = 'Доступ только для администраторов';
+            
+            document.getElementById('authLoader').style.display = 'none'; // УБИРАЕМ ЛОАДЕР
+            document.getElementById('authButtonWrapper').style.display = 'block'; // ПОКАЗЫВАЕМ КНОПКУ
+            document.getElementById('btnBack').style.display = 'inline-flex';
+            
+            initGoogleAuth();
+        }
+
+        function setAuthError(msg) {
+            document.getElementById('authIcon').className = 'fa-solid fa-ban auth-icon';
+            document.getElementById('authIcon').style.color = 'var(--error)';
+            document.getElementById('authTitle').innerText = 'ДОСТУП ЗАПРЕЩЕН';
+            document.getElementById('authTitle').style.color = 'var(--error)';
+            document.getElementById('authDesc').innerText = msg;
+            
+            document.getElementById('authLoader').style.display = 'none';
+            document.getElementById('authButtonWrapper').style.display = 'none';
+            document.getElementById('btnBack').style.display = 'inline-flex';
+            setTimeout(() => supabase.auth.signOut(), 2000);
+        }
+
         function initGoogleAuth() {
             if (window.google) {
                 google.accounts.id.initialize({
                     client_id: '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com',
                     callback: handleGoogleLogin
                 });
+                // Рендерим огромную кнопку для прозрачного слоя
                 google.accounts.id.renderButton(document.getElementById("google-btn-wrapper"), {
                     theme: "outline", size: "large", type: "standard", width: 400
                 });
@@ -418,8 +498,9 @@
         }
 
         async function handleGoogleLogin(response) {
-            // Прячем кнопку, показываем лоадер
             document.getElementById('authButtonWrapper').style.display = 'none';
+            document.getElementById('btnBack').style.display = 'none';
+            
             document.getElementById('authLoader').style.display = 'block';
             document.getElementById('authTitle').innerText = 'СИНХРОНИЗАЦИЯ';
             document.getElementById('authDesc').innerText = 'Проверка данных аккаунта...';
@@ -428,53 +509,13 @@
                 provider: 'google',
                 token: response.credential
             });
-            if (error) { setAuthError('Ошибка входа'); return; }
-            checkSession();
-        }
-
-        async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
             
-            if (session) {
-                const user = session.user;
-                document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
-                document.getElementById('authDesc').innerText = 'Сверка полномочий...';
-                document.getElementById('authLoader').style.display = 'block';
-                document.getElementById('authButtonWrapper').style.display = 'none';
-                
-                const { data: dbUser } = await supabase.from('users').select('is_admin').eq('email', user.email).single();
-                
-                if (dbUser && dbUser.is_admin === true) {
-                    document.getElementById('authOverlay').style.display = 'none';
-                    document.getElementById('mainSidebar').style.display = 'flex';
-                    document.getElementById('mainContent').style.display = 'flex';
-                    loadShop();
-                } else {
-                    setAuthError('У вас нет прав администратора!');
-                }
-            } else {
-                // Нет сессии -> Отрисовываем кнопку
-                document.getElementById('authIcon').className = 'fa-solid fa-lock auth-icon';
-                document.getElementById('authIcon').style.color = 'var(--accent-gold)';
-                document.getElementById('authTitle').innerText = 'АВТОРИЗАЦИЯ';
-                document.getElementById('authDesc').innerText = 'Вход только для администрации';
-                document.getElementById('authLoader').style.display = 'none';
-                document.getElementById('authButtonWrapper').style.display = 'flex';
-                document.getElementById('btnBack').style.display = 'inline-flex';
-                initGoogleAuth();
+            if (error) { 
+                setAuthError('Ошибка входа: ' + error.message); 
+                return; 
             }
-        }
-
-        function setAuthError(msg) {
-            document.getElementById('authIcon').className = 'fa-solid fa-ban auth-icon';
-            document.getElementById('authIcon').style.color = 'var(--error)';
-            document.getElementById('authTitle').innerText = 'ДОСТУП ЗАПРЕЩЕН';
-            document.getElementById('authTitle').style.color = 'var(--error)';
-            document.getElementById('authDesc').innerText = msg;
-            document.getElementById('authLoader').style.display = 'none';
-            document.getElementById('authButtonWrapper').style.display = 'none';
-            document.getElementById('btnBack').style.display = 'inline-flex';
-            setTimeout(() => supabase.auth.signOut(), 2000);
+            
+            checkSession();
         }
 
         async function logout() { await supabase.auth.signOut(); location.reload(); }
