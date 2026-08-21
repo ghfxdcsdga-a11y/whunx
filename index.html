@@ -29,8 +29,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Скрипт Гугла. Загружается параллельно, без багованных onload -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
@@ -78,9 +76,32 @@
         @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
 
         /* =========================================
-           HEADER & GOOGLE LOGIN TRICK
+           HEADER & SIDEBAR MENU
         ========================================= */
         header { height: 80px; background: rgba(16, 18, 26, 0.4); backdrop-filter: blur(30px); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 50px; position: sticky; top: 0; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        
+        .header-left { display: flex; align-items: center; gap: 25px; }
+        
+        /* БУРГЕР МЕНЮ */
+        .burger-btn { width: 45px; height: 45px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: #fff; cursor: pointer; transition: var(--transition); }
+        .burger-btn:hover { background: rgba(139, 92, 246, 0.1); border-color: var(--accent-purple); color: var(--accent-purple); box-shadow: 0 0 15px var(--accent-purple-glow); }
+        
+        .sidebar-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100vh; background: rgba(10, 12, 18, 0.95); backdrop-filter: blur(25px); border-right: 1px solid rgba(255,255,255,0.05); z-index: 1000; transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 40px 20px; box-shadow: 20px 0 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+        .sidebar-menu.active { left: 0; }
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 999; display: none; opacity: 0; transition: opacity 0.4s; }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+        
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-header h2 { font-size: 1.2rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar-close { color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
+        .sidebar-close:hover { color: var(--accent-red); transform: rotate(90deg); }
+        
+        .sidebar-nav { display: flex; flex-direction: column; gap: 10px; }
+        .sidebar-link { display: flex; align-items: center; gap: 15px; padding: 15px 20px; border-radius: 12px; text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px;}
+        .sidebar-link i { font-size: 1.2rem; width: 25px; text-align: center; color: var(--accent-purple); transition: 0.3s;}
+        .sidebar-link:hover { background: rgba(255,255,255,0.05); color: #fff; transform: translateX(5px); }
+        .sidebar-link:hover i { text-shadow: 0 0 10px var(--accent-purple-glow); }
+
         .logo { font-size: 24px; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; text-shadow: 0 0 20px rgba(139, 92, 246, 0.2); } .logo span { color: var(--accent-purple); }
         .header-right { display: flex; align-items: center; gap: 20px; }
         
@@ -109,6 +130,10 @@
         .product-card { background: rgba(20, 22, 30, 0.4); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 30px 20px; text-align: center; transition: var(--transition); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
         .product-card:hover { transform: translateY(-5px); border-color: rgba(244, 199, 69, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(244,199,69,0.05); }
         
+        /* СТИЛЬ СКИДКИ НА КАРТОЧКЕ */
+        .discount-badge { position: absolute; top: 15px; left: 15px; background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); padding: 5px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; z-index: 5; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+        .old-price { text-decoration: line-through; color: var(--text-muted); font-size: 14px; font-weight: 600; margin-right: 8px; opacity: 0.7; }
+
         .product-img-wrapper { position: relative; width: 140px; height: 140px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; z-index: 1; }
         .product-img-wrapper::before { content: ''; position: absolute; width: 90px; height: 90px; background: var(--accent-gold); filter: blur(35px); opacity: 0.4; border-radius: 50%; animation: pulseGlow 3s infinite alternate; z-index: -1; transition: 0.4s; }
         @keyframes pulseGlow { 0% { transform: scale(0.8); opacity: 0.2; } 100% { transform: scale(1.3); opacity: 0.6; } }
@@ -117,7 +142,7 @@
         .product-card:hover .product-img { transform: scale(1.2) translateY(-10px); filter: contrast(1.3) saturate(1.2) drop-shadow(0 15px 15px rgba(244,199,69,0.3)); }
         
         .product-gold { font-size: 24px; font-weight: 900; color: var(--accent-gold); margin-bottom: 5px; text-shadow: 0 0 15px rgba(244,199,69,0.2); } 
-        .product-price { font-size: 16px; color: var(--text-muted); font-weight: 600; margin-bottom: 25px; }
+        .product-price { font-size: 18px; color: #fff; font-weight: 800; margin-bottom: 25px; display: flex; justify-content: center; align-items: baseline; }
         
         .btn-buy { width: 100%; background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); border: 1px solid rgba(139, 92, 246, 0.2); padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 800; transition: 0.2s; position: relative; z-index: 2; } 
         .product-card:hover .btn-buy { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
@@ -175,6 +200,7 @@
         @media (max-width: 768px) {
             header { padding: 0 20px; height: 70px; }
             .logo { font-size: 20px; }
+            .header-left { gap: 15px; }
             .balance-amount { padding: 0 10px; font-size: 14px; }
             .balance-add-btn { width: 35px; height: 35px; }
             main { padding: 30px 15px; }
@@ -204,13 +230,30 @@
 
     <div id="toastContainer"></div>
 
+    <!-- БОКОВОЕ МЕНЮ (ДЛЯ ОТЗЫВОВ И ИДЕЙ) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="sidebar-header">
+            <h2>Навигация</h2>
+            <i class="fa-solid fa-xmark sidebar-close" onclick="toggleSidebar()"></i>
+        </div>
+        <div class="sidebar-nav">
+            <a href="https://whunx.shop/" class="sidebar-link"><i class="fa-solid fa-store"></i> Магазин голды</a>
+            <a href="https://whunx.shop/comment" class="sidebar-link"><i class="fa-solid fa-star"></i> Отзывы клиентов</a>
+            <a href="https://whunx.shop/idea" class="sidebar-link"><i class="fa-solid fa-lightbulb"></i> Предложить идею</a>
+        </div>
+    </div>
+
     <header>
-        <div class="logo">WHUNX<span>.SHOP</span></div>
+        <div class="header-left">
+            <div class="burger-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></div>
+            <div class="logo">WHUNX<span>.SHOP</span></div>
+        </div>
         <div class="header-right">
             
             <div id="googleLoginWrapper" class="custom-google-wrapper">
                 <button class="login-btn">
-                    <i class="fa-brands fa-google" style="color:#DB4437;"></i> 
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 20px;"> 
                     <span id="fakeGoogleText">Загрузка...</span>
                 </button>
                 <div id="googleLoginBtn" class="invisible-google-btn"></div>
@@ -222,7 +265,7 @@
             </div>
             <div class="profile-module" id="profileModule">
                 <div class="profile-trigger" onclick="toggleDropdown()">
-                    <img id="headerAvatar" src="whunx_pp.png" alt="Avatar">
+                    <img id="headerAvatar" src="https://whunx.shop/whunx_pp.png" alt="Avatar">
                 </div>
                 <div class="dropdown-menu" id="profileDropdown">
                     <div class="dropdown-header"><div class="dropdown-name" id="dropdownName">Player</div></div>
@@ -240,7 +283,9 @@
             <h1>Покупка игровой валюты</h1>
             <p>Моментальное начисление на ваш аккаунт Standoff 2</p>
         </div>
-        <div class="products-grid" id="productsGrid"></div>
+        <div class="products-grid" id="productsGrid">
+            <!-- Динамические товары из БД -->
+        </div>
     </main>
 
     <footer>
@@ -305,7 +350,7 @@
             <button class="modal-close" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">Настройки аккаунта</div>
             <div style="display:flex; align-items:center; gap:20px; margin-bottom:30px;">
-                <img id="settingsAvatar" src="whunx_pp.png" alt="" style="width:70px; height:70px; border-radius:15px; border:1px solid rgba(255,255,255,0.1); object-fit:cover;">
+                <img id="settingsAvatar" src="https://whunx.shop/whunx_pp.png" alt="" style="width:70px; height:70px; border-radius:15px; border:1px solid rgba(255,255,255,0.1); object-fit:cover;">
                 <div>
                     <input type="file" id="siteAvatarInput" style="display:none;" accept="image/*" onchange="previewSiteAvatar(event)">
                     <button style="background:rgba(255,255,255,0.1); color:#fff; padding:6px 12px; border-radius:8px; font-weight:700; font-size:12px; transition:0.2s;" onclick="document.getElementById('siteAvatarInput').click()">Изменить аватарку</button>
@@ -393,14 +438,6 @@
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
-        // === НОВЫЕ ЦЕНЫ ===
-        const shopItems = [
-            { id: 1, gold: 100, price: 590, img: '100.png' },
-            { id: 2, gold: 500, price: 2490, img: '500.png' },
-            { id: 3, gold: 1000, price: 4490, img: '1000.png' },
-            { id: 4, gold: 3000, price: 9990, img: '3000.png' }
-        ];
-
         document.addEventListener("wheel", function(event){ if(document.activeElement.type === "number") document.activeElement.blur(); });
         function formatPattern(el) { if(el.value) el.value = el.value.padStart(3, '0'); }
 
@@ -413,17 +450,20 @@
             setTimeout(() => { toast.style.animation = 'slideOutRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'; setTimeout(() => toast.remove(), 400); }, 7000);
         }
 
+        function toggleSidebar() {
+            document.getElementById('sidebarMenu').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
         // ==========================================
-        // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ GOOGLE (УМНЫЙ ЖДУН)
+        // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ GOOGLE
         // ==========================================
         function initGoogleAuth() {
             const btn = document.getElementById("googleLoginBtn");
             const fakeText = document.getElementById('fakeGoogleText');
 
-            // Если юзер уже залогинен, скрытая кнопка нам не нужна
             if (currentSessionToken) return;
 
-            // Проверяем, загрузился ли скрипт гугла и HTML элементы
             if (window.google && window.google.accounts && btn && fakeText) {
                 try {
                     google.accounts.id.initialize({
@@ -431,7 +471,6 @@
                         callback: handleGoogleLogin
                     });
                     
-                    // Рендерим широкую кнопку
                     google.accounts.id.renderButton(
                         btn,
                         { theme: "outline", size: "large", type: "standard", width: 250 }
@@ -443,13 +482,12 @@
                     fakeText.innerText = 'Ошибка';
                 }
             } else {
-                // Если Гугл еще не успел подгрузиться из интернета — ждем 100мс и пробуем снова
                 setTimeout(initGoogleAuth, 100);
             }
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            renderShop();
+            loadDynamicShop();
             
             const savedGameAvatar = localStorage.getItem('gameAvatarTemp');
             if (savedGameAvatar) {
@@ -463,7 +501,6 @@
             if (session) {
                 handleUserLogin(session);
             } else {
-                // Запускаем нашего ждуна
                 initGoogleAuth();
             }
 
@@ -574,16 +611,26 @@
                 clearInterval(window.syncInterval);
                 window.syncInterval = null;
             }
-            // Перерисовываем кнопку гугла при выходе
             initGoogleAuth();
+        }
+
+        // Защита Base64 для аватарок
+        function getSafeAvatar(url) {
+            if (!url) return 'https://whunx.shop/whunx_pp.png';
+            if (url.startsWith('http') || url.startsWith('data:')) return url;
+            if (url.startsWith('/')) return 'https://whunx.shop' + url;
+            return 'https://whunx.shop/' + url;
         }
 
         function updateUI() {
             if(!currentDbUser) return;
             document.getElementById('balanceText').innerHTML = `${currentDbUser.balance} <span>₸</span>`;
             document.getElementById('dropdownName').innerText = currentDbUser.username;
-            document.getElementById('headerAvatar').src = currentDbUser.avatar_url || 'whunx_pp.png';
-            document.getElementById('settingsAvatar').src = currentDbUser.avatar_url || 'whunx_pp.png';
+            
+            const safeAvatar = getSafeAvatar(currentDbUser.avatar_url);
+            document.getElementById('headerAvatar').src = safeAvatar;
+            document.getElementById('settingsAvatar').src = safeAvatar;
+            
             document.getElementById('inputSetNick').value = currentDbUser.username;
         }
 
@@ -625,18 +672,58 @@
             else { showToast('Ошибка', 'Не удалось сохранить', 'error'); }
         }
 
-        function renderShop() {
-            const grid = document.getElementById('productsGrid'); grid.innerHTML = '';
-            shopItems.forEach(item => {
-                const card = document.createElement('div'); card.className = 'product-card';
-                card.innerHTML = `<div class="product-img-wrapper"><img src="${item.img}" class="product-img" alt="Gold"></div><div class="product-gold">${item.gold} G</div><div class="product-price">${item.price} ₸</div><button class="btn-buy" onclick="attemptPurchase(${item.id})">Купить</button>`;
+        // ==========================================
+        // ДИНАМИЧЕСКИЙ МАГАЗИН ИЗ БД
+        // ==========================================
+        let shopItemsCache = [];
+
+        async function loadDynamicShop() {
+            try {
+                // Если бэкенд не отвечает, берем данные напрямую из Супабейса
+                const { data, error } = await supabaseClient.from('shop_items').select('*').order('id', {ascending: true});
+                if (data && data.length) {
+                    shopItemsCache = data;
+                    renderDynamicShop();
+                } else {
+                    document.getElementById('productsGrid').innerHTML = '<div style="color:var(--text-muted); text-align:center; width:100%;">Товары не загружены</div>';
+                }
+            } catch (err) {
+                console.error("Ошибка загрузки товаров:", err);
+            }
+        }
+
+        function renderDynamicShop() {
+            const grid = document.getElementById('productsGrid'); 
+            grid.innerHTML = '';
+            
+            shopItemsCache.forEach(item => {
+                const card = document.createElement('div'); 
+                card.className = 'product-card';
+                
+                let priceHtml = `<div class="product-price">${item.price} ₸</div>`;
+                let badgeHtml = '';
+
+                // Логика скидок
+                if (item.discount_active && item.discount_percent > 0) {
+                    const originalPrice = Math.round(item.price / (1 - (item.discount_percent / 100)));
+                    badgeHtml = `<div class="discount-badge">-${item.discount_percent}%</div>`;
+                    priceHtml = `<div class="product-price"><span class="old-price">${originalPrice} ₸</span> ${item.price} ₸</div>`;
+                }
+
+                card.innerHTML = `
+                    ${badgeHtml}
+                    <div class="product-img-wrapper"><img src="${item.img}" class="product-img" alt="Gold"></div>
+                    <div class="product-gold">${item.gold} G</div>
+                    ${priceHtml}
+                    <button class="btn-buy" onclick="attemptPurchase(${item.id})">Купить</button>
+                `;
                 grid.appendChild(card);
             });
         }
 
         function attemptPurchase(itemId) {
             if (!currentDbUser) { showToast('Ошибка', 'Войдите в аккаунт для покупок.', 'error'); return; }
-            const item = shopItems.find(i => i.id === itemId);
+            const item = shopItemsCache.find(i => i.id === itemId);
             if (currentDbUser.balance >= item.price) { pendingPurchaseItem = item; openPurchaseWithdrawModal(item); } 
             else { showToast('Внимание', 'Недостаточно средств. Пополните баланс.', 'info'); openModal('topupModal'); document.getElementById('topupAmountInput').value = item.price; }
         }
