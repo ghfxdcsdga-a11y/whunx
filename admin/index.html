@@ -29,7 +29,7 @@
         html, body { scrollbar-width: none; -ms-overflow-style: none; overflow-x: hidden; }
         html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 
-        body { width: 100%; min-height: 100vh; background-color: var(--bg-body); color: var(--text-main); display: flex; font-family: 'Montserrat', sans-serif; }
+        body { font-family: 'Montserrat', sans-serif; width: 100%; min-height: 100vh; background-color: var(--bg-body); color: var(--text-main); display: flex; }
         input, button, textarea, select { font-family: 'Montserrat', sans-serif; }
 
         /* ── ФОН ── */
@@ -39,11 +39,7 @@
         .blob-2 { width: 600px; height: 600px; background: var(--accent-gold); bottom: -20%; right: -10%; animation-delay: -5s; opacity: 0.15; }
         @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, 40px) scale(1.1); } }
 
-        body::before {
-            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none;
-            background: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-            background-size: 50px 50px; mask-image: radial-gradient(ellipse at center, black 50%, transparent 100%);
-        }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; background: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 50px 50px; mask-image: radial-gradient(ellipse at center, black 50%, transparent 100%); }
 
         /* ── TOAST ── */
         .toast-container { position: fixed; top: 25px; right: 25px; z-index: 100000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
@@ -51,45 +47,24 @@
         .toast.toast-error { border-left-color: var(--error); } .toast.toast-success { border-left-color: var(--success); }
         @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* ── ЭКРАН ПРОВЕРКИ ── */
+        /* ── ЭКРАН ВХОДА ── */
         .auth-overlay { position: fixed; inset: 0; background: var(--bg-body); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; backdrop-filter: blur(25px); transition: opacity 0.5s ease; }
         .auth-box { background: rgba(15, 15, 20, 0.6); border: 1px solid var(--glass-border); border-radius: 24px; padding: 50px; max-width: 500px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(244, 199, 69, 0.05); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
-        .auth-icon { font-size: 4rem; color: var(--accent-gold); margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--accent-gold-glow)); font-family: "Font Awesome 6 Free"; }
+        .auth-icon { font-size: 4rem; color: var(--accent-gold); margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--accent-gold-glow)); }
         .auth-title { font-size: 1.5rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
         .auth-desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5; font-weight: 600; }
-        .loader-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        
+        .loader-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; margin-bottom: 20px; display: none; }
         .loader-fill { height: 100%; width: 50%; background: var(--accent-gold); border-radius: 10px; animation: loadIndeterminate 1.5s infinite ease-in-out; box-shadow: 0 0 15px var(--accent-gold-glow); }
         @keyframes loadIndeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
 
-        /* НАРИСОВАННАЯ КНОПКА GOOGLE + КОНТЕЙНЕР ДЛЯ ХИТРОСТИ */
-        .auth-btn-container {
-            display: none; /* Изначально скрыто */
-            position: relative;
-            width: 100%;
-            max-width: 320px;
-            margin-top: 10px;
-            transition: 0.3s;
-        }
-        .auth-btn-container:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(244, 199, 69, 0.15);
-            border-radius: 14px;
-        }
-        .google-login-visual-btn { 
-            display: flex; align-items: center; justify-content: center; gap: 12px; 
-            width: 100%; padding: 16px; border-radius: 14px; 
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(244, 199, 69, 0.4); 
-            color: #fff; font-weight: 800; font-size: 1.05rem; 
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        /* ПРОЗРАЧНЫЙ СЛОЙ ДЛЯ GIS */
-        .gis-wrapper {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            opacity: 0.01; z-index: 10; overflow: hidden; 
-            display: flex; justify-content: center; align-items: center; cursor: pointer;
-        }
+        /* ИДЕАЛЬНАЯ КНОПКА GOOGLE */
+        .auth-btn-container { display: flex; position: relative; width: 100%; max-width: 320px; margin-top: 5px; }
+        .google-login-visual-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 16px; border-radius: 14px; background: rgba(244, 199, 69, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 0 15px rgba(244, 199, 69, 0.2); transition: 0.3s; }
+        .auth-btn-container:hover .google-login-visual-btn { background: rgba(244, 199, 69, 0.2); box-shadow: 0 0 25px rgba(244, 199, 69, 0.4); transform: translateY(-2px); }
+        .gis-wrapper { position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; opacity: 0.01; z-index: 100; overflow: hidden; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         
-        .btn-back { display: none; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 14px 30px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: 0.3s; margin-top: 15px; align-items: center; gap: 10px;}
+        .btn-back { display: inline-flex; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 14px 30px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: 0.3s; margin-top: 15px; align-items: center; gap: 10px;}
         .btn-back:hover { background: rgba(239, 68, 68, 0.15); border-color: var(--error); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); color: var(--error); }
 
         /* ── БОКОВОЕ МЕНЮ ── */
@@ -115,7 +90,7 @@
         .table-container { background: rgba(15, 15, 20, 0.6); border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px; backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-x: auto; margin-bottom: 30px; }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
         .table-header h3 { font-size: 1.2rem; font-weight: 800; color: #fff; text-transform: uppercase; }
-        .action-btn { background: var(--accent-gold); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; font-family: 'Montserrat', sans-serif;}
+        .action-btn { background: var(--accent-gold); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; }
         .action-btn:hover { filter: brightness(1.15); box-shadow: 0 5px 15px var(--accent-gold-glow); transform: translateY(-2px); }
 
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
@@ -146,13 +121,13 @@
         
         .form-group { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 15px; }
         .form-label { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-        .form-input { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: #fff; outline: none; transition: 0.3s; font-weight: 600; font-family: 'Montserrat', sans-serif;}
+        .form-input { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: #fff; outline: none; transition: 0.3s; font-weight: 600;}
         .form-input:focus { border-color: var(--accent-gold); box-shadow: inset 0 0 10px var(--accent-gold-glow); }
         
         .checkbox-label { cursor: pointer; color: #fff; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 15px;}
 
         .modal-btns { display: flex; gap: 15px; margin-top: 25px; }
-        .m-btn { padding: 14px 25px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; border: none; transition: 0.3s; flex: 1; font-family: 'Montserrat', sans-serif;}
+        .m-btn { padding: 14px 25px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; border: none; transition: 0.3s; flex: 1;}
         .m-btn-cancel { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); }
         .m-btn-cancel:hover { background: rgba(255,255,255,0.1); }
         .m-btn-confirm { background: var(--accent-gold); color: #000; box-shadow: 0 5px 15px var(--accent-gold-glow); }
@@ -171,23 +146,23 @@
     <div class="bg-blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- ЭКРАН ПРОВЕРКИ И ВХОДА -->
+    <!-- ЭКРАН ПРОВЕРКИ И ВХОДА (ПО УМОЛЧАНИЮ ОТКРЫТА КНОПКА) -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-box">
             <i class="fa-solid fa-lock auth-icon" id="authIcon"></i>
-            <h2 class="auth-title" id="authTitle">ПРОВЕРКА СЕССИИ</h2>
-            <p class="auth-desc" id="authDesc">Ожидание ответа базы данных...</p>
+            <h2 class="auth-title" id="authTitle">АВТОРИЗАЦИЯ</h2>
+            <p class="auth-desc" id="authDesc">Вход только для администраторов</p>
             
             <div class="loader-bar" id="authLoader"><div class="loader-fill"></div></div>
 
-            <!-- ИДЕАЛЬНАЯ КНОПКА АВТОРИЗАЦИИ (Отрисована + Прозрачный GIS поверх) -->
+            <!-- ИДЕАЛЬНАЯ КНОПКА АВТОРИЗАЦИИ -->
             <div class="auth-btn-container" id="authButtonWrapper">
                 <div class="google-login-visual-btn">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 24px;"> ВОЙТИ В СИСТЕМУ
                 </div>
+                <!-- ПРОЗРАЧНЫЙ СЛОЙ ОТ ГУГЛА -->
                 <div class="gis-wrapper">
-                    <!-- Увеличили scale(2), чтобы iframe гугла 100% перекрыл кнопку -->
-                    <div id="google-btn-wrapper" style="transform: scale(2); transform-origin: center;"></div>
+                    <div id="google-btn-wrapper" style="transform: scale(3); transform-origin: center;"></div>
                 </div>
             </div>
 
@@ -420,53 +395,70 @@
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // --- ЛОГИКА АВТОРИЗАЦИИ (БЕЗ ВЕЧНОЙ ЗАГРУЗКИ) ---
+        // --- АВТОРИЗАЦИЯ GOOGLE (С ПРОЗРАЧНОЙ КНОПКОЙ) ---
         window.addEventListener('DOMContentLoaded', () => {
-            checkSession();
+            initGoogleAuth();
+            checkSessionFast();
         });
 
-        async function checkSession() {
+        // Функция инициализации прозрачной кнопки Google
+        function initGoogleAuth() {
+            if (window.google && window.google.accounts) {
+                google.accounts.id.initialize({
+                    client_id: '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com',
+                    callback: handleGoogleLogin
+                });
+                google.accounts.id.renderButton(document.getElementById("google-btn-wrapper"), {
+                    theme: "outline", size: "large", type: "standard", width: 400
+                });
+            } else {
+                setTimeout(initGoogleAuth, 100);
+            }
+        }
+
+        // Быстрая проверка сессии без блокировки UI
+        async function checkSessionFast() {
             try {
-                const { data: { session }, error } = await supabase.auth.getSession();
-                
+                const { data: { session } } = await supabase.auth.getSession();
                 if (session) {
-                    const user = session.user;
+                    // Есть сессия, прячем кнопку, показываем лоадер, проверяем админку
+                    document.getElementById('authButtonWrapper').style.display = 'none';
+                    document.getElementById('btnBack').style.display = 'none';
+                    document.getElementById('authLoader').style.display = 'block';
                     document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
                     document.getElementById('authDesc').innerText = 'Сверка полномочий...';
-                    
-                    const { data: dbUser } = await supabase.from('users').select('is_admin').eq('email', user.email).single();
-                    
+
+                    const { data: dbUser } = await supabase.from('users').select('is_admin').eq('email', session.user.email).single();
                     if (dbUser && dbUser.is_admin === true) {
-                        // ЮЗЕР АДМИН - ОТКРЫВАЕМ ПАНЕЛЬ
                         document.getElementById('authOverlay').style.display = 'none';
                         document.getElementById('mainSidebar').style.display = 'flex';
                         document.getElementById('mainContent').style.display = 'flex';
                         loadShop();
                     } else {
-                        // ЮЗЕР НЕ АДМИН
                         setAuthError('У вас нет прав администратора!');
                     }
-                } else {
-                    // НЕТ СЕССИИ - ПОКАЗЫВАЕМ КНОПКУ ВХОДА
-                    showLoginScreen();
                 }
             } catch (err) {
-                // ПРИ ЛЮБОЙ ОШИБКЕ ТОЖЕ ПОКАЗЫВАЕМ КНОПКУ ВХОДА
-                showLoginScreen();
+                // Игнорируем ошибку, юзер просто увидит кнопку входа
             }
         }
 
-        function showLoginScreen() {
-            document.getElementById('authIcon').className = 'fa-solid fa-user-shield auth-icon';
-            document.getElementById('authIcon').style.color = 'var(--accent-gold)';
-            document.getElementById('authTitle').innerText = 'АВТОРИЗАЦИЯ';
-            document.getElementById('authDesc').innerText = 'Доступ только для администраторов';
+        async function handleGoogleLogin(response) {
+            // Прячем кнопку, показываем лоадер
+            document.getElementById('authButtonWrapper').style.display = 'none';
+            document.getElementById('btnBack').style.display = 'none';
+            document.getElementById('authLoader').style.display = 'block';
+            document.getElementById('authTitle').innerText = 'СИНХРОНИЗАЦИЯ';
+            document.getElementById('authDesc').innerText = 'Проверка данных аккаунта...';
+
+            const { data, error } = await supabase.auth.signInWithIdToken({
+                provider: 'google',
+                token: response.credential
+            });
+            if (error) { setAuthError('Ошибка входа: ' + error.message); return; }
             
-            document.getElementById('authLoader').style.display = 'none'; // УБИРАЕМ ЛОАДЕР
-            document.getElementById('authButtonWrapper').style.display = 'block'; // ПОКАЗЫВАЕМ КНОПКУ
-            document.getElementById('btnBack').style.display = 'inline-flex';
-            
-            initGoogleAuth();
+            // После успешного логина запускаем проверку сессии заново
+            checkSessionFast();
         }
 
         function setAuthError(msg) {
@@ -480,42 +472,6 @@
             document.getElementById('authButtonWrapper').style.display = 'none';
             document.getElementById('btnBack').style.display = 'inline-flex';
             setTimeout(() => supabase.auth.signOut(), 2000);
-        }
-
-        function initGoogleAuth() {
-            if (window.google) {
-                google.accounts.id.initialize({
-                    client_id: '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com',
-                    callback: handleGoogleLogin
-                });
-                // Рендерим огромную кнопку для прозрачного слоя
-                google.accounts.id.renderButton(document.getElementById("google-btn-wrapper"), {
-                    theme: "outline", size: "large", type: "standard", width: 400
-                });
-            } else {
-                setTimeout(initGoogleAuth, 100);
-            }
-        }
-
-        async function handleGoogleLogin(response) {
-            document.getElementById('authButtonWrapper').style.display = 'none';
-            document.getElementById('btnBack').style.display = 'none';
-            
-            document.getElementById('authLoader').style.display = 'block';
-            document.getElementById('authTitle').innerText = 'СИНХРОНИЗАЦИЯ';
-            document.getElementById('authDesc').innerText = 'Проверка данных аккаунта...';
-
-            const { data, error } = await supabase.auth.signInWithIdToken({
-                provider: 'google',
-                token: response.credential
-            });
-            
-            if (error) { 
-                setAuthError('Ошибка входа: ' + error.message); 
-                return; 
-            }
-            
-            checkSession();
         }
 
         async function logout() { await supabase.auth.signOut(); location.reload(); }
