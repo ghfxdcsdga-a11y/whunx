@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHUNX SHOP | ADMIN</title>
+    <link rel="icon" type="image/png" href="https://whunx.shop/whunx_icon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-body: #08090d;
+            --accent-gold: #f4c745;
+            --accent-gold-glow: rgba(244, 199, 69, 0.4);
+            --accent-purple: #8b5cf6;
+            --accent-purple-glow: rgba(139, 92, 246, 0.4);
+            
+            --glass-bg: rgba(15, 15, 20, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #a3a8b5;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; }
+        html, body { scrollbar-width: none; -ms-overflow-style: none; overflow-x: hidden; }
+        html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+
+        body { width: 100%; min-height: 100vh; background-color: var(--bg-body); color: var(--text-main); display: flex; }
+
+        /* ── ФОН ── */
+        .bg-blobs { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; overflow: hidden; background: var(--bg-body); pointer-events: none;}
+        .blob { position: absolute; border-radius: 50%; filter: blur(150px); opacity: 0.25; animation: float 20s infinite alternate ease-in-out; }
+        .blob-1 { width: 700px; height: 700px; background: var(--accent-purple); top: -20%; left: -10%; }
+        .blob-2 { width: 600px; height: 600px; background: var(--accent-gold); bottom: -20%; right: -10%; animation-delay: -5s; opacity: 0.15; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, 40px) scale(1.1); } }
+
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none;
+            background: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 50px 50px; mask-image: radial-gradient(ellipse at center, black 50%, transparent 100%);
+        }
+
+        /* ── TOAST ── */
+        .toast-container { position: fixed; top: 25px; right: 25px; z-index: 100000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { background: rgba(15, 15, 20, 0.9); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-left: 4px solid var(--accent-gold); color: #fff; padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 15px; animation: slideInRight 0.4s ease forwards; pointer-events: auto; }
+        .toast.toast-error { border-left-color: var(--error); } .toast.toast-success { border-left-color: var(--success); }
+        @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* ── ЭКРАН ПРОВЕРКИ ── */
+        .auth-overlay { position: fixed; inset: 0; background: var(--bg-body); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; backdrop-filter: blur(25px); transition: opacity 0.5s ease; }
+        .auth-overlay.hidden { opacity: 0; pointer-events: none; }
+        .auth-box { background: rgba(15, 15, 20, 0.6); border: 1px solid var(--glass-border); border-radius: 24px; padding: 50px; max-width: 500px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(244, 199, 69, 0.05); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        .auth-icon { font-size: 4rem; color: var(--accent-gold); margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--accent-gold-glow)); }
+        .auth-title { font-size: 1.5rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
+        .auth-desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 30px; line-height: 1.5; }
+        .loader-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        .loader-fill { height: 100%; width: 50%; background: var(--accent-gold); border-radius: 10px; animation: loadIndeterminate 1.5s infinite ease-in-out; box-shadow: 0 0 15px var(--accent-gold-glow); }
+        @keyframes loadIndeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+
+        /* ── МОДАЛКА GOOGLE ── */
+        .install-box { background: rgba(10, 10, 15, 0.95); border: 1px solid var(--accent-gold); border-radius: 28px; padding: 40px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.8); position: relative; display: flex; flex-direction: column; align-items: center; margin: auto; }
+        .install-close { position: absolute; top: 20px; right: 25px; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; transition: 0.3s; }
+        .install-close:hover { color: var(--error); transform: rotate(90deg); }
+        .google-login-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); color: #fff; font-weight: 800; font-size: 1.05rem; cursor: pointer; transition: 0.3s; }
+        .google-login-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+
+        /* ── БОКОВОЕ МЕНЮ ── */
+        .admin-sidebar { width: 280px; background: rgba(10, 10, 15, 0.85); backdrop-filter: blur(25px); border-right: 1px solid var(--glass-border); height: 100vh; display: flex; flex-direction: column; padding: 30px 20px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); z-index: 100; }
+        .admin-logo { text-align: center; margin-bottom: 40px; }
+        .admin-logo h2 { font-size: 1.5rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+        .admin-logo span { color: var(--accent-gold); }
+        .nav-item { display: flex; align-items: center; gap: 15px; padding: 16px 20px; color: var(--text-muted); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; border-radius: 14px; cursor: pointer; transition: 0.3s; margin-bottom: 8px; }
+        .nav-item i { font-size: 1.2rem; width: 25px; text-align: center; }
+        .nav-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .nav-item.active { background: var(--accent-gold); color: #000; box-shadow: 0 5px 15px var(--accent-gold-glow); }
+        .nav-item.active i { color: #000; }
+
+        /* ── ОСНОВА ── */
+        .admin-main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; padding: 40px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .header-title h1 { font-size: 2rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        .header-title p { color: var(--text-muted); font-size: 0.9rem; }
+        .admin-section { display: none; animation: fadeIn 0.4s ease forwards; } .admin-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── ТАБЛИЦЫ & КАРТОЧКИ ── */
+        .table-container { background: rgba(15, 15, 20, 0.6); border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px; backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-x: auto; margin-bottom: 30px; }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
+        .table-header h3 { font-size: 1.2rem; font-weight: 800; color: #fff; text-transform: uppercase; }
+        .action-btn { background: var(--accent-gold); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; }
+        .action-btn:hover { filter: brightness(1.15); box-shadow: 0 5px 15px var(--accent-gold-glow); transform: translateY(-2px); }
+
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; border-bottom: 1px solid var(--glass-border); }
+        td { padding: 15px; color: #fff; font-size: 0.95rem; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.02); vertical-align: middle; }
+        tbody tr:hover { background-color: rgba(255,255,255,0.02); }
+        
+        .td-user { display: flex; align-items: center; gap: 12px; }
+        .td-user img { width: 45px; height: 45px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); }
+        .td-actions { display: flex; gap: 8px; } 
+        .btn-sm { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; width: 35px; height: 35px; }
+        .btn-sm:hover { background: rgba(255,255,255,0.15); }
+        .btn-sm.edit:hover { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(244, 199, 69, 0.1); }
+        .btn-sm.ban:hover { border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        .btn-sm.succ:hover { border-color: var(--success); color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .badge.active { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); }
+        .badge.inactive { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--glass-border); }
+        .badge.pending { background: rgba(244, 199, 69, 0.1); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+        .badge.rejected { background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid var(--error); }
+
+        /* ── МОДАЛКИ ── */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10005; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-box { background: rgba(15, 15, 20, 0.95); border: 1px solid var(--glass-border); border-top: 4px solid var(--accent-gold); border-radius: 24px; padding: 30px; max-width: 600px; width: 90%; transform: scale(0.95); transition: 0.3s; box-shadow: 0 20px 50px rgba(0,0,0,0.8); max-height: 90vh; overflow-y: auto;}
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-box h3 { color: #fff; font-size: 1.3rem; margin-bottom: 20px; text-transform: uppercase; font-weight: 900; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px;}
+        
+        .form-group { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 15px; }
+        .form-label { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .form-input { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: #fff; outline: none; transition: 0.3s; font-weight: 600;}
+        .form-input:focus { border-color: var(--accent-gold); box-shadow: inset 0 0 10px var(--accent-gold-glow); }
+        
+        .checkbox-label { cursor: pointer; color: #fff; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 15px;}
+
+        .modal-btns { display: flex; gap: 15px; margin-top: 25px; }
+        .m-btn { padding: 14px 25px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; border: none; transition: 0.3s; flex: 1;}
+        .m-btn-cancel { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); }
+        .m-btn-cancel:hover { background: rgba(255,255,255,0.1); }
+        .m-btn-confirm { background: var(--accent-gold); color: #000; box-shadow: 0 5px 15px var(--accent-gold-glow); }
+        .m-btn-confirm:hover { filter: brightness(1.15); transform: translateY(-2px); }
+
+        .user-history-table th, .user-history-table td { font-size: 0.85rem; padding: 10px; }
+    </style>
+    
+    <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleAuth()"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="bg-blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- МОДАЛКА ВХОДА -->
+    <div class="modal-overlay" id="loginModal" style="z-index: 100000; align-items: center;">
+        <div class="install-box">
+            <i class="fa-solid fa-shield-halved auth-icon" style="font-size: 3rem;"></i>
+            <h3 style="color:#fff; font-weight:900; margin-bottom:10px;">АВТОРИЗАЦИЯ</h3>
+            <p style="color:var(--text-muted); margin-bottom:20px;">Вход только для администраторов</p>
+            <div style="position: relative; width: 100%; display: flex; justify-content: center; overflow: hidden; border-radius: 14px;">
+                <button class="google-login-btn" style="margin: 0; width: 100%;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 24px;"> Войти через Google
+                </button>
+                <div id="google-btn-wrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; z-index: 10; cursor: pointer;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН ПРОВЕРКИ -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <i class="fa-solid fa-lock auth-icon" id="authIcon"></i>
+            <h2 class="auth-title" id="authTitle">ДОСТУП ЗАКРЫТ</h2>
+            <p class="auth-desc" id="authDesc">Ожидание авторизации...</p>
+            <div class="loader-bar" id="authLoader" style="display: none;"><div class="loader-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- БОКОВОЕ МЕНЮ -->
+    <aside class="admin-sidebar" id="mainSidebar" style="display:none;">
+        <div class="admin-logo"><h2>WHUNX <span>|</span> CC</h2></div>
+        <nav>
+            <div class="nav-item active" onclick="switchSection('shop', this)"><i class="fa-solid fa-store"></i> Товары / Цены</div>
+            <div class="nav-item" onclick="switchSection('users', this)"><i class="fa-solid fa-users"></i> Юзеры</div>
+            <div class="nav-item" onclick="switchSection('reviews', this)"><i class="fa-solid fa-star"></i> Отзывы</div>
+            <div class="nav-item" onclick="switchSection('ideas', this)"><i class="fa-solid fa-lightbulb"></i> Идеи юзеров</div>
+            <div class="nav-item" onclick="switchSection('giveaways', this)"><i class="fa-solid fa-gift"></i> Розыгрыши</div>
+        </nav>
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--glass-border);">
+            <div class="nav-item" onclick="logout()" style="color:var(--error);"><i class="fa-solid fa-door-open"></i> Выход</div>
+        </div>
+    </aside>
+
+    <!-- ОСНОВНАЯ ПАНЕЛЬ -->
+    <main class="admin-main" id="mainContent" style="display:none;">
+        <header class="header-top">
+            <div class="header-title">
+                <h1 id="pageTitle">Товары магазина</h1>
+                <p>Управление ценами и скидками</p>
+            </div>
+        </header>
+
+        <!-- СЕКЦИЯ: ТОВАРЫ -->
+        <section id="sec-shop" class="admin-section active">
+            <div class="table-container">
+                <div class="table-header"><h3>Цены на голду</h3></div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead><tr><th>Пак</th><th>Цена (₸)</th><th>Скидка</th><th>Действия</th></tr></thead>
+                        <tbody id="shopTable"><tr><td colspan="4" style="text-align:center;">Загрузка...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- СЕКЦИЯ: ЮЗЕРЫ -->
+        <section id="sec-users" class="admin-section">
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>База пользователей</h3>
+                    <input type="text" id="userSearch" placeholder="Поиск (Email / Ник)..." class="form-input" style="width:250px; padding:8px 15px; margin-bottom:0;">
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead><tr><th>Пользователь</th><th>Email</th><th>Баланс (₸)</th><th>Действия</th></tr></thead>
+                        <tbody id="usersTable"><tr><td colspan="4" style="text-align:center;">Загрузка...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- СЕКЦИЯ: ОТЗЫВЫ -->
+        <section id="sec-reviews" class="admin-section">
+            <div class="table-container">
+                <div class="table-header"><h3>Модерация отзывов</h3></div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead><tr><th>Пользователь</th><th>Оценка</th><th>Текст</th><th>Ответ админа</th><th>Действия</th></tr></thead>
+                        <tbody id="reviewsTable"><tr><td colspan="5" style="text-align:center;">Загрузка...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- СЕКЦИЯ: ИДЕИ -->
+        <section id="sec-ideas" class="admin-section">
+            <div class="table-container">
+                <div class="table-header"><h3>Предложения по улучшению</h3></div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead><tr><th>Пользователь</th><th>Идея</th><th>Статус</th><th>Награда (₸)</th><th>Действия</th></tr></thead>
+                        <tbody id="ideasTable"><tr><td colspan="5" style="text-align:center;">Загрузка...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- СЕКЦИЯ: РОЗЫГРЫШИ -->
+        <section id="sec-giveaways" class="admin-section">
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Активные розыгрыши</h3>
+                    <button class="action-btn" onclick="openModal('giveawayModal')"><i class="fa-solid fa-plus"></i> Создать</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead><tr><th>Сумма (G)</th><th>Участники</th><th>Конец</th><th>Статус</th><th>Действия</th></tr></thead>
+                        <tbody id="giveawaysTable"><tr><td colspan="5" style="text-align:center;">Загрузка...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- МОДАЛКИ УПРАВЛЕНИЯ -->
+
+    <!-- Модал: Товар -->
+    <div class="modal-overlay" id="shopModal">
+        <div class="modal-box">
+            <h3 id="shopModalTitle">Редактировать товар</h3>
+            <div class="form-group"><label class="form-label">Новая цена (₸)</label><input type="number" id="shopPrice" class="form-input"></div>
+            <label class="checkbox-label"><input type="checkbox" id="shopDiscountActive"> Включить скидку на товар</label>
+            <div class="form-group"><label class="form-label">Процент скидки (%)</label><input type="number" id="shopDiscountPct" class="form-input"></div>
+            <div class="modal-btns">
+                <button class="m-btn m-btn-cancel" onclick="closeModal('shopModal')">Отмена</button>
+                <button class="m-btn m-btn-confirm" onclick="saveShopItem()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модал: Редактировать Юзера -->
+    <div class="modal-overlay" id="userEditModal">
+        <div class="modal-box">
+            <h3>Редактировать профиль</h3>
+            <div class="form-group"><label class="form-label">Никнейм</label><input type="text" id="editUserName" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Аватарка (URL)</label><input type="text" id="editUserAvatar" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Баланс (₸)</label><input type="number" id="editUserBalance" class="form-input"></div>
+            <div class="modal-btns">
+                <button class="m-btn m-btn-cancel" onclick="closeModal('userEditModal')">Отмена</button>
+                <button class="m-btn m-btn-confirm" onclick="saveUserEdit()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модал: История Юзера (Детальная) -->
+    <div class="modal-overlay" id="userHistoryModal">
+        <div class="modal-box" style="max-width: 800px;">
+            <h3 id="historyModalTitle">История пользователя</h3>
+            <div style="overflow-y: auto; max-height: 50vh;">
+                <table class="user-history-table" style="width:100%;">
+                    <thead><tr><th>Дата</th><th>Сумма / Скин</th><th>Статус</th><th>Действия</th></tr></thead>
+                    <tbody id="userHistoryBody"></tbody>
+                </table>
+            </div>
+            <div class="modal-btns"><button class="m-btn m-btn-cancel" onclick="closeModal('userHistoryModal')">Закрыть</button></div>
+        </div>
+    </div>
+
+    <!-- Модал: Ответ на отзыв -->
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal-box">
+            <h3>Управление отзывом</h3>
+            <div class="form-group"><label class="form-label">Текст отзыва (можно ред.)</label><textarea id="revText" class="form-input" rows="3"></textarea></div>
+            <div class="form-group"><label class="form-label">Ответ администратора</label><textarea id="revReply" class="form-input" rows="3"></textarea></div>
+            <div class="modal-btns">
+                <button class="m-btn m-btn-cancel" onclick="closeModal('reviewModal')">Отмена</button>
+                <button class="m-btn m-btn-confirm" onclick="saveReview()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модал: Управление Идеей -->
+    <div class="modal-overlay" id="ideaModal">
+        <div class="modal-box">
+            <h3>Решение по идее</h3>
+            <div class="form-group"><label class="form-label">Текст идеи</label><textarea id="ideaText" class="form-input" rows="3" disabled></textarea></div>
+            <div class="form-group"><label class="form-label">Ответ админа</label><textarea id="ideaReply" class="form-input" rows="2"></textarea></div>
+            <div class="form-group"><label class="form-label">Статус</label>
+                <select id="ideaStatus" class="form-input">
+                    <option value="pending">Ожидает</option><option value="approved">Подтверждена (Одобрено)</option><option value="rejected">Отклонена</option>
+                </select>
+            </div>
+            <div class="form-group"><label class="form-label">Награда пользователю (₸)</label><input type="number" id="ideaReward" class="form-input" value="0"></div>
+            <div class="modal-btns">
+                <button class="m-btn m-btn-cancel" onclick="closeModal('ideaModal')">Отмена</button>
+                <button class="m-btn m-btn-confirm" onclick="saveIdea()">Применить решение</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модал: Розыгрыш -->
+    <div class="modal-overlay" id="giveawayModal">
+        <div class="modal-box">
+            <h3>Настройки розыгрыша</h3>
+            <div class="form-group"><label class="form-label">Сумма розыгрыша (Gold)</label><input type="number" id="gwAmount" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Макс. участников</label><input type="number" id="gwMax" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Дата завершения</label><input type="datetime-local" id="gwEnd" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Условия (текст)</label><textarea id="gwCond" class="form-input" rows="3" placeholder="Подписка на ТГ, привязать ТГ к аккаунту и т.д."></textarea></div>
+            <label class="checkbox-label"><input type="checkbox" id="gwActive" checked> Активен</label>
+            <div class="modal-btns">
+                <button class="m-btn m-btn-cancel" onclick="closeModal('giveawayModal')">Отмена</button>
+                <button class="m-btn m-btn-confirm" onclick="saveGiveaway()">Создать / Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhucGJibXl0dGV4cW10YnR5YmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2OTc4NDcsImV4cCI6MjEwMjI3Mzg0N30.7x3UDegy7zCeT88-2Fps-uF2nMR-PDAnnXcLt5we0zw';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- УТИЛИТЫ ---
+        function showToast(msg, type='info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div'); toast.className = `toast toast-${type}`;
+            let icon = type==='error'?'fa-circle-exclamation':(type==='success'?'fa-circle-check':'fa-info-circle');
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'fadeOutRight 0.4s ease forwards'; setTimeout(() => toast.remove(), 400); }, 3500);
+        }
+
+        function switchSection(secId, btn) {
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById('sec-' + secId).classList.add('active');
+            if(btn) btn.classList.add('active');
+            
+            const titles = { 'shop': 'Товары магазина', 'users': 'База пользователей', 'reviews': 'Отзывы клиентов', 'ideas': 'Идеи и предложения', 'giveaways': 'Управление розыгрышами' };
+            document.getElementById('pageTitle').innerText = titles[secId] || '';
+
+            if (secId === 'shop') loadShop();
+            if (secId === 'users') loadUsers();
+            if (secId === 'reviews') loadReviews();
+            if (secId === 'ideas') loadIdeas();
+            if (secId === 'giveaways') loadGiveaways();
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // --- АВТОРИЗАЦИЯ GOOGLE & SUPABASE ---
+        function initGoogleAuth() {
+            if(window.google) {
+                google.accounts.id.initialize({
+                    client_id: '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com',
+                    callback: handleGoogleLogin
+                });
+                google.accounts.id.renderButton(document.getElementById("google-btn-wrapper"), { theme: "outline", size: "large", type: "standard", width: 300 });
+                checkSession();
+            }
+        }
+
+        async function handleGoogleLogin(response) {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
+            document.getElementById('authDesc').innerText = 'Связь с сервером...';
+            document.getElementById('authLoader').style.display = 'block';
+
+            const { data, error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: response.credential });
+            if (error) { setAuthError('Ошибка авторизации.'); return; }
+            checkSession();
+        }
+
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                const user = session.user;
+                document.getElementById('loginModal').classList.remove('active');
+                document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
+                document.getElementById('authLoader').style.display = 'block';
+                
+                // Проверяем флаг is_admin в таблице
+                const { data: dbUser, error } = await supabase.from('users').select('is_admin').eq('email', user.email).single();
+                
+                if (dbUser && dbUser.is_admin === true) {
+                    document.getElementById('authOverlay').style.display = 'none';
+                    document.getElementById('mainSidebar').style.display = 'flex';
+                    document.getElementById('mainContent').style.display = 'flex';
+                    loadShop();
+                } else {
+                    setAuthError('У вас нет прав администратора!');
+                }
+            } else {
+                document.getElementById('authOverlay').style.display = 'flex';
+                document.getElementById('authTitle').innerText = 'ДОСТУП ЗАКРЫТ';
+                document.getElementById('authDesc').innerText = 'Авторизуйтесь в системе';
+                document.getElementById('authLoader').style.display = 'none';
+                document.getElementById('loginModal').classList.add('active');
+            }
+        }
+
+        function setAuthError(msg) {
+            document.getElementById('authIcon').className = 'fa-solid fa-ban auth-icon';
+            document.getElementById('authIcon').style.color = 'var(--error)';
+            document.getElementById('authTitle').innerText = 'ДОСТУП ЗАПРЕЩЕН';
+            document.getElementById('authDesc').innerText = msg;
+            document.getElementById('authLoader').style.display = 'none';
+            setTimeout(() => supabase.auth.signOut(), 2000);
+        }
+
+        async function logout() { await supabase.auth.signOut(); location.reload(); }
+
+        // =====================================
+        // ЛОГИКА СЕКЦИЙ
+        // =====================================
+
+        // --- 1. ТОВАРЫ ---
+        let currentShopId = null;
+        async function loadShop() {
+            const { data, error } = await supabase.from('shop_items').select('*').order('id', {ascending: true});
+            const tbody = document.getElementById('shopTable');
+            if (data && data.length) {
+                tbody.innerHTML = data.map(i => `
+                    <tr>
+                        <td><div class="td-user"><img src="https://whunx.shop/${i.img}"><b>${i.gold} G</b></div></td>
+                        <td style="font-weight:900;">${i.price} ₸</td>
+                        <td>${i.discount_active ? `<span class="badge active">${i.discount_percent}%</span>` : `<span class="badge inactive">Нет</span>`}</td>
+                        <td><button class="btn-sm edit" onclick="openShopEdit(${i.id}, ${i.price}, ${i.discount_active}, ${i.discount_percent})"><i class="fa-solid fa-pen"></i></button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function openShopEdit(id, price, dAct, dPct) {
+            currentShopId = id;
+            document.getElementById('shopPrice').value = price;
+            document.getElementById('shopDiscountActive').checked = dAct;
+            document.getElementById('shopDiscountPct').value = dPct;
+            openModal('shopModal');
+        }
+
+        async function saveShopItem() {
+            const price = parseInt(document.getElementById('shopPrice').value);
+            const dAct = document.getElementById('shopDiscountActive').checked;
+            const dPct = parseInt(document.getElementById('shopDiscountPct').value) || 0;
+            const { error } = await supabase.from('shop_items').update({ price, discount_active: dAct, discount_percent: dPct }).eq('id', currentShopId);
+            if (!error) { showToast('Товар обновлен', 'success'); closeModal('shopModal'); loadShop(); }
+        }
+
+        // --- 2. ЮЗЕРЫ И ИХ ИСТОРИЯ ---
+        let currentEditEmail = null;
+        let allUsersCache = [];
+        
+        async function loadUsers() {
+            const { data } = await supabase.from('users').select('*').order('created_at', {ascending: false});
+            if (data) { allUsersCache = data; renderUsers(data); }
+        }
+        
+        function renderUsers(list) {
+            document.getElementById('usersTable').innerHTML = list.map(u => `
+                <tr>
+                    <td><div class="td-user"><img src="${u.avatar_url.includes('http')?u.avatar_url:'https://whunx.shop/'+u.avatar_url}"><b>${u.username}</b></div></td>
+                    <td style="color:var(--text-muted); font-size:0.85rem;">${u.email}</td>
+                    <td style="font-weight:900; color:var(--accent-gold);">${u.balance} ₸</td>
+                    <td><div class="td-actions">
+                        <button class="btn-sm edit" onclick="openUserEdit('${u.email}', '${u.username}', '${u.avatar_url}', ${u.balance})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-sm" onclick="openUserHistory('${u.email}')"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                    </div></td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('userSearch').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            renderUsers(allUsersCache.filter(u => u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)));
+        });
+
+        function openUserEdit(email, name, ava, bal) {
+            currentEditEmail = email;
+            document.getElementById('editUserName').value = name;
+            document.getElementById('editUserAvatar').value = ava;
+            document.getElementById('editUserBalance').value = bal;
+            openModal('userEditModal');
+        }
+
+        async function saveUserEdit() {
+            const username = document.getElementById('editUserName').value;
+            const avatar_url = document.getElementById('editUserAvatar').value;
+            const balance = parseInt(document.getElementById('editUserBalance').value) || 0;
+            const { error } = await supabase.from('users').update({ username, avatar_url, balance }).eq('email', currentEditEmail);
+            if (!error) { showToast('Юзер сохранен', 'success'); closeModal('userEditModal'); loadUsers(); }
+        }
+
+        async function openUserHistory(email) {
+            document.getElementById('historyModalTitle').innerText = 'История: ' + email;
+            const tbody = document.getElementById('userHistoryBody'); tbody.innerHTML = '<tr><td colspan="4">Загрузка...</td></tr>';
+            openModal('userHistoryModal');
+
+            const { data } = await supabase.from('withdrawals').select('*').eq('user_email', email).order('created_at', {ascending: false});
+            if (data && data.length) {
+                tbody.innerHTML = data.map(w => {
+                    const dt = new Date(w.created_at).toLocaleString('ru-RU');
+                    const stat = w.status === 'completed' ? '<span class="badge active">Завершен</span>' : (w.status === 'pending' ? '<span class="badge pending">В ожидании</span>' : '<span class="badge rejected">Отменен</span>');
+                    return `<tr><td>${dt}</td><td><b>${w.amount}</b> (${w.target_skin})</td><td>${stat}</td>
+                    <td><button class="btn-sm ban" onclick="deleteHistoryItem(${w.id}, '${email}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                }).join('');
+            } else { tbody.innerHTML = '<tr><td colspan="4">Пусто</td></tr>'; }
+        }
+
+        async function deleteHistoryItem(id, email) {
+            if(!confirm("Точно удалить запись?")) return;
+            await supabase.from('withdrawals').delete().eq('id', id);
+            showToast('Запись удалена', 'success');
+            openUserHistory(email); // refresh
+        }
+
+        // --- 3. ОТЗЫВЫ ---
+        let currentReviewId = null;
+        async function loadReviews() {
+            const { data } = await supabase.from('reviews').select('*').order('created_at', {ascending: false});
+            const tbody = document.getElementById('reviewsTable');
+            if(data && data.length) {
+                tbody.innerHTML = data.map(r => `
+                    <tr>
+                        <td style="font-size:0.85rem;">${r.user_email}</td>
+                        <td style="color:var(--accent-gold); font-weight:900;"><i class="fa-solid fa-star"></i> ${r.rating}</td>
+                        <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.comment}</td>
+                        <td>${r.admin_reply ? '<span class="badge active">Дан</span>' : '<span class="badge inactive">Нет</span>'}</td>
+                        <td><div class="td-actions">
+                            <button class="btn-sm edit" onclick="openReviewEdit(${r.id}, '${r.comment.replace(/'/g, "\\'")}', '${(r.admin_reply || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-reply"></i></button>
+                            <button class="btn-sm ban" onclick="deleteReview(${r.id})"><i class="fa-solid fa-trash"></i></button>
+                        </div></td>
+                    </tr>
+                `).join('');
+            } else { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Пусто</td></tr>'; }
+        }
+
+        function openReviewEdit(id, text, reply) {
+            currentReviewId = id;
+            document.getElementById('revText').value = text;
+            document.getElementById('revReply').value = reply;
+            openModal('reviewModal');
+        }
+
+        async function saveReview() {
+            const comment = document.getElementById('revText').value;
+            const admin_reply = document.getElementById('revReply').value;
+            await supabase.from('reviews').update({ comment, admin_reply }).eq('id', currentReviewId);
+            showToast('Отзыв обновлен', 'success'); closeModal('reviewModal'); loadReviews();
+        }
+        async function deleteReview(id) { if(confirm("Удалить отзыв?")) { await supabase.from('reviews').delete().eq('id', id); loadReviews(); } }
+
+        // --- 4. ИДЕИ ---
+        let currentIdeaId = null, currentIdeaEmail = null;
+        async function loadIdeas() {
+            const { data } = await supabase.from('ideas').select('*').order('created_at', {ascending: false});
+            const tbody = document.getElementById('ideasTable');
+            if(data && data.length) {
+                tbody.innerHTML = data.map(i => {
+                    let stat = i.status === 'approved' ? '<span class="badge active">Одобрено</span>' : (i.status === 'rejected' ? '<span class="badge rejected">Отклонено</span>' : '<span class="badge pending">Ожидает</span>');
+                    return `<tr>
+                        <td style="font-size:0.85rem;">${i.user_email}</td>
+                        <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${i.idea_text}</td>
+                        <td>${stat}</td><td style="color:var(--accent-gold); font-weight:900;">${i.reward_amount} ₸</td>
+                        <td><div class="td-actions">
+                            <button class="btn-sm succ" onclick="openIdeaEdit(${i.id}, '${i.user_email}', '${i.idea_text.replace(/'/g, "\\'")}', '${i.status}', ${i.reward_amount}, '${(i.admin_reply || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-gavel"></i></button>
+                            <button class="btn-sm ban" onclick="deleteIdea(${i.id})"><i class="fa-solid fa-trash"></i></button>
+                        </div></td>
+                    </tr>`;
+                }).join('');
+            } else { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Пусто</td></tr>'; }
+        }
+
+        function openIdeaEdit(id, email, text, status, reward, reply) {
+            currentIdeaId = id; currentIdeaEmail = email;
+            document.getElementById('ideaText').value = text;
+            document.getElementById('ideaStatus').value = status;
+            document.getElementById('ideaReward').value = reward;
+            document.getElementById('ideaReply').value = reply;
+            openModal('ideaModal');
+        }
+
+        async function saveIdea() {
+            const status = document.getElementById('ideaStatus').value;
+            const reward_amount = parseInt(document.getElementById('ideaReward').value) || 0;
+            const admin_reply = document.getElementById('ideaReply').value;
+
+            // Если одобряем и есть награда, нужно начислить юзеру (если раньше не начисляли, тут простая логика: просто прибавим)
+            // Идеально бы проверять, начислялась ли уже, но для админки сделаем прямое зачисление.
+            if (status === 'approved' && reward_amount > 0) {
+                const { data: u } = await supabase.from('users').select('balance').eq('email', currentIdeaEmail).single();
+                if(u) await supabase.from('users').update({ balance: u.balance + reward_amount }).eq('email', currentIdeaEmail);
+            }
+
+            await supabase.from('ideas').update({ status, reward_amount, admin_reply }).eq('id', currentIdeaId);
+            showToast('Решение применено', 'success'); closeModal('ideaModal'); loadIdeas();
+        }
+        async function deleteIdea(id) { if(confirm("Удалить идею?")) { await supabase.from('ideas').delete().eq('id', id); loadIdeas(); } }
+
+        // --- 5. РОЗЫГРЫШИ ---
+        let currentGwId = null;
+        async function loadGiveaways() {
+            const { data } = await supabase.from('giveaways').select('*').order('created_at', {ascending: false});
+            const tbody = document.getElementById('giveawaysTable');
+            if(data && data.length) {
+                tbody.innerHTML = data.map(g => {
+                    const dt = new Date(g.end_time).toLocaleString('ru-RU');
+                    return `<tr>
+                        <td style="font-weight:900;">${g.amount} G</td><td>До ${g.max_participants} чел.</td><td>${dt}</td>
+                        <td>${g.is_active ? '<span class="badge active">Активен</span>' : '<span class="badge inactive">Завершен</span>'}</td>
+                        <td><div class="td-actions">
+                            <button class="btn-sm edit" onclick="openGwEdit(${g.id}, ${g.amount}, ${g.max_participants}, '${g.end_time}', '${g.conditions.replace(/'/g, "\\'")}', ${g.is_active})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-sm ban" onclick="deleteGw(${g.id})"><i class="fa-solid fa-trash"></i></button>
+                        </div></td>
+                    </tr>`;
+                }).join('');
+            } else { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Пусто</td></tr>'; }
+        }
+
+        function openGwEdit(id, amt, max, end, cond, act) {
+            currentGwId = id;
+            document.getElementById('gwAmount').value = amt || '';
+            document.getElementById('gwMax').value = max || '';
+            
+            // Format datetime-local
+            if(end) {
+                const dateObj = new Date(end);
+                dateObj.setMinutes(dateObj.getMinutes() - dateObj.getTimezoneOffset());
+                document.getElementById('gwEnd').value = dateObj.toISOString().slice(0, 16);
+            } else { document.getElementById('gwEnd').value = ''; }
+            
+            document.getElementById('gwCond').value = cond || '';
+            document.getElementById('gwActive').checked = act !== false;
+            openModal('giveawayModal');
+        }
+
+        async function saveGiveaway() {
+            const amount = parseInt(document.getElementById('gwAmount').value);
+            const max_participants = parseInt(document.getElementById('gwMax').value);
+            const rawEnd = document.getElementById('gwEnd').value;
+            const end_time = rawEnd ? new Date(rawEnd).toISOString() : null;
+            const conditions = document.getElementById('gwCond').value;
+            const is_active = document.getElementById('gwActive').checked;
+
+            const payload = { amount, max_participants, end_time, conditions, is_active };
+
+            if (currentGwId) { await supabase.from('giveaways').update(payload).eq('id', currentGwId); } 
+            else { await supabase.from('giveaways').insert([payload]); }
+            
+            showToast('Розыгрыш сохранен', 'success'); closeModal('giveawayModal'); loadGiveaways();
+        }
+        async function deleteGw(id) { if(confirm("Удалить розыгрыш?")) { await supabase.from('giveaways').delete().eq('id', id); loadGiveaways(); } }
+
+    </script>
+</body>
+</html>
