@@ -54,17 +54,17 @@
         .auth-title { font-size: 1.5rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
         .auth-desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5; font-weight: 600; }
         
-        .loader-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; margin-bottom: 20px; display: none; }
+        .loader-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
         .loader-fill { height: 100%; width: 50%; background: var(--accent-gold); border-radius: 10px; animation: loadIndeterminate 1.5s infinite ease-in-out; box-shadow: 0 0 15px var(--accent-gold-glow); }
         @keyframes loadIndeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
 
-        /* ИДЕАЛЬНАЯ КНОПКА GOOGLE */
-        .auth-btn-container { display: flex; position: relative; width: 100%; max-width: 320px; margin-top: 5px; }
-        .google-login-visual-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 16px; border-radius: 14px; background: rgba(244, 199, 69, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 0 15px rgba(244, 199, 69, 0.2); transition: 0.3s; cursor: pointer; }
-        .auth-btn-container:hover .google-login-visual-btn { background: rgba(244, 199, 69, 0.2); box-shadow: 0 0 25px rgba(244, 199, 69, 0.4); transform: translateY(-2px); }
-        .gis-wrapper { position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; opacity: 0.01; z-index: 100; overflow: hidden; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        /* ИДЕАЛЬНАЯ КНОПКА GOOGLE ИЗ ТВОЕГО КОДА МАГАЗИНА */
+        .custom-google-wrapper { position: relative; display: block; width: 100%; max-width: 320px; margin-top: 10px; cursor: pointer; border-radius: 14px; z-index: 10; }
+        .login-btn { width: 100%; background: rgba(244, 199, 69, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); height: 56px; padding: 0 25px; border-radius: 14px; font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s; box-shadow: 0 0 15px rgba(244, 199, 69, 0.2); pointer-events: none; text-transform: uppercase; letter-spacing: 1px; font-family: 'Montserrat', sans-serif;} 
+        .custom-google-wrapper:hover .login-btn { background: rgba(244, 199, 69, 0.2); box-shadow: 0 0 25px rgba(244, 199, 69, 0.4); transform: translateY(-2px); }
+        .invisible-google-btn { position: absolute; top: -10px; left: -20px; right: -20px; bottom: -10px; opacity: 0.01; z-index: 50; overflow: hidden; display: flex; justify-content: center; align-items: center; }
         
-        .btn-back { display: inline-flex; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 14px 30px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: 0.3s; margin-top: 15px; align-items: center; gap: 10px;}
+        .btn-back { display: none; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 14px 30px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: 0.3s; margin-top: 15px; align-items: center; gap: 10px;}
         .btn-back:hover { background: rgba(239, 68, 68, 0.15); border-color: var(--error); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); color: var(--error); }
 
         /* ── БОКОВОЕ МЕНЮ ── */
@@ -99,7 +99,7 @@
         tbody tr:hover { background-color: rgba(255,255,255,0.02); }
         
         .td-user { display: flex; align-items: center; gap: 12px; }
-        .td-user img { width: 45px; height: 45px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); background: var(--glass-bg); }
+        .td-user img { width: 45px; height: 45px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); }
         .td-actions { display: flex; gap: 8px; } 
         .btn-sm { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; width: 35px; height: 35px; }
         .btn-sm:hover { background: rgba(255,255,255,0.15); }
@@ -146,23 +146,21 @@
     <div class="bg-blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- ЭКРАН ПРОВЕРКИ И ВХОДА (ПО УМОЛЧАНИЮ ВСЕГДА ПОКАЗЫВАЕТ КНОПКУ!) -->
+    <!-- ЭКРАН ПРОВЕРКИ И ВХОДА -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-box">
             <i class="fa-solid fa-lock auth-icon" id="authIcon"></i>
-            <h2 class="auth-title" id="authTitle">АВТОРИЗАЦИЯ</h2>
-            <p class="auth-desc" id="authDesc">Вход только для администраторов</p>
+            <h2 class="auth-title" id="authTitle">ПРОВЕРКА СЕССИИ</h2>
+            <p class="auth-desc" id="authDesc">Сверка полномочий...</p>
             
-            <div class="loader-bar" id="authLoader" style="display: none;"><div class="loader-fill"></div></div>
+            <div class="loader-bar" id="authLoader"><div class="loader-fill"></div></div>
 
-            <!-- ИДЕАЛЬНАЯ КНОПКА АВТОРИЗАЦИИ (с прозрачным слоем) -->
-            <div class="auth-btn-container" id="authButtonWrapper">
-                <div class="google-login-visual-btn">
+            <!-- ИДЕАЛЬНАЯ КНОПКА АВТОРИЗАЦИИ (ИЗ ТВОЕГО КОДА МАГАЗИНА) -->
+            <div id="googleLoginWrapper" class="custom-google-wrapper" style="display: none;">
+                <button class="login-btn">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 24px;"> ВОЙТИ В СИСТЕМУ
-                </div>
-                <div class="gis-wrapper">
-                    <div id="google-btn-wrapper" style="transform: scale(3); transform-origin: center;"></div>
-                </div>
+                </button>
+                <div id="googleLoginBtn" class="invisible-google-btn"></div>
             </div>
 
             <!-- Кнопка возврата в магазин -->
@@ -361,9 +359,12 @@
     </div>
 
     <script>
+        const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
         const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhucGJibXl0dGV4cW10YnR5YmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2OTc4NDcsImV4cCI6MjEwMjI3Mzg0N30.7x3UDegy7zCeT88-2Fps-uF2nMR-PDAnnXcLt5we0zw';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let supabaseClient;
+        let authListenerSet = false;
 
         // --- УТИЛИТЫ ---
         function showToast(msg, type='info') {
@@ -394,44 +395,56 @@
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // --- ЛОГИКА АВТОРИЗАЦИИ GOOGLE IDENTITY SERVICES ---
-        
-        function initGoogleAuth() {
-            if (window.google) {
-                google.accounts.id.initialize({
-                    client_id: '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com',
-                    callback: handleGoogleLogin
-                });
-                google.accounts.id.renderButton(document.getElementById("google-btn-wrapper"), {
-                    theme: "outline", size: "large", type: "standard", width: 400
-                });
-                
-                // Проверяем сессию только ПОСЛЕ инициализации гугла (если он загрузился)
+        // ==========================================
+        // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ GOOGLE & СЕССИИ
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.supabase) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 checkSession();
             } else {
-                // Если скрипт от Гугла еще не успел подгрузиться - ждем и проверяем заново
+                setTimeout(() => {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    checkSession();
+                }, 500);
+            }
+        });
+
+        function initGoogleAuth() {
+            const btn = document.getElementById("googleLoginBtn");
+            if (window.google && window.google.accounts && btn) {
+                try {
+                    google.accounts.id.initialize({
+                        client_id: GOOGLE_CLIENT_ID,
+                        callback: handleGoogleLogin
+                    });
+                    google.accounts.id.renderButton(
+                        btn,
+                        { theme: "outline", size: "large", type: "standard", width: 300 }
+                    );
+                } catch (e) {
+                    console.error("Ошибка загрузки Google Auth:", e);
+                }
+            } else {
                 setTimeout(initGoogleAuth, 100);
             }
         }
 
-        // Запуск умного ждуна загрузки Google + Сессии сразу при старте
-        window.addEventListener('DOMContentLoaded', () => {
-            initGoogleAuth();
-        });
-
         async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             
             if (session) {
                 const user = session.user;
-                // Есть сессия - показываем лоадер и сверяем админку
-                document.getElementById('authButtonWrapper').style.display = 'none';
+                
+                // Есть сессия - показываем лоадер и проверяем админку
+                document.getElementById('googleLoginWrapper').style.display = 'none';
                 document.getElementById('btnBack').style.display = 'none';
                 document.getElementById('authLoader').style.display = 'block';
                 document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
                 document.getElementById('authDesc').innerText = 'Сверка полномочий...';
 
-                const { data: dbUser } = await supabase.from('users').select('is_admin').eq('email', user.email).single();
+                const { data: dbUser } = await supabaseClient.from('users').select('is_admin').eq('email', user.email).single();
+                
                 if (dbUser && dbUser.is_admin === true) {
                     document.getElementById('authOverlay').style.display = 'none';
                     document.getElementById('mainSidebar').style.display = 'flex';
@@ -441,26 +454,48 @@
                     setAuthError('У вас нет прав администратора!');
                 }
             } else {
-                // НЕТ СЕССИИ - Ничего не делаем, кнопка УЖЕ видима на экране по умолчанию.
+                // НЕТ СЕССИИ - Показываем кнопку
+                document.getElementById('authIcon').className = 'fa-solid fa-lock auth-icon';
+                document.getElementById('authIcon').style.color = 'var(--accent-gold)';
+                document.getElementById('authTitle').innerText = 'АВТОРИЗАЦИЯ';
+                document.getElementById('authDesc').innerText = 'Доступ только для администраторов';
+                
+                document.getElementById('authLoader').style.display = 'none'; 
+                document.getElementById('googleLoginWrapper').style.display = 'block'; 
+                document.getElementById('btnBack').style.display = 'inline-flex';
+                initGoogleAuth();
+            }
+
+            if (!authListenerSet) {
+                authListenerSet = true;
+                supabaseClient.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_IN' && session) {
+                        checkSession();
+                    } else if (event === 'SIGNED_OUT') {
+                        location.reload();
+                    }
+                });
             }
         }
 
         async function handleGoogleLogin(response) {
             // Прячем кнопку, показываем лоадер
-            document.getElementById('authButtonWrapper').style.display = 'none';
+            document.getElementById('googleLoginWrapper').style.display = 'none';
             document.getElementById('btnBack').style.display = 'none';
             document.getElementById('authLoader').style.display = 'block';
             document.getElementById('authTitle').innerText = 'СИНХРОНИЗАЦИЯ';
-            document.getElementById('authDesc').innerText = 'Проверка данных аккаунта...';
+            document.getElementById('authDesc').innerText = 'Вход в аккаунт...';
 
-            const { data, error } = await supabase.auth.signInWithIdToken({
+            const id_token = response.credential;
+            const { data, error } = await supabaseClient.auth.signInWithIdToken({
                 provider: 'google',
-                token: response.credential
+                token: id_token
             });
-            if (error) { setAuthError('Ошибка входа: ' + error.message); return; }
-            
-            // После логина Гугла - проверяем права админа
-            checkSession();
+
+            if (error) {
+                setAuthError('Ошибка авторизации: ' + error.message);
+            }
+            // onAuthStateChange сам вызовет checkSession
         }
 
         function setAuthError(msg) {
@@ -471,12 +506,12 @@
             document.getElementById('authDesc').innerText = msg;
             
             document.getElementById('authLoader').style.display = 'none';
-            document.getElementById('authButtonWrapper').style.display = 'none';
+            document.getElementById('googleLoginWrapper').style.display = 'none';
             document.getElementById('btnBack').style.display = 'inline-flex';
-            setTimeout(() => supabase.auth.signOut(), 2000);
+            setTimeout(() => supabaseClient.auth.signOut(), 2000);
         }
 
-        async function logout() { await supabase.auth.signOut(); location.reload(); }
+        async function logout() { await supabaseClient.auth.signOut(); }
 
         // =====================================
         // ЛОГИКА СЕКЦИЙ
@@ -485,7 +520,7 @@
         // --- 1. ТОВАРЫ ---
         let currentShopId = null;
         async function loadShop() {
-            const { data, error } = await supabase.from('shop_items').select('*').order('id', {ascending: true});
+            const { data, error } = await supabaseClient.from('shop_items').select('*').order('id', {ascending: true});
             const tbody = document.getElementById('shopTable');
             if (data && data.length) {
                 tbody.innerHTML = data.map(i => `
@@ -511,7 +546,7 @@
             const price = parseInt(document.getElementById('shopPrice').value);
             const dAct = document.getElementById('shopDiscountActive').checked;
             const dPct = parseInt(document.getElementById('shopDiscountPct').value) || 0;
-            const { error } = await supabase.from('shop_items').update({ price, discount_active: dAct, discount_percent: dPct }).eq('id', currentShopId);
+            const { error } = await supabaseClient.from('shop_items').update({ price, discount_active: dAct, discount_percent: dPct }).eq('id', currentShopId);
             if (!error) { showToast('Товар обновлен', 'success'); closeModal('shopModal'); loadShop(); }
         }
 
@@ -520,11 +555,11 @@
         let allUsersCache = [];
         
         async function loadUsers() {
-            const { data } = await supabase.from('users').select('*').order('created_at', {ascending: false});
+            const { data } = await supabaseClient.from('users').select('*').order('created_at', {ascending: false});
             if (data) { allUsersCache = data; renderUsers(data); }
         }
         
-        // Умная функция загрузки Аватарок (не ломается от Base64)
+        // Умная функция загрузки Аватарок
         function getSafeAvatar(url) {
             if (!url) return 'https://whunx.shop/whunx_pp.png';
             if (url.startsWith('http') || url.startsWith('data:')) return url;
@@ -563,7 +598,7 @@
             const username = document.getElementById('editUserName').value;
             const avatar_url = document.getElementById('editUserAvatar').value;
             const balance = parseInt(document.getElementById('editUserBalance').value) || 0;
-            const { error } = await supabase.from('users').update({ username, avatar_url, balance }).eq('email', currentEditEmail);
+            const { error } = await supabaseClient.from('users').update({ username, avatar_url, balance }).eq('email', currentEditEmail);
             if (!error) { showToast('Юзер сохранен', 'success'); closeModal('userEditModal'); loadUsers(); }
         }
 
@@ -572,7 +607,7 @@
             const tbody = document.getElementById('userHistoryBody'); tbody.innerHTML = '<tr><td colspan="4">Загрузка...</td></tr>';
             openModal('userHistoryModal');
 
-            const { data } = await supabase.from('withdrawals').select('*').eq('user_email', email).order('created_at', {ascending: false});
+            const { data } = await supabaseClient.from('withdrawals').select('*').eq('user_email', email).order('created_at', {ascending: false});
             if (data && data.length) {
                 tbody.innerHTML = data.map(w => {
                     const dt = new Date(w.created_at).toLocaleString('ru-RU');
@@ -585,7 +620,7 @@
 
         async function deleteHistoryItem(id, email) {
             if(!confirm("Точно удалить запись?")) return;
-            await supabase.from('withdrawals').delete().eq('id', id);
+            await supabaseClient.from('withdrawals').delete().eq('id', id);
             showToast('Запись удалена', 'success');
             openUserHistory(email); // refresh
         }
@@ -593,7 +628,7 @@
         // --- 3. ОТЗЫВЫ ---
         let currentReviewId = null;
         async function loadReviews() {
-            const { data } = await supabase.from('reviews').select('*').order('created_at', {ascending: false});
+            const { data } = await supabaseClient.from('reviews').select('*').order('created_at', {ascending: false});
             const tbody = document.getElementById('reviewsTable');
             if(data && data.length) {
                 tbody.innerHTML = data.map(r => `
@@ -621,15 +656,15 @@
         async function saveReview() {
             const comment = document.getElementById('revText').value;
             const admin_reply = document.getElementById('revReply').value;
-            await supabase.from('reviews').update({ comment, admin_reply }).eq('id', currentReviewId);
+            await supabaseClient.from('reviews').update({ comment, admin_reply }).eq('id', currentReviewId);
             showToast('Отзыв обновлен', 'success'); closeModal('reviewModal'); loadReviews();
         }
-        async function deleteReview(id) { if(confirm("Удалить отзыв?")) { await supabase.from('reviews').delete().eq('id', id); loadReviews(); } }
+        async function deleteReview(id) { if(confirm("Удалить отзыв?")) { await supabaseClient.from('reviews').delete().eq('id', id); loadReviews(); } }
 
         // --- 4. ИДЕИ ---
         let currentIdeaId = null, currentIdeaEmail = null;
         async function loadIdeas() {
-            const { data } = await supabase.from('ideas').select('*').order('created_at', {ascending: false});
+            const { data } = await supabaseClient.from('ideas').select('*').order('created_at', {ascending: false});
             const tbody = document.getElementById('ideasTable');
             if(data && data.length) {
                 tbody.innerHTML = data.map(i => {
@@ -662,19 +697,19 @@
             const admin_reply = document.getElementById('ideaReply').value;
 
             if (status === 'approved' && reward_amount > 0) {
-                const { data: u } = await supabase.from('users').select('balance').eq('email', currentIdeaEmail).single();
-                if(u) await supabase.from('users').update({ balance: u.balance + reward_amount }).eq('email', currentIdeaEmail);
+                const { data: u } = await supabaseClient.from('users').select('balance').eq('email', currentIdeaEmail).single();
+                if(u) await supabaseClient.from('users').update({ balance: u.balance + reward_amount }).eq('email', currentIdeaEmail);
             }
 
-            await supabase.from('ideas').update({ status, reward_amount, admin_reply }).eq('id', currentIdeaId);
+            await supabaseClient.from('ideas').update({ status, reward_amount, admin_reply }).eq('id', currentIdeaId);
             showToast('Решение применено', 'success'); closeModal('ideaModal'); loadIdeas();
         }
-        async function deleteIdea(id) { if(confirm("Удалить идею?")) { await supabase.from('ideas').delete().eq('id', id); loadIdeas(); } }
+        async function deleteIdea(id) { if(confirm("Удалить идею?")) { await supabaseClient.from('ideas').delete().eq('id', id); loadIdeas(); } }
 
         // --- 5. РОЗЫГРЫШИ ---
         let currentGwId = null;
         async function loadGiveaways() {
-            const { data } = await supabase.from('giveaways').select('*').order('created_at', {ascending: false});
+            const { data } = await supabaseClient.from('giveaways').select('*').order('created_at', {ascending: false});
             const tbody = document.getElementById('giveawaysTable');
             if(data && data.length) {
                 tbody.innerHTML = data.map(g => {
@@ -717,12 +752,12 @@
 
             const payload = { amount, max_participants, end_time, conditions, is_active };
 
-            if (currentGwId) { await supabase.from('giveaways').update(payload).eq('id', currentGwId); } 
-            else { await supabase.from('giveaways').insert([payload]); }
+            if (currentGwId) { await supabaseClient.from('giveaways').update(payload).eq('id', currentGwId); } 
+            else { await supabaseClient.from('giveaways').insert([payload]); }
             
             showToast('Розыгрыш сохранен', 'success'); closeModal('giveawayModal'); loadGiveaways();
         }
-        async function deleteGw(id) { if(confirm("Удалить розыгрыш?")) { await supabase.from('giveaways').delete().eq('id', id); loadGiveaways(); } }
+        async function deleteGw(id) { if(confirm("Удалить розыгрыш?")) { await supabaseClient.from('giveaways').delete().eq('id', id); loadGiveaways(); } }
 
     </script>
 </body>
