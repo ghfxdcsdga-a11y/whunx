@@ -286,6 +286,27 @@
         <div class="products-grid" id="productsGrid">
             <!-- Динамические товары из БД -->
         </div>
+        <!-- ПЛАШКА РОЗЫГРЫША -->
+<div class="promo-banner giveaway-banner fade-in" id="giveawayBanner" style="display: none; animation-delay: 0.2s; border: 1px solid var(--accent-gold);">
+    <div class="promo-cover-wrap" style="background: rgba(244, 199, 69, 0.1); display: flex; justify-content: center; align-items: center;">
+        <i class="fa-solid fa-gift" style="font-size: 80px; color: var(--accent-gold);"></i>
+    </div>
+    <div class="promo-info">
+        <div class="promo-badge" style="color: var(--accent-gold); border-color: var(--accent-gold);">Розыгрыш</div>
+        <h2 id="gwTitle">Загрузка...</h2>
+        <p id="gwCondText">Условия скоро появятся</p>
+        <div class="countdown" id="gwCountdown">
+            <div class="cd-box"><span class="cd-num" id="gwDays">00</span><span class="cd-label">Дней</span></div>
+            <div class="cd-colon">:</div>
+            <div class="cd-box"><span class="cd-num" id="gwHours">00</span><span class="cd-label">Часов</span></div>
+            <div class="cd-colon">:</div>
+            <div class="cd-box"><span class="cd-num" id="gwMinutes">00</span><span class="cd-label">Минут</span></div>
+            <div class="cd-colon">:</div>
+            <div class="cd-box"><span class="cd-num" id="gwSeconds">00</span><span class="cd-label">Секунд</span></div>
+        </div>
+        <button class="btn-submit" style="width: auto; padding: 15px 40px; margin-top: 15px;" onclick="participateGw()">Принять участие</button>
+    </div>
+</div>
     </main>
 
     <footer>
@@ -510,6 +531,39 @@
             });
         });
 
+        // --- ЛОГИКА РОЗЫГРЫША НА ГЛАВНОЙ ---
+        async function loadActiveGiveaway() {
+            const { data, error } = await supabaseClient.from('giveaways').select('*').eq('is_active', true).single();
+            if (data) {
+                const banner = document.getElementById('giveawayBanner');
+                banner.style.display = 'flex';
+                document.getElementById('gwTitle').innerText = data.amount + ' GOLD';
+                document.getElementById('gwCondText').innerText = data.conditions;
+                startGiveawayCountdown(new Date(data.end_time).getTime());
+            }
+        }
+
+        function startGiveawayCountdown(countDownDate) {
+            setInterval(function() {
+                const now = new Date().getTime();
+                const distance = countDownDate - now;
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                document.getElementById("gwDays").innerText = days < 10 ? '0' + days : days;
+                document.getElementById("gwHours").innerText = hours < 10 ? '0' + hours : hours;
+                document.getElementById("gwMinutes").innerText = minutes < 10 ? '0' + minutes : minutes;
+                document.getElementById("gwSeconds").innerText = seconds < 10 ? '0' + seconds : seconds;
+            }, 1000);
+        }
+
+        async function participateGw() {
+            if (!currentDbUser) { showToast('Ошибка', 'Авторизуйтесь для участия!', 'error'); return; }
+            // Тут мы будем проверять привязку ТГ, когда дойдем до этого
+            showToast('Участие', 'Функция привязки Telegram в разработке', 'info');
+        }
+        
         async function handleGoogleLogin(response) {
             const id_token = response.credential;
             const { data, error } = await supabaseClient.auth.signInWithIdToken({
