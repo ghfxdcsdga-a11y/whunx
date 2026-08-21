@@ -135,7 +135,7 @@ const authenticateUser = async (req, res, next) => {
 };
 
 const requireAdmin = (req, res, next) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Доступ запрещен' });
+  if (req.user.is_admin !== true) return res.status(403).json({ error: 'Доступ запрещен' });
   next();
 };
 
@@ -250,25 +250,73 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
 });
 
 // ==========================================
-// СЕКРЕТНАЯ АДМИН-ПАНЕЛЬ
+// МАРШРУТЫ НОВЫХ МЕХАНИК (Магазин, Отзывы, Идеи, Розыгрыши)
 // ==========================================
-app.post('/api/admin/items', authenticateUser, requireAdmin, async (req, res) => {
-  const { name, weapon, price, rarity, img } = req.body;
-  const { data, error } = await supabase.from('items').insert([{ name, weapon, price, rarity, image_url: img }]).select();
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true, item: data[0] });
+
+// 1. Получить актуальные товары (с учетом скидок)
+app.get('/api/shop/items', async (req, res) => {
+  const { data, error } = await supabase.from('shop_items').select('*').order('id', { ascending: true });
+  if (error) return res.status(500).json({ error: 'Ошибка БД' });
+  res.json({ success: true, items: data });
 });
-app.post('/api/admin/cases', authenticateUser, requireAdmin, async (req, res) => {
-  const { name, price, img } = req.body;
-  const { data, error } = await supabase.from('cases').insert([{ name, price, image_url: img }]).select();
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true, case: data[0] });
+
+// 2. Оставить отзыв
+app.post('/api/reviews/add', authenticateUser, async (req, res) => {
+  const { rating, comment } = req.body;
+  if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Некорректная оценка' });
+
+  // Проверка: есть ли у юзера успешные выводы?
+  const { data: wList, error: wErr } = await supabase.from('withdrawals').select('id').eq('user_email', req.user.email).eq('status', 'completed');
+  if (wErr || !wList || wList.length === 0) return res.status(403).json({ error: 'Оставить отзыв могут только пользователи с успешными выводами!' });
+
+  // Проверка: сколько выводов, столько и отзывов максимум
+  const { data: rList, error: rErr } = await supabase.from('reviews').select('id').eq('user_email', req.user.email);
+  if (rList && rList.length >= wList.length) return res.status(403).json({ error: 'Вы исчерпали лимит отзывов. 1 успешный вывод = 1 отзыв.' });
+
+  const { error } = await supabase.from('reviews').insert([{ user_email: req.user.email, rating, comment }]);
+  if (error) return res.status(500).json({ error: 'Ошибка при сохранении отзыва' });
+  res.json({ success: true, message: 'Отзыв успешно добавлен!' });
 });
-app.post('/api/admin/case-items', authenticateUser, requireAdmin, async (req, res) => {
-  const { case_id, item_id, regular_chance, stattrack_chance } = req.body;
-  const { data, error } = await supabase.from('case_items').insert([{ case_id, item_id, regular_chance, stattrack_chance }]);
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true, message: 'Скин успешно добавлен в кейс' });
+
+// 3. Получить все отзывы (для отдельной страницы на сайте)
+app.get('/api/reviews/list', async (req, res) => {
+  const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: 'Ошибка БД' });
+  res.json({ success: true, reviews: data });
+});
+
+// 4. Предложить идею (с лимитом раз в сутки)
+app.post('/api/ideas/add', authenticateUser, async (req, res) => {
+  const { idea_text } = req.body;
+  if (!idea_text) return res.status(400).json({ error: 'Текст идеи не может быть пустым' });
+
+  // Проверка: предлагал ли сегодня?
+  const oneDayAgo = new Date();
+  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+  const isoString = oneDayAgo.toISOString();
+
+  const { data: recent, error: rErr } = await supabase.from('ideas')
+      .select('id').eq('user_email', req.user.email).gte('created_at', isoString);
+      
+  if (recent && recent.length > 0) return res.status(403).json({ error: 'Вы можете предлагать идеи не чаще 1 раза в сутки!' });
+
+  const { error } = await supabase.from('ideas').insert([{ user_email: req.user.email, idea_text }]);
+  if (error) return res.status(500).json({ error: 'Ошибка при сохранении' });
+  res.json({ success: true, message: 'Идея отправлена на модерацию!' });
+});
+
+// 5. Получить список идей (для отдельной страницы на сайте)
+app.get('/api/ideas/list', async (req, res) => {
+  const { data, error } = await supabase.from('ideas').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: 'Ошибка БД' });
+  res.json({ success: true, ideas: data });
+});
+
+// 6. Получить активные розыгрыши
+app.get('/api/giveaways/active', async (req, res) => {
+  const { data, error } = await supabase.from('giveaways').select('*').eq('is_active', true).order('end_time', { ascending: true });
+  if (error) return res.status(500).json({ error: 'Ошибка БД' });
+  res.json({ success: true, giveaways: data });
 });
 
 // ==========================================
