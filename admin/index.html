@@ -50,7 +50,7 @@
         /* ── ЭКРАН ВХОДА ── */
         .auth-overlay { position: fixed; inset: 0; background: var(--bg-body); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; backdrop-filter: blur(25px); transition: opacity 0.5s ease; }
         .auth-box { background: rgba(15, 15, 20, 0.6); border: 1px solid var(--glass-border); border-radius: 24px; padding: 50px; max-width: 500px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(244, 199, 69, 0.05); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
-        .auth-icon { font-size: 4rem; color: var(--accent-gold); margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--accent-gold-glow)); font-family: "Font Awesome 6 Free"; font-weight: 900; }
+        .auth-icon { font-size: 4rem; color: var(--accent-gold); margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--accent-gold-glow)); font-family: "Font Awesome 6 Free"; font-weight: 900;}
         .auth-title { font-size: 1.5rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
         .auth-desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5; font-weight: 600; }
         
@@ -58,10 +58,11 @@
         .loader-fill { height: 100%; width: 50%; background: var(--accent-gold); border-radius: 10px; animation: loadIndeterminate 1.5s infinite ease-in-out; box-shadow: 0 0 15px var(--accent-gold-glow); }
         @keyframes loadIndeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
 
-        /* КНОПКА GOOGLE */
+        /* ИДЕАЛЬНАЯ КНОПКА GOOGLE */
         .auth-btn-container { display: flex; position: relative; width: 100%; max-width: 320px; margin-top: 5px; }
-        .google-login-visual-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 16px; border-radius: 14px; background: rgba(244, 199, 69, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 0 15px rgba(244, 199, 69, 0.2); transition: 0.3s; cursor: pointer; }
-        .google-login-visual-btn:hover { background: rgba(244, 199, 69, 0.2); box-shadow: 0 0 25px rgba(244, 199, 69, 0.4); transform: translateY(-2px); }
+        .google-login-visual-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 16px; border-radius: 14px; background: rgba(244, 199, 69, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 0 15px rgba(244, 199, 69, 0.2); transition: 0.3s; }
+        .auth-btn-container:hover .google-login-visual-btn { background: rgba(244, 199, 69, 0.2); box-shadow: 0 0 25px rgba(244, 199, 69, 0.4); transform: translateY(-2px); }
+        .gis-wrapper { position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; opacity: 0.01; z-index: 100; overflow: hidden; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         
         .btn-back { display: inline-flex; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 14px 30px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: 0.3s; margin-top: 15px; align-items: center; gap: 10px;}
         .btn-back:hover { background: rgba(239, 68, 68, 0.15); border-color: var(--error); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); color: var(--error); }
@@ -89,7 +90,7 @@
         .table-container { background: rgba(15, 15, 20, 0.6); border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px; backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow-x: auto; margin-bottom: 30px; }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
         .table-header h3 { font-size: 1.2rem; font-weight: 800; color: #fff; text-transform: uppercase; }
-        .action-btn { background: var(--accent-gold); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; }
+        .action-btn { background: var(--accent-gold); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; font-family: 'Montserrat', sans-serif;}
         .action-btn:hover { filter: brightness(1.15); box-shadow: 0 5px 15px var(--accent-gold-glow); transform: translateY(-2px); }
 
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
@@ -120,13 +121,13 @@
         
         .form-group { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 15px; }
         .form-label { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-        .form-input { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: #fff; outline: none; transition: 0.3s; font-weight: 600;}
+        .form-input { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: #fff; outline: none; transition: 0.3s; font-weight: 600; font-family: 'Montserrat', sans-serif;}
         .form-input:focus { border-color: var(--accent-gold); box-shadow: inset 0 0 10px var(--accent-gold-glow); }
         
         .checkbox-label { cursor: pointer; color: #fff; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 15px;}
 
         .modal-btns { display: flex; gap: 15px; margin-top: 25px; }
-        .m-btn { padding: 14px 25px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; border: none; transition: 0.3s; flex: 1;}
+        .m-btn { padding: 14px 25px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; border: none; transition: 0.3s; flex: 1; font-family: 'Montserrat', sans-serif;}
         .m-btn-cancel { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); }
         .m-btn-cancel:hover { background: rgba(255,255,255,0.1); }
         .m-btn-confirm { background: var(--accent-gold); color: #000; box-shadow: 0 5px 15px var(--accent-gold-glow); }
@@ -135,7 +136,9 @@
         .user-history-table th, .user-history-table td { font-size: 0.85rem; padding: 10px; }
     </style>
     
-    <!-- Скрипт Supabase (Загружается синхронно, чтобы не тупить) -->
+    <!-- Скрипт Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleAuth()"></script>
+    <!-- Скрипт Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -143,24 +146,27 @@
     <div class="bg-blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- ЭКРАН ПРОВЕРКИ И ВХОДА (ПО УМОЛЧАНИЮ ВСЕГДА ПОКАЗЫВАЕТ КНОПКУ!) -->
+    <!-- ЭКРАН ПРОВЕРКИ И ВХОДА (КНОПКА ВИДИМА ПО УМОЛЧАНИЮ) -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-box">
             <i class="fa-solid fa-lock auth-icon" id="authIcon"></i>
             <h2 class="auth-title" id="authTitle">АВТОРИЗАЦИЯ</h2>
-            <p class="auth-desc" id="authDesc">Доступ только для администраторов</p>
+            <p class="auth-desc" id="authDesc">Вход только для администраторов</p>
             
-            <div class="loader-bar" id="authLoader" style="display: none;"><div class="loader-fill"></div></div>
+            <div class="loader-bar" id="authLoader"><div class="loader-fill"></div></div>
 
-            <!-- ИДЕАЛЬНАЯ КНОПКА АВТОРИЗАЦИИ (ВИДИМА ИЗНАЧАЛЬНО) -->
-            <div class="auth-btn-container" id="authButtonWrapper" style="display: flex;">
-                <button class="google-login-visual-btn" onclick="signInWithGoogle()">
+            <!-- ИДЕАЛЬНАЯ КНОПКА АВТОРИЗАЦИИ (с прозрачным слоем) -->
+            <div class="auth-btn-container" id="authButtonWrapper">
+                <div class="google-login-visual-btn">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 24px;"> ВОЙТИ В СИСТЕМУ
-                </button>
+                </div>
+                <div class="gis-wrapper">
+                    <div id="google-btn-wrapper" style="transform: scale(3); transform-origin: center;"></div>
+                </div>
             </div>
 
             <!-- Кнопка возврата в магазин -->
-            <a href="https://whunx.shop/" class="btn-back" id="btnBack" style="display: inline-flex;">
+            <a href="https://whunx.shop/" class="btn-back" id="btnBack">
                 <i class="fa-solid fa-arrow-left"></i> Вернуться в магазин
             </a>
         </div>
@@ -355,10 +361,9 @@
     </div>
 
     <script>
-        // ИНИЦИАЛИЗАЦИЯ SUPABASE
-        let supabase;
         const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhucGJibXl0dGV4cW10YnR5YmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2OTc4NDcsImV4cCI6MjEwMjI3Mzg0N30.7x3UDegy7zCeT88-2Fps-uF2nMR-PDAnnXcLt5we0zw';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- УТИЛИТЫ ---
         function showToast(msg, type='info') {
@@ -389,90 +394,67 @@
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // --- ЛОГИКА АВТОРИЗАЦИИ ---
-        window.addEventListener('DOMContentLoaded', () => {
-            initApp();
-        });
-
-        function initApp() {
-            // Ждем пока загрузится Supabase
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                backgroundSessionCheck();
+        // --- ЛОГИКА АВТОРИЗАЦИИ GOOGLE IDENTITY SERVICES ---
+        
+        function initGoogleAuth() {
+            if (window.google) {
+                google.accounts.id.initialize({
+                    client_id: '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com',
+                    callback: handleGoogleLogin
+                });
+                google.accounts.id.renderButton(document.getElementById("google-btn-wrapper"), {
+                    theme: "outline", size: "large", type: "standard", width: 400
+                });
+                
+                // Проверяем сессию только ПОСЛЕ инициализации гугла (если он загрузился)
+                checkSession();
             } else {
-                setTimeout(initApp, 200);
+                // Если скрипт от Гугла еще не успел подгрузиться - ждем и проверяем заново
+                setTimeout(initGoogleAuth, 100);
             }
         }
 
-        // Проверяем сессию на фоне. Кнопка в это время остается видимой.
-        async function backgroundSessionCheck() {
-            try {
-                // Таймаут 3 секунды, чтобы не виснуть
-                const sessionPromise = supabase.auth.getSession();
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000));
-                
-                const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
-                
-                if (session) {
-                    // У нас есть сессия. Прячем кнопку и показываем лоадер "Проверка прав"
-                    document.getElementById('authButtonWrapper').style.display = 'none';
-                    document.getElementById('btnBack').style.display = 'none';
-                    document.getElementById('authLoader').style.display = 'block';
-                    document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
-                    document.getElementById('authDesc').innerText = 'Сверка полномочий...';
-
-                    const { data: dbUser } = await supabase.from('users').select('is_admin').eq('email', session.user.email).single();
-                    
-                    if (dbUser && dbUser.is_admin === true) {
-                        // ЮЗЕР АДМИН - ОТКРЫВАЕМ ПАНЕЛЬ
-                        document.getElementById('authOverlay').style.display = 'none';
-                        document.getElementById('mainSidebar').style.display = 'flex';
-                        document.getElementById('mainContent').style.display = 'flex';
-                        loadShop();
-                    } else {
-                        // ЮЗЕР НЕ АДМИН
-                        setAuthError('У вас нет прав администратора!');
-                    }
-                }
-                // Если сессии нет, мы ничего не делаем. Кнопка уже видима на экране!
-            } catch (err) {
-                // Ошибка интернета или таймаут - ничего не делаем, кнопка доступна для ручного нажатия
-            }
-        }
-
-        function showLoginScreen() {
-            document.getElementById('authIcon').className = 'fa-solid fa-lock auth-icon';
-            document.getElementById('authIcon').style.color = 'var(--accent-gold)';
-            document.getElementById('authTitle').innerText = 'АВТОРИЗАЦИЯ';
-            document.getElementById('authDesc').innerText = 'Вход только для администраторов';
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
             
-            document.getElementById('authLoader').style.display = 'none'; 
-            document.getElementById('authButtonWrapper').style.display = 'flex'; 
-            document.getElementById('btnBack').style.display = 'inline-flex';
+            if (session) {
+                const user = session.user;
+                // Есть сессия - показываем лоадер и сверяем админку
+                document.getElementById('authButtonWrapper').style.display = 'none';
+                document.getElementById('btnBack').style.display = 'none';
+                document.getElementById('authLoader').style.display = 'block';
+                document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
+                document.getElementById('authDesc').innerText = 'Сверка полномочий...';
+
+                const { data: dbUser } = await supabase.from('users').select('is_admin').eq('email', user.email).single();
+                if (dbUser && dbUser.is_admin === true) {
+                    document.getElementById('authOverlay').style.display = 'none';
+                    document.getElementById('mainSidebar').style.display = 'flex';
+                    document.getElementById('mainContent').style.display = 'flex';
+                    loadShop();
+                } else {
+                    setAuthError('У вас нет прав администратора!');
+                }
+            } else {
+                // НЕТ СЕССИИ - Ничего не делаем! Кнопка уже на экране.
+            }
         }
 
-        // Вызывается при нажатии на нашу нарисованную кнопку
-        async function signInWithGoogle() {
-            if (!supabase) {
-                showToast('База данных еще загружается. Подождите пару секунд.', 'error');
-                return;
-            }
-
+        async function handleGoogleLogin(response) {
             // Прячем кнопку, показываем лоадер
             document.getElementById('authButtonWrapper').style.display = 'none';
             document.getElementById('btnBack').style.display = 'none';
             document.getElementById('authLoader').style.display = 'block';
-            document.getElementById('authTitle').innerText = 'АВТОРИЗАЦИЯ';
-            document.getElementById('authDesc').innerText = 'Открытие окна входа...';
+            document.getElementById('authTitle').innerText = 'СИНХРОНИЗАЦИЯ';
+            document.getElementById('authDesc').innerText = 'Проверка данных аккаунта...';
 
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { data, error } = await supabase.auth.signInWithIdToken({
                 provider: 'google',
+                token: response.credential
             });
+            if (error) { setAuthError('Ошибка входа: ' + error.message); return; }
             
-            if (error) {
-                showToast('Ошибка при открытии окна входа', 'error');
-                showLoginScreen(); // Возвращаем кнопку, если ошибка
-            }
+            checkSession();
         }
 
         function setAuthError(msg) {
