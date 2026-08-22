@@ -1245,13 +1245,31 @@
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Обработка...';
 
             try {
+                // БЕРЕМ СВЕЖИЙ ТОКЕН ИЗ SUPABASE ПЕРЕД ЗАПРОСОМ
+                const { data: sessionData } = await supabaseClient.auth.getSession();
+                const freshToken = sessionData?.session?.access_token || currentSessionToken;
+
+                if (!freshToken) {
+                    showToast('Ошибка', 'Сессия истекла. Пожалуйста, перезайдите в аккаунт.', 'error');
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                    return;
+                }
+
                 const response = await fetch(`${BACKEND_URL}/api/giveaways/participate`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ gwId })
+                    method: 'POST', 
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${freshToken}` 
+                    }, 
+                    body: JSON.stringify({ gwId })
                 });
+                
                 const result = await response.json();
                 if (result.success) { 
                     showToast('Успех', 'Вы успешно участвуете в розыгрыше!', 'success'); 
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Успешно';
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Вы участник';
+                    btn.onclick = null; // Отключаем повторное нажатие
                     loadActiveGiveaway(); 
                 } 
                 else { 
