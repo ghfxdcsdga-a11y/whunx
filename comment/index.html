@@ -98,6 +98,9 @@
         .sidebar-link i { font-size: 1.2rem; width: 25px; text-align: center; color: var(--accent-purple); transition: 0.3s;}
         .sidebar-link:hover { background: rgba(255,255,255,0.03); color: #fff; border-color: var(--glass-border); transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2);}
         .sidebar-link:hover i { text-shadow: 0 0 15px var(--accent-purple-glow); }
+        
+        /* Свечение активной вкладки (фиолетовое) */
+        .sidebar-link.active { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #fff; box-shadow: 0 5px 15px var(--accent-purple-glow);}
 
         .logo { font-size: 26px; font-weight: 900; letter-spacing: 1px; cursor: pointer; color: #fff; text-transform: uppercase;} 
         .logo span { color: var(--accent-purple); text-shadow: 0 0 20px var(--accent-purple-glow); }
@@ -236,7 +239,7 @@
         </div>
         <div class="sidebar-nav">
             <a href="https://whunx.shop/" class="sidebar-link"><i class="fa-solid fa-store"></i> Магазин голды</a>
-            <a href="https://whunx.shop/comment" class="sidebar-link" style="background: rgba(255,255,255,0.05); border-color: var(--glass-border); color: #fff;"><i class="fa-solid fa-star"></i> Отзывы клиентов</a>
+            <a href="https://whunx.shop/comment" class="sidebar-link active"><i class="fa-solid fa-star"></i> Отзывы клиентов</a>
             <a href="https://whunx.shop/idea" class="sidebar-link"><i class="fa-solid fa-lightbulb"></i> Предложить идею</a>
             <a href="https://whunx.shop/top" class="sidebar-link"><i class="fa-solid fa-trophy"></i> Зал Славы</a>
         </div>
