@@ -29,6 +29,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <style>
         /* =========================================
@@ -121,11 +122,10 @@
         .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; color: var(--text-muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; } .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* =========================================
-           MAIN SHOP SECTION & GIVEAWAY
+           MAIN SHOP SECTION
         ========================================= */
         main { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 60px 20px; z-index: 10; position: relative; }
         .shop-header { text-align: center; margin-bottom: 50px; } .shop-header h1 { font-size: 36px; font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 20px rgba(255,255,255,0.2); } .shop-header p { color: var(--text-muted); font-size: 16px; }
-        
         .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-bottom: 60px; }
         
         .product-card { background: rgba(20, 22, 30, 0.4); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 30px 20px; text-align: center; transition: var(--transition); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
@@ -151,11 +151,16 @@
         /* РОЗЫГРЫШ */
         .giveaway-banner { background: rgba(15, 15, 20, 0.7); backdrop-filter: blur(25px); border: 1px solid var(--accent-gold); border-radius: 30px; padding: 40px; display: flex; gap: 40px; align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(244, 199, 69, 0.05); position: relative; overflow: hidden; margin-bottom: 50px; }
         .giveaway-banner::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at center, rgba(244,199,69,0.1) 0%, transparent 60%); animation: rotate 20s linear infinite reverse; pointer-events: none; z-index: 0; }
-        .giveaway-cover { position: relative; flex-shrink: 0; width: 200px; height: 200px; z-index: 1; border-radius: 20px; background: rgba(244, 199, 69, 0.1); border: 1px solid rgba(244, 199, 69, 0.3); display: flex; justify-content: center; align-items: center; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
-        .giveaway-cover i { font-size: 80px; color: var(--accent-gold); filter: drop-shadow(0 0 20px var(--accent-gold-glow)); animation: floatOrb 4s ease-in-out infinite alternate; }
-        .giveaway-info { flex: 1; z-index: 1; display: flex; flex-direction: column; gap: 15px; }
+        
+        .giveaway-cover { position: relative; flex-shrink: 0; width: 200px; height: 200px; z-index: 1; border-radius: 20px; background: rgba(244, 199, 69, 0.1); border: 1px solid rgba(244, 199, 69, 0.3); display: flex; justify-content: center; align-items: center; box-shadow: 0 15px 40px rgba(0,0,0,0.6); overflow: hidden; }
+        /* Новая аккуратная анимация только для подарка */
+        @keyframes floatGift { 0% { transform: translateY(0px); } 100% { transform: translateY(-15px); } }
+        .giveaway-cover i { font-size: 80px; color: var(--accent-gold); filter: drop-shadow(0 0 20px var(--accent-gold-glow)); animation: floatGift 3s ease-in-out infinite alternate; }
+        
+        .giveaway-info { flex: 1; z-index: 1; display: flex; flex-direction: column; gap: 10px; }
         .gw-badge { display: inline-block; background: rgba(244, 199, 69, 0.1); color: var(--accent-gold); padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; border: 1px solid var(--accent-gold); box-shadow: 0 0 15px var(--accent-gold-glow); align-self: flex-start; }
-        .giveaway-info h2 { font-size: 3.5rem; font-weight: 900; line-height: 1.1; color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.2); letter-spacing: 1px; }
+        .giveaway-info h2 { font-size: 3.5rem; font-weight: 900; line-height: 1.1; color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.2); letter-spacing: 1px; margin-top: 5px; }
+        .gw-winner-text { color: var(--text-muted); font-size: 14px; font-weight: 600; margin-top: -5px; }
         .giveaway-info p { color: var(--text-muted); font-size: 1rem; font-weight: 600; line-height: 1.5; }
         
         .countdown { display: flex; gap: 15px; margin-top: 10px; }
@@ -262,7 +267,7 @@
 
     <div id="toastContainer"></div>
 
-    <!-- БОКОВОЕ МЕНЮ (ДЛЯ ОТЗЫВОВ И ИДЕЙ) -->
+    <!-- БОКОВОЕ МЕНЮ -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
     <div class="sidebar-menu" id="sidebarMenu">
         <div class="sidebar-header">
@@ -314,11 +319,16 @@
         <!-- ПЛАШКА РОЗЫГРЫША -->
         <div class="promo-banner giveaway-banner fade-in" id="giveawayBanner" style="display: none;">
             <div class="giveaway-cover">
-                <i class="fa-solid fa-gift"></i>
+                <!-- Подарок с правильной анимацией -->
+                <i class="fa-solid fa-gift" id="gwGiftIcon"></i>
+                <!-- Картинка победителя (скрыта по умолчанию) -->
+                <img id="gwWinnerAvatarInside" src="" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:20px;">
             </div>
             <div class="giveaway-info">
                 <div class="gw-badge" id="gwStatusBadge">Розыгрыш</div>
                 <h2 id="gwTitle">Загрузка...</h2>
+                <div id="gwWinnerName" style="display:none; color: var(--text-muted); font-size: 14px; margin-top: -5px; margin-bottom: 5px; font-weight: 600;"></div>
+                
                 <p id="gwCondText">Условия скоро появятся</p>
                 <p id="gwParticipants" style="color: var(--accent-gold); font-size: 14px; font-weight: 800;">Участников: 0 / ∞</p>
                 
@@ -330,14 +340,6 @@
                     <div class="cd-box"><span class="cd-num" id="gwMinutes">00</span><span class="cd-label">Минут</span></div>
                     <div class="cd-colon">:</div>
                     <div class="cd-box"><span class="cd-num" id="gwSeconds">00</span><span class="cd-label">Секунд</span></div>
-                </div>
-
-                <div id="gwWinnerInfo" style="display: none; align-items: center; gap: 15px; background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 12px; border: 1px solid var(--accent-green); margin-top: 10px; width: fit-content;">
-                    <img id="gwWinnerAvatar" src="" style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover;">
-                    <div style="text-align: left;">
-                        <span style="display: block; font-size: 11px; color: var(--accent-green); font-weight: 800; text-transform: uppercase;">Победитель розыгрыша</span>
-                        <span id="gwWinnerName" style="font-size: 18px; font-weight: 900; color: #fff;">Name</span>
-                    </div>
                 </div>
 
                 <button class="btn-submit" id="gwActionBtn" style="width: auto; padding: 15px 40px; margin-top: 5px;">Принять участие</button>
@@ -501,6 +503,7 @@
         let currentSessionToken = null;
         let pendingPurchaseItem = null;
         let chatInterval = null;
+        let socket = null;
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -575,6 +578,16 @@
                 if (event === 'SIGNED_IN' && session) handleUserLogin(session);
                 else if (event === 'SIGNED_OUT') handleUserLogout();
             });
+
+            // Инициализация Socket.io для получения личной плашки
+            try {
+                socket = io(BACKEND_URL);
+                socket.on('open_plashka', (data) => {
+                    openGiftWithdrawModal(data.amount);
+                });
+            } catch(e) {
+                console.log("Сокеты временно недоступны");
+            }
         });
 
         async function handleGoogleLogin(response) {
@@ -613,6 +626,11 @@
             updateUI();
             
             if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
+
+            // Регистрация сокета при входе
+            if (socket && socket.connected) {
+                socket.emit('register_client', { token: currentSessionToken });
+            }
         }
 
         async function syncUserData() {
@@ -768,7 +786,6 @@
 
             if (data.is_active && now < endTime) {
                 // АКТИВЕН
-                document.getElementById('gwWinnerInfo').style.display = 'none';
                 document.getElementById('gwCountdown').style.display = 'flex';
                 document.getElementById('gwActionBtn').style.display = 'block';
                 document.getElementById('gwActionBtn').innerText = 'Принять участие';
@@ -778,12 +795,18 @@
                 // ВРЕМЯ ВЫШЛО, НО В БАЗЕ ЕЩЕ АКТИВЕН -> ВЫБИРАЕМ ПОБЕДИТЕЛЯ
                 endGiveaway(data);
             } else if (!data.is_active && data.winner) {
-                // ЗАВЕРШЕН, ПОКАЗЫВАЕМ ПОБЕДИТЕЛЯ
+                // ЗАВЕРШЕН, ПОКАЗЫВАЕМ ПОБЕДИТЕЛЯ И ПРЯЧЕМ ПОДАРОК
                 document.getElementById('gwCountdown').style.display = 'none';
                 document.getElementById('gwActionBtn').style.display = 'none';
-                document.getElementById('gwWinnerInfo').style.display = 'flex';
-                document.getElementById('gwWinnerAvatar').src = getSafeAvatar(data.winner.avatar);
-                document.getElementById('gwWinnerName').innerText = data.winner.nickname;
+                
+                document.getElementById('gwGiftIcon').style.display = 'none';
+                const winnerImg = document.getElementById('gwWinnerAvatarInside');
+                winnerImg.src = getSafeAvatar(data.winner.avatar);
+                winnerImg.style.display = 'block';
+
+                const winnerName = document.getElementById('gwWinnerName');
+                winnerName.innerHTML = `Победитель: <span>${data.winner.nickname}</span>`;
+                winnerName.style.display = 'block';
                 
                 const badge = document.getElementById('gwStatusBadge');
                 badge.innerText = 'Розыгрыш завершен';
@@ -832,29 +855,18 @@
         async function participateGw(gwId, participants, maxP) {
             if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт для участия', 'info');
             
-            // Проверка участия
             if (participants.find(p => p.email === currentDbUser.email)) {
                 return showToast('Ошибка', 'Вы уже участвуете!', 'error');
             }
             
-            // Проверка лимита
             if (maxP !== '∞' && participants.length >= maxP) {
                 return showToast('Ошибка', 'Мест больше нет!', 'error');
             }
 
-            // Добавляем юзера
-            const newParticipant = {
-                email: currentDbUser.email,
-                nickname: currentDbUser.username,
-                avatar: currentDbUser.avatar_url
-            };
-
+            const newParticipant = { email: currentDbUser.email, nickname: currentDbUser.username, avatar: currentDbUser.avatar_url };
             const updatedParticipants = [...participants, newParticipant];
 
-            const { error } = await supabaseClient.from('giveaways').update({
-                participants: updatedParticipants
-            }).eq('id', gwId);
-
+            const { error } = await supabaseClient.from('giveaways').update({ participants: updatedParticipants }).eq('id', gwId);
             if (error) {
                 showToast('Ошибка', 'Не удалось принять участие', 'error');
             } else {
@@ -919,17 +931,23 @@
         function attemptPurchase(itemId) {
             if (!currentDbUser) { showToast('Ошибка', 'Войдите в аккаунт для покупок.', 'error'); return; }
             const item = shopItemsCache.find(i => i.id === itemId);
-            if (currentDbUser.balance >= item.finalPrice) { pendingPurchaseItem = item; openPurchaseWithdrawModal(item); } 
+            if (currentDbUser.balance >= item.finalPrice) { pendingPurchaseItem = { gold: item.gold, finalPrice: item.finalPrice, isGift: false }; openPurchaseWithdrawModal(item.gold, item.finalPrice); } 
             else { showToast('Внимание', 'Недостаточно средств. Пополните баланс.', 'info'); openModal('topupModal'); document.getElementById('topupAmountInput').value = item.finalPrice; }
         }
 
-        function openPurchaseWithdrawModal(item) {
+        // ЛОГИКА ДЛЯ ПОДАРОЧНОЙ ПЛАШКИ
+        function openGiftWithdrawModal(goldAmount) {
+            pendingPurchaseItem = { gold: goldAmount, finalPrice: 0, isGift: true };
+            openPurchaseWithdrawModal(goldAmount, 0);
+        }
+
+        function openPurchaseWithdrawModal(gold, price) {
             openModal('purchaseWithdrawModal');
             let randomCents = (Math.floor(Math.random() * 99) + 1) / 100;
-            let listingPrice = (item.gold * 1.25) + randomCents;
-            document.getElementById('pwGoldAmount').value = item.gold + ' G';
+            let listingPrice = (gold * 1.25) + randomCents;
+            document.getElementById('pwGoldAmount').value = gold + ' G';
             document.getElementById('pwListingPrice').innerText = listingPrice.toFixed(2) + ' G';
-            document.getElementById('pwBtnAction').innerText = `Списать ${item.finalPrice} ₸`;
+            document.getElementById('pwBtnAction').innerText = price === 0 ? `Вывести приз (0 ₸)` : `Списать ${price} ₸`;
             document.getElementById('pwBtnAction').disabled = false;
         }
 
