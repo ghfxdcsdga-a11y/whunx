@@ -21,13 +21,14 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- ПРЕМИАЛЬНЫЙ ШРИФТ MONTSERRAT -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- БИБЛИОТЕКА ДЛЯ КОНФЕТТИ -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
         /* =========================================
@@ -147,7 +148,6 @@
         
         .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px; margin-bottom: 60px; }
         
-        /* ПРЕМИАЛЬНЫЕ КАРТОЧКИ ТОВАРОВ */
         .product-card { 
             background: linear-gradient(145deg, rgba(30, 34, 48, 0.3) 0%, rgba(15, 18, 26, 0.6) 100%); 
             backdrop-filter: blur(25px); 
@@ -276,8 +276,14 @@
         .hc-bot { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; flex-wrap: wrap; gap: 10px;}
         .hc-date { font-size: 12px; color: var(--text-muted); font-weight: 600; }
         
+        /* АНИМАЦИИ ДЛЯ ПРОМОКОДОВ */
+        .input-success { border-color: var(--accent-green) !important; box-shadow: inset 0 5px 10px rgba(0,0,0,0.3), 0 0 20px rgba(16, 185, 129, 0.4) !important; color: var(--accent-green) !important; }
+        .input-error { border-color: var(--accent-red) !important; box-shadow: inset 0 5px 10px rgba(0,0,0,0.3), 0 0 15px rgba(239, 68, 68, 0.3) !important; animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
+        .promo-reward-text { display: inline-block; padding: 12px 25px; border-radius: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); color: var(--accent-green); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;}
+
         /* =========================================
-           MOBILE RESPONSIVENESS (ИСПРАВЛЕНА ШАПКА)
+           MOBILE RESPONSIVENESS
         ========================================= */
         @media (max-width: 768px) {
             header { padding: 0 10px; height: 70px; }
@@ -321,7 +327,6 @@
             .btn-donate { justify-content: center; width: 100%; padding: 15px;}
         }
         
-        /* СКРЫВАЕМ ПРИСТАВКУ .SHOP НА ОЧЕНЬ УЗКИХ ЭКРАНАХ */
         @media (max-width: 400px) {
             .logo span { display: none; }
             .logo { font-size: 16px; }
@@ -346,7 +351,7 @@
             <i class="fa-solid fa-xmark sidebar-close" onclick="toggleSidebar()"></i>
         </div>
         <div class="sidebar-nav">
-            <a href="https://whunx.shop/" class="sidebar-link"><i class="fa-solid fa-store"></i> Магазин голды</a>
+            <a href="https://whunx.shop/" class="sidebar-link" style="background: rgba(255,255,255,0.05); border-color: var(--glass-border); color: #fff;"><i class="fa-solid fa-store"></i> Магазин голды</a>
             <a href="https://whunx.shop/comment" class="sidebar-link"><i class="fa-solid fa-star"></i> Отзывы клиентов</a>
             <a href="https://whunx.shop/idea" class="sidebar-link"><i class="fa-solid fa-lightbulb"></i> Предложить идею</a>
         </div>
@@ -380,6 +385,8 @@
                     <div class="dropdown-item" onclick="openHistoryModal()"><i class="fa-solid fa-clock-rotate-left"></i> История покупок</div>
                     <div class="dropdown-item" onclick="openModal('settingsModal')"><i class="fa-solid fa-gear"></i> Настройки</div>
                     <div class="dropdown-item" onclick="openModal('topupModal')"><i class="fa-solid fa-wallet"></i> Пополнить баланс</div>
+                    <!-- НОВЫЙ ПУНКТ ПРОМОКОДА -->
+                    <div class="dropdown-item" onclick="openModal('promoActivationModal')" style="color: var(--accent-gold); border-top: 1px solid rgba(255,255,255,0.05); border-radius: 0; padding-top: 15px; margin-top: 5px;"><i class="fa-solid fa-ticket"></i> Ввести промокод</div>
                     <div class="dropdown-item logout" onclick="logout()" style="color: var(--accent-red);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Выйти</div>
                 </div>
             </div>
@@ -400,7 +407,6 @@
                 
                 <p id="gwCondText">Условия скоро появятся</p>
                 
-                <!-- БЛОК С КАНАЛАМИ ТЕЛЕГРАМ -->
                 <div id="gwChannelsDiv" style="display: none; margin-top: 5px; gap: 10px; flex-wrap: wrap; justify-content: center;"></div>
                 
                 <p id="gwParticipants" style="color: var(--accent-gold); font-size: 14px; font-weight: 800;">Участников: 0 / ∞</p>
@@ -447,6 +453,25 @@
         <div class="chat-input-area">
             <input type="text" id="chatInput" class="chat-input" placeholder="Введите сообщение..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
             <button class="chat-send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: ПРОМОКОД -->
+    <div class="modal-overlay" id="promoActivationModal">
+        <div class="modal-box" style="max-width: 450px; border-top-color: var(--accent-gold);">
+            <button class="modal-close" onclick="closeModal('promoActivationModal')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title">Активация промокода</div>
+            
+            <div class="f-input-group" style="margin-bottom: 25px;">
+                <div class="f-input-wrapper">
+                    <input type="text" id="promoActivationInput" class="f-input" placeholder="ВВЕДИТЕ КОД" style="text-transform: uppercase; text-align: center; font-size: 20px; font-weight: 900; letter-spacing: 2px;">
+                    <i class="fa-solid fa-ticket" style="position:absolute; left:20px; top:50%; transform:translateY(-50%); color:var(--accent-gold); z-index:2; font-size: 20px;"></i>
+                </div>
+            </div>
+
+            <div id="promoResultMessage" style="display: none; text-align: center; margin-bottom: 20px; animation: slideInRight 0.4s ease forwards;"></div>
+
+            <button class="btn-submit" id="promoActivateBtn" onclick="activatePromo()" style="background: var(--accent-gold); color: #000; box-shadow: 0 10px 25px var(--accent-gold-glow);">Активировать</button>
         </div>
     </div>
 
@@ -512,14 +537,10 @@
     </div>
 
     <div class="modal-overlay" id="historyModal">
-        <div class="modal-box" style="max-width: 600px;"> <!-- Сделали модалку поуже для красоты -->
+        <div class="modal-box" style="max-width: 600px;"> 
             <button class="modal-close" onclick="closeModal('historyModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">История выводов</div>
-            
-            <!-- Вместо таблицы теперь контейнер для карточек -->
-            <div class="history-list" id="historyListContainer">
-                <!-- JS будет вставлять карточки сюда -->
-            </div>
+            <div class="history-list" id="historyListContainer"></div>
         </div>
     </div>
 
@@ -567,7 +588,9 @@
         let pendingPurchaseItem = null;
         let chatInterval = null;
         let socket = null;
-        let gwParticipantsInterval = null; // Интервал для живого обновления участников
+        let gwParticipantsInterval = null; 
+        
+        let localDiscountValue = 0; // Для хранения скидки от промокода
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -588,30 +611,17 @@
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
 
-        // ==========================================
-        // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ GOOGLE
-        // ==========================================
         function initGoogleAuth() {
             const btn = document.getElementById("googleLoginBtn");
             const fakeText = document.getElementById('fakeGoogleText');
-
             if (currentSessionToken) return;
 
             if (window.google && window.google.accounts && btn && fakeText) {
                 try {
-                    google.accounts.id.initialize({
-                        client_id: GOOGLE_CLIENT_ID,
-                        callback: handleGoogleLogin
-                    });
-                    
-                    google.accounts.id.renderButton(
-                        btn,
-                        { theme: "outline", size: "large", type: "standard", width: 250 }
-                    );
-
+                    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin });
+                    google.accounts.id.renderButton(btn, { theme: "outline", size: "large", type: "standard", width: 250 });
                     fakeText.innerText = 'Войти';
                 } catch (e) {
-                    console.error("Ошибка загрузки Google Auth:", e);
                     fakeText.innerText = 'Ошибка';
                 }
             } else {
@@ -648,24 +658,14 @@
                 socket.on('open_plashka', (data) => {
                     openGiftWithdrawModal(data.amount);
                 });
-            } catch(e) {
-                console.log("Сокеты временно недоступны");
-            }
+            } catch(e) {}
         });
 
         async function handleGoogleLogin(response) {
             const id_token = response.credential;
-            const { data, error } = await supabaseClient.auth.signInWithIdToken({
-                provider: 'google',
-                token: id_token
-            });
-
-            if (error) {
-                showToast('Ошибка', 'Не удалось авторизоваться', 'error');
-            } else {
-                showToast('Успех', 'Успешный вход!', 'success');
-                handleUserLogin(data.session);
-            }
+            const { data, error } = await supabaseClient.auth.signInWithIdToken({ provider: 'google', token: id_token });
+            if (error) showToast('Ошибка', 'Не удалось авторизоваться', 'error');
+            else { showToast('Успех', 'Успешный вход!', 'success'); handleUserLogin(data.session); }
         }
 
         async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); }
@@ -689,10 +689,7 @@
             updateUI();
             
             if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
-
-            if (socket && socket.connected) {
-                socket.emit('register_client', { token: currentSessionToken });
-            }
+            if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
         }
 
         async function syncUserData() {
@@ -754,10 +751,7 @@
             document.getElementById('googleLoginWrapper').style.display = 'inline-block';
             document.getElementById('balanceModule').style.display = 'none';
             document.getElementById('profileModule').style.display = 'none';
-            if (window.syncInterval) {
-                clearInterval(window.syncInterval);
-                window.syncInterval = null;
-            }
+            if (window.syncInterval) { clearInterval(window.syncInterval); window.syncInterval = null; }
             initGoogleAuth();
         }
 
@@ -776,7 +770,6 @@
             const safeAvatar = getSafeAvatar(currentDbUser.avatar_url);
             document.getElementById('headerAvatar').src = safeAvatar;
             document.getElementById('settingsAvatar').src = safeAvatar;
-            
             document.getElementById('inputSetNick').value = currentDbUser.username;
 
             const tgBtn = document.getElementById('tgBindBtn');
@@ -845,7 +838,68 @@
         }
 
         // ==========================================
-        // ЛОГИКА РОЗЫГРЫША И ЖИВЫХ ОБНОВЛЕНИЙ
+        // АКТИВАЦИЯ ПРОМОКОДА
+        // ==========================================
+        async function activatePromo() {
+            const input = document.getElementById('promoActivationInput');
+            const code = input.value.trim().toUpperCase();
+            const btn = document.getElementById('promoActivateBtn');
+            const msgBox = document.getElementById('promoResultMessage');
+            
+            if (!code) return;
+            if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт!', 'info');
+
+            btn.disabled = true;
+            btn.innerText = 'Проверка...';
+            input.classList.remove('input-error', 'input-success');
+            msgBox.style.display = 'none';
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/promocodes/activate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                    body: JSON.stringify({ code })
+                });
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    input.classList.add('input-success');
+                    
+                    // Эффект конфетти
+                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#f4c745', '#8b5cf6', '#10b981'] });
+
+                    msgBox.style.display = 'block';
+                    if (result.type === 'balance') {
+                        msgBox.innerHTML = `<div class="promo-reward-text">Успешно! +${result.value} ₸ на баланс! 🎉</div>`;
+                        currentDbUser.balance = result.new_balance;
+                        updateUI();
+                    } else if (result.type === 'discount') {
+                        msgBox.innerHTML = `<div class="promo-reward-text">Успешно! Активирована скидка -${result.value}% 🔥</div>`;
+                        // Применяем скидку локально для текущей сессии
+                        localDiscountValue = result.value;
+                        loadDynamicShop();
+                    }
+                    btn.style.display = 'none'; 
+                } else {
+                    input.classList.add('input-error');
+                    showToast('Ошибка', result.error, 'error');
+                    setTimeout(() => input.classList.remove('input-error'), 500);
+                    btn.disabled = false;
+                    btn.innerText = 'Активировать';
+                }
+            } catch (err) {
+                input.classList.add('input-error');
+                showToast('Ошибка', 'Ошибка соединения', 'error');
+                setTimeout(() => input.classList.remove('input-error'), 500);
+                btn.disabled = false;
+                btn.innerText = 'Активировать';
+            }
+        }
+
+
+        // ==========================================
+        // ЛОГИКА РОЗЫГРЫША
         // ==========================================
         async function loadActiveGiveaway() {
             const { data, error } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1).single();
@@ -874,23 +928,19 @@
                     const cleanCh = ch.replace('@', '');
                     return `<a href="https://t.me/${cleanCh}" target="_blank" class="gw-badge" style="text-decoration:none; border-color:var(--accent-purple); color:var(--accent-purple); box-shadow: 0 0 10px var(--accent-purple-glow);"><i class="fa-brands fa-telegram"></i> @${cleanCh}</a>`;
                 }).join('');
-            } else {
-                channelsDiv.style.display = 'none';
-            }
+            } else { channelsDiv.style.display = 'none'; }
             
             const participantsCount = data.participants ? data.participants.length : 0;
             const maxP = data.max_participants || '∞';
             document.getElementById('gwParticipants').innerText = `Участников: ${participantsCount} / ${maxP}`;
 
             if (data.is_active && now < endTime) {
-                // АКТИВЕН
                 document.getElementById('gwCountdown').style.display = 'flex';
                 document.getElementById('gwActionBtn').style.display = 'block';
                 document.getElementById('gwActionBtn').innerText = 'Принять участие';
                 document.getElementById('gwActionBtn').onclick = () => participateGw(data.id);
                 startGwTimer(endTime, data);
 
-                // ЗАПУСК ЖИВОГО ОБНОВЛЕНИЯ УЧАСТНИКОВ
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 gwParticipantsInterval = setInterval(async () => {
                     try {
@@ -898,19 +948,14 @@
                         if (updateData) {
                             const count = updateData.participants ? updateData.participants.length : 0;
                             document.getElementById('gwParticipants').innerText = `Участников: ${count} / ${maxP}`;
-                            if (!updateData.is_active) {
-                                clearInterval(gwParticipantsInterval);
-                                loadActiveGiveaway(); 
-                            }
+                            if (!updateData.is_active) { clearInterval(gwParticipantsInterval); loadActiveGiveaway(); }
                         }
                     } catch(e) {}
                 }, 3000);
 
             } else if (data.is_active && now >= endTime) {
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
-                await fetch(`${BACKEND_URL}/api/giveaways/end`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gwId: data.id })
-                });
+                await fetch(`${BACKEND_URL}/api/giveaways/end`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gwId: data.id }) });
                 setTimeout(loadActiveGiveaway, 1500); 
             } else if (!data.is_active && data.winner) {
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
@@ -962,15 +1007,9 @@
                 });
                 const result = await response.json();
                 
-                if (result.success) {
-                    showToast('Успех', 'Вы успешно участвуете в розыгрыше!', 'success');
-                    loadActiveGiveaway(); 
-                } else {
-                    showToast('Ошибка', result.error, 'error');
-                }
-            } catch(e) {
-                showToast('Ошибка', 'Сбой связи с сервером', 'error');
-            }
+                if (result.success) { showToast('Успех', 'Вы успешно участвуете в розыгрыше!', 'success'); loadActiveGiveaway(); } 
+                else { showToast('Ошибка', result.error, 'error'); }
+            } catch(e) { showToast('Ошибка', 'Сбой связи с сервером', 'error'); }
         }
 
         // ==========================================
@@ -987,9 +1026,7 @@
                 } else {
                     document.getElementById('productsGrid').innerHTML = '<div style="color:var(--text-muted); text-align:center; width:100%;">Товары не загружены</div>';
                 }
-            } catch (err) {
-                console.error("Ошибка загрузки товаров:", err);
-            }
+            } catch (err) {}
         }
 
         function renderDynamicShop() {
@@ -1004,9 +1041,14 @@
                 let badgeHtml = '';
                 let finalPrice = item.price;
 
-                if (item.discount_active && item.discount_percent > 0) {
-                    finalPrice = Math.round(item.price * (1 - (item.discount_percent / 100)));
-                    badgeHtml = `<div class="discount-badge">-${item.discount_percent}%</div>`;
+                // Учитываем скидку из базы или из промокода
+                let activeDiscount = 0;
+                if (item.discount_active && item.discount_percent > 0) activeDiscount = item.discount_percent;
+                if (localDiscountValue > activeDiscount) activeDiscount = localDiscountValue; // Промокод сильнее базы
+
+                if (activeDiscount > 0) {
+                    finalPrice = Math.round(item.price * (1 - (activeDiscount / 100)));
+                    badgeHtml = `<div class="discount-badge">-${activeDiscount}%</div>`;
                     priceHtml = `<div class="product-price"><span class="old-price">${item.price} ₸</span> ${finalPrice} ₸</div>`;
                 }
 
@@ -1024,13 +1066,12 @@
         }
 
         function attemptPurchase(itemId) {
-            if (!currentDbUser) { showToast('Ошибка', 'Войдите в аккаунт для покупок.', 'error'); return; }
+            if (!currentDbUser) return showToast('Ошибка', 'Войдите в аккаунт для покупок.', 'error');
             const item = shopItemsCache.find(i => i.id === itemId);
             if (currentDbUser.balance >= item.finalPrice) { pendingPurchaseItem = { gold: item.gold, finalPrice: item.finalPrice, isGift: false }; openPurchaseWithdrawModal(item.gold, item.finalPrice); } 
             else { showToast('Внимание', 'Недостаточно средств. Пополните баланс.', 'info'); openModal('topupModal'); document.getElementById('topupAmountInput').value = item.finalPrice; }
         }
 
-        // ЛОГИКА ДЛЯ ПОДАРОЧНОЙ ПЛАШКИ ОТ БОТА
         function openGiftWithdrawModal(goldAmount) {
             document.getElementById('pwModalTitle').innerText = "Выдача приза";
             pendingPurchaseItem = { gold: goldAmount, finalPrice: 0, isGift: true };
@@ -1047,10 +1088,7 @@
             document.getElementById('pwBtnAction').disabled = false;
         }
 
-        function copyCard() {
-            navigator.clipboard.writeText("4400430281234671");
-            showToast("Копирование", "Номер карты скопирован!", "info");
-        }
+        function copyCard() { navigator.clipboard.writeText("4400430281234671"); showToast("Копирование", "Номер карты скопирован!", "info"); }
 
         function goToTopupStep2() {
             const amount = parseFloat(document.getElementById('topupAmountInput').value);
@@ -1060,28 +1098,18 @@
             document.getElementById('topupStep2').style.display = 'block';
         }
 
-        function resetTopupModal() {
-            document.getElementById('topupStep1').style.display = 'block';
-            document.getElementById('topupStep2').style.display = 'none';
-        }
+        function resetTopupModal() { document.getElementById('topupStep1').style.display = 'block'; document.getElementById('topupStep2').style.display = 'none'; }
 
         async function processTopup() {
             const amount = parseFloat(document.getElementById('topupAmountInput').value);
-            closeModal('topupModal');
-            resetTopupModal();
+            closeModal('topupModal'); resetTopupModal();
 
             try {
-                const response = await fetch(`${BACKEND_URL}/api/finance/topup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
-                    body: JSON.stringify({ amount })
-                });
+                const response = await fetch(`${BACKEND_URL}/api/finance/topup`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ amount }) });
                 const result = await response.json();
                 if(result.success) showToast('Заявка отправлена', 'Администратор проверяет платеж. Ожидайте...', 'success');
                 else showToast('Ошибка', result.error, 'error');
-            } catch(e) {
-                showToast('Ошибка', 'Сбой связи с сервером', 'error');
-            }
+            } catch(e) { showToast('Ошибка', 'Сбой связи с сервером', 'error'); }
         }
 
         async function executePurchaseWithdraw() {
@@ -1093,17 +1121,12 @@
             if(!gameId || !pattern) { showToast('Ошибка', 'Заполните Игровой ID и Паттерн скина!', 'error'); return; }
             if(!currentSessionToken) return;
 
-            document.getElementById('pwBtnAction').disabled = true;
-            document.getElementById('pwBtnAction').innerText = 'Обработка...';
+            document.getElementById('pwBtnAction').disabled = true; document.getElementById('pwBtnAction').innerText = 'Обработка...';
 
             try {
-                const response = await fetch(`${BACKEND_URL}/api/finance/withdraw`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
-                    body: JSON.stringify({ amount: pendingPurchaseItem.gold, gameId: gameId, gameAvatar: gameAvatar, targetSkin: targetSkin, pattern: pattern, spentTenge: pendingPurchaseItem.finalPrice })
-                });
-
+                const response = await fetch(`${BACKEND_URL}/api/finance/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ amount: pendingPurchaseItem.gold, gameId: gameId, gameAvatar: gameAvatar, targetSkin: targetSkin, pattern: pattern, spentTenge: pendingPurchaseItem.finalPrice }) });
                 const result = await response.json();
+                
                 if (result.success) {
                     currentDbUser.balance = result.balance; updateUI();
                     closeModal('purchaseWithdrawModal');
@@ -1137,66 +1160,36 @@
             container.innerHTML = '';
             data.forEach(order => {
                 const d = new Date(order.created_at);
-                // Делаем красивую дату
                 const dateStr = d.toLocaleDateString('ru-RU') + ' в ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
                 
                 let statusHtml = '';
-                if (order.status === 'pending') {
-                    statusHtml = `<span class="h-status pending"><i class="fa-solid fa-clock"></i> В ожидании</span>`;
-                } else if (order.status === 'completed') {
-                    statusHtml = `<span class="h-status completed"><i class="fa-solid fa-check"></i> Завершен</span>`;
-                } else {
-                    statusHtml = `<span class="h-status cancelled"><i class="fa-solid fa-xmark"></i> Отменен</span>`;
-                }
+                if (order.status === 'pending') statusHtml = `<span class="h-status pending"><i class="fa-solid fa-clock"></i> В ожидании</span>`;
+                else if (order.status === 'completed') statusHtml = `<span class="h-status completed"><i class="fa-solid fa-check"></i> Завершен</span>`;
+                else statusHtml = `<span class="h-status cancelled"><i class="fa-solid fa-xmark"></i> Отменен</span>`;
 
                 const price = (order.target_skin || order.amount).toString().replace(' G', '');
 
-                // Вставляем карточку
                 container.innerHTML += `
                 <div class="history-card">
-                    <div class="hc-top">
-                        <div class="h-skin-badge">
-                            <img src="USP_G.png" alt="USP">
-                            <span>USP "Ghosts"</span>
-                        </div>
-                        <div class="hc-price">${price} G</div>
-                    </div>
+                    <div class="hc-top"><div class="h-skin-badge"><img src="USP_G.png" alt="USP"><span>USP "Ghosts"</span></div><div class="hc-price">${price} G</div></div>
                     <div class="hc-mid">
-                        <div class="hc-item">
-                            <span class="hc-item-label">Игровой ID</span>
-                            <span class="hc-item-val">${order.game_id}</span>
-                        </div>
-                        <div class="hc-item">
-                            <span class="hc-item-label">Паттерн</span>
-                            <span class="hc-item-val">
-                                <div class="h-pattern"><i class="fa-solid fa-cube"></i> ${order.pattern || '000'}</div>
-                            </span>
-                        </div>
+                        <div class="hc-item"><span class="hc-item-label">Игровой ID</span><span class="hc-item-val">${order.game_id}</span></div>
+                        <div class="hc-item"><span class="hc-item-label">Паттерн</span><span class="hc-item-val"><div class="h-pattern"><i class="fa-solid fa-cube"></i> ${order.pattern || '000'}</div></span></div>
                     </div>
-                    <div class="hc-bot">
-                        <div class="hc-date"><i class="fa-regular fa-calendar" style="margin-right: 5px;"></i>${dateStr}</div>
-                        <div>${statusHtml}</div>
-                    </div>
+                    <div class="hc-bot"><div class="hc-date"><i class="fa-regular fa-calendar" style="margin-right: 5px;"></i>${dateStr}</div><div>${statusHtml}</div></div>
                 </div>`;
             });
         }
 
         function toggleChat() { 
-            const widget = document.getElementById('chatWidget');
-            widget.classList.toggle('active'); 
-            
-            if (widget.classList.contains('active')) {
-                loadChatHistory();
-                chatInterval = setInterval(loadChatHistory, 3000);
-            } else {
-                clearInterval(chatInterval);
-            }
+            const widget = document.getElementById('chatWidget'); widget.classList.toggle('active'); 
+            if (widget.classList.contains('active')) { loadChatHistory(); chatInterval = setInterval(loadChatHistory, 3000); } 
+            else { clearInterval(chatInterval); }
         }
 
         async function loadChatHistory() {
             if (!currentDbUser || !currentSessionToken) return;
             const chatBox = document.getElementById('chatMessages');
-            
             try {
                 const response = await fetch(`${BACKEND_URL}/api/chat/history`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
                 const result = await response.json();
@@ -1204,48 +1197,30 @@
                 if (result.success && result.messages) {
                     const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
                     chatBox.innerHTML = '<div class="msg admin">Привет! Если есть вопросы по пополнению или выводу — пиши сюда.</div>';
-                    
                     result.messages.forEach(msg => {
-                        const div = document.createElement('div');
-                        div.className = msg.sender === 'user' ? 'msg user' : 'msg admin';
-                        div.innerText = msg.text;
-                        chatBox.appendChild(div);
+                        const div = document.createElement('div'); div.className = msg.sender === 'user' ? 'msg user' : 'msg admin'; div.innerText = msg.text; chatBox.appendChild(div);
                     });
-
                     if (isScrolledToBottom) { chatBox.scrollTop = chatBox.scrollHeight; }
                 }
-            } catch (err) { console.log('Ожидание чата...'); }
+            } catch (err) {}
         }
 
         async function sendChatMessage() {
             const input = document.getElementById('chatInput'); const text = input.value.trim();
-            if(!text || !currentDbUser || !currentSessionToken) { showToast('Внимание', 'Войдите в аккаунт, чтобы писать в поддержку.', 'info'); return; }
-
+            if(!text || !currentDbUser || !currentSessionToken) return showToast('Внимание', 'Войдите в аккаунт, чтобы писать в поддержку.', 'info');
             const chatBox = document.getElementById('chatMessages');
             const userMsg = document.createElement('div'); userMsg.className = 'msg user'; userMsg.innerText = text;
             chatBox.appendChild(userMsg); input.value = ''; chatBox.scrollTop = chatBox.scrollHeight;
 
-            try {
-                await fetch(`${BACKEND_URL}/api/chat/send`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ message: text }) });
+            try { await fetch(`${BACKEND_URL}/api/chat/send`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ message: text }) });
             } catch (err) { showToast('Ошибка', 'Не удалось отправить сообщение.', 'error'); }
         }
 
         function toggleDropdown() { document.getElementById('profileModule').classList.toggle('active'); }
-        document.addEventListener('click', (e) => { const module = document.getElementById('profileModule'); if (module.classList.contains('active') && !module.contains(e.target)) module.classList.remove('active'); });
+        document.addEventListener('click', (e) => { const module = document.getElementById('profileModule'); if (module && module.classList.contains('active') && !module.contains(e.target)) module.classList.remove('active'); });
         
-        function openModal(id) { 
-            document.getElementById('profileDropdown').classList.remove('active'); 
-            if (id === 'topupModal') resetTopupModal();
-            const modal = document.getElementById(id); 
-            modal.style.display = 'flex'; 
-            setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
-        }
-        function closeModal(id) { 
-            const modal = document.getElementById(id); 
-            modal.style.opacity = '0'; 
-            modal.querySelector('.modal-box').style.transform = 'scale(0.9)'; 
-            setTimeout(() => { modal.style.display = 'none'; }, 300); 
-        }
+        function openModal(id) { document.getElementById('profileDropdown').classList.remove('active'); if (id === 'topupModal') resetTopupModal(); const modal = document.getElementById(id); modal.style.display = 'flex'; setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); }
+        function closeModal(id) { const modal = document.getElementById(id); modal.style.opacity = '0'; modal.querySelector('.modal-box').style.transform = 'scale(0.9)'; setTimeout(() => { modal.style.display = 'none'; }, 300); }
     </script>
 </body>
 </html>
