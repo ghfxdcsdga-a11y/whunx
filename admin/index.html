@@ -16,6 +16,7 @@
             --accent-gold-glow: rgba(244, 199, 69, 0.4);
             --accent-purple: #8b5cf6;
             --accent-purple-glow: rgba(139, 92, 246, 0.4);
+            --accent-blue: #3b82f6; /* Добавлен синий цвет для статуса Выполнено */
             
             --glass-bg: rgba(15, 15, 20, 0.65);
             --glass-border: rgba(255, 255, 255, 0.08);
@@ -110,6 +111,7 @@
         .badge.inactive { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--glass-border); }
         .badge.pending { background: rgba(244, 199, 69, 0.1); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
         .badge.rejected { background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid var(--error); }
+        .badge.completed { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
 
         /* ── МОДАЛКИ ── */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10005; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
@@ -377,7 +379,7 @@
     <div class="modal-overlay" id="reviewModal">
         <div class="modal-box" style="max-width: 550px;">
             <button class="modal-close" onclick="closeModal('reviewModal')"><i class="fa-solid fa-xmark"></i></button>
-            <div class="modal-title">Управление отзывом</div>
+            <div class="modal-title" style="margin-bottom: 20px;">Управление отзывом</div>
             
             <div class="form-group"><label class="form-label">Текст отзыва</label><textarea id="revText" class="form-input" rows="3"></textarea></div>
             
@@ -388,7 +390,6 @@
             </div>
             <input type="file" id="revAdminPhotoInput" style="display:none;" accept="image/*" onchange="previewRevAdminPhoto(event)">
             
-            <!-- Красивая кнопка под стиль сайта для добавления фото -->
             <div class="upload-area" id="revAdminPhotoBtn" onclick="document.getElementById('revAdminPhotoInput').click()" style="margin-bottom: 20px;">
                 Изменить скриншот <i class="fa-solid fa-pen" style="margin-left: 5px;"></i>
             </div>
@@ -407,10 +408,20 @@
         <div class="modal-box">
             <h3>Решение по идее</h3>
             <div class="form-group"><label class="form-label">Текст идеи</label><textarea id="ideaText" class="form-input" rows="3" disabled></textarea></div>
+            
+            <!-- Блок для отображения прикрепленных скриншотов идеи -->
+            <div class="form-group" id="ideaPhotosGroup" style="display:none;">
+                <label class="form-label">Прикрепленные скриншоты</label>
+                <div id="ideaPhotosPreview" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;"></div>
+            </div>
+
             <div class="form-group"><label class="form-label">Ответ админа</label><textarea id="ideaReply" class="form-input" rows="2"></textarea></div>
             <div class="form-group"><label class="form-label">Статус</label>
                 <select id="ideaStatus" class="form-input">
-                    <option value="pending">Ожидает</option><option value="approved">Подтверждена (Одобрено)</option><option value="rejected">Отклонена</option>
+                    <option value="pending">Ожидает</option>
+                    <option value="approved">Подтверждена (Одобрено)</option>
+                    <option value="completed">Выполнено</option>
+                    <option value="rejected">Отклонена</option>
                 </select>
             </div>
             <div class="form-group"><label class="form-label">Награда пользователю (₸)</label><input type="number" id="ideaReward" class="form-input" value="0"></div>
@@ -676,7 +687,7 @@
                 tbody.innerHTML = data.map(p => {
                     const dt = p.expires_at ? new Date(p.expires_at).toLocaleString('ru-RU') : 'Безлимит';
                     const targetStr = p.target_item_id ? `(ID: ${p.target_item_id})` : '';
-                    const rewardStr = p.reward_type === 'balance' ? `<span style="color:var(--accent-green);">+${p.reward_value} ₸</span>` : `<span style="color:var(--accent-gold);">-${p.reward_value}% ${targetStr}</span>`;
+                    const rewardStr = p.reward_type === 'balance' ? `<span style="color:var(--success);">+${p.reward_value} ₸</span>` : `<span style="color:var(--accent-gold);">-${p.reward_value}% ${targetStr}</span>`;
                     const limitStr = p.max_activations > 0 ? `${p.used_activations || 0} / ${p.max_activations}` : `${p.used_activations || 0} / ∞`;
                     const isActive = p.is_active ? '<span class="badge active">Вкл</span>' : '<span class="badge inactive">Выкл</span>';
                     
@@ -919,13 +930,33 @@
             const tbody = document.getElementById('ideasTable');
             if(data && data.length) {
                 tbody.innerHTML = data.map(i => {
-                    let stat = i.status === 'approved' ? '<span class="badge active">Одобрено</span>' : (i.status === 'rejected' ? '<span class="badge rejected">Отклонено</span>' : '<span class="badge pending">Ожидает</span>');
+                    let statClass = '';
+                    let statText = '';
+                    if (i.status === 'approved') { statClass = 'active'; statText = 'Одобрено'; }
+                    else if (i.status === 'completed') { statClass = 'completed'; statText = 'Выполнено'; }
+                    else if (i.status === 'rejected') { statClass = 'rejected'; statText = 'Отклонено'; }
+                    else { statClass = 'pending'; statText = 'Ожидает'; }
+                    
+                    let stat = `<span class="badge ${statClass}">${statText}</span>`;
+                    
+                    const safeText = (i.idea_text || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                    const safeReply = (i.admin_reply || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+                    const imagesJson = i.images ? JSON.stringify(i.images).replace(/'/g, "\\'").replace(/"/g, '&quot;') : '[]';
+
                     return `<tr>
-                        <td style="font-size:0.85rem;">${i.user_email}</td>
+                        <td>
+                            <div class="td-user">
+                                <img src="${getSafeAvatar(i.avatar_url)}" onerror="this.src='https://whunx.shop/whunx_pp.png'">
+                                <div>
+                                    <b>${i.username || i.user_email.split('@')[0]}</b><br>
+                                    <span style="font-size:0.75rem; color:var(--text-muted);">${i.user_email}</span>
+                                </div>
+                            </div>
+                        </td>
                         <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${i.idea_text}</td>
-                        <td>${stat}</td><td style="color:var(--accent-gold); font-weight:900;">${i.reward_amount} ₸</td>
+                        <td>${stat}</td><td style="color:var(--accent-gold); font-weight:900;">${i.reward_amount || 0} ₸</td>
                         <td><div class="td-actions">
-                            <button class="btn-sm succ" onclick="openIdeaEdit(${i.id}, '${i.user_email}', '${i.idea_text.replace(/'/g, "\\'")}', '${i.status}', ${i.reward_amount}, '${(i.admin_reply || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-gavel"></i></button>
+                            <button class="btn-sm succ" onclick="openIdeaEdit(${i.id}, '${i.user_email}', '${safeText}', '${i.status}', ${i.reward_amount || 0}, '${safeReply}', '${imagesJson}')"><i class="fa-solid fa-gavel"></i></button>
                             <button class="btn-sm ban" onclick="deleteIdea(${i.id})"><i class="fa-solid fa-trash"></i></button>
                         </div></td>
                     </tr>`;
@@ -933,12 +964,30 @@
             } else { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Пусто</td></tr>'; }
         }
 
-        function openIdeaEdit(id, email, text, status, reward, reply) {
+        function openIdeaEdit(id, email, text, status, reward, reply, imagesJsonStr) {
             currentIdeaId = id; currentIdeaEmail = email;
             document.getElementById('ideaText').value = text;
             document.getElementById('ideaStatus').value = status;
             document.getElementById('ideaReward').value = reward;
             document.getElementById('ideaReply').value = reply;
+
+            // Отображение прикрепленных фото
+            const photosGroup = document.getElementById('ideaPhotosGroup');
+            const photosPreview = document.getElementById('ideaPhotosPreview');
+            photosPreview.innerHTML = '';
+            
+            let images = [];
+            try { images = JSON.parse(imagesJsonStr.replace(/&quot;/g, '"')); } catch(e) {}
+            
+            if (images && images.length > 0) {
+                photosGroup.style.display = 'block';
+                images.forEach(img => {
+                    photosPreview.innerHTML += `<img src="${img}" style="width:70px; height:70px; object-fit:cover; border-radius:10px; border:1px solid var(--glass-border); cursor:pointer;" onclick="openLightbox(this.src)">`;
+                });
+            } else {
+                photosGroup.style.display = 'none';
+            }
+
             openModal('ideaModal');
         }
 
@@ -947,9 +996,18 @@
             const reward_amount = parseInt(document.getElementById('ideaReward').value) || 0;
             const admin_reply = document.getElementById('ideaReply').value;
 
-            if (status === 'approved' && reward_amount > 0) {
-                const { data: u } = await supabaseClient.from('users').select('balance').eq('email', currentIdeaEmail).single();
-                if(u) await supabaseClient.from('users').update({ balance: u.balance + reward_amount }).eq('email', currentIdeaEmail);
+            // Проверяем текущий статус, чтобы не выдать награду дважды
+            const { data: currentIdea } = await supabaseClient.from('ideas').select('status').eq('id', currentIdeaId).single();
+
+            // Если награда больше 0 и мы меняем статус на "Одобрено" или "Выполнено" В ПЕРВЫЙ РАЗ:
+            if ((status === 'approved' || status === 'completed') && reward_amount > 0) {
+                if (currentIdea && currentIdea.status !== 'approved' && currentIdea.status !== 'completed') {
+                    const { data: u } = await supabaseClient.from('users').select('balance').eq('email', currentIdeaEmail).single();
+                    if(u) {
+                        await supabaseClient.from('users').update({ balance: u.balance + reward_amount }).eq('email', currentIdeaEmail);
+                        await supabaseClient.from('transactions').insert([{ user_email: currentIdeaEmail, type: 'deposit', amount: reward_amount, description: 'Награда за предложенную идею' }]);
+                    }
+                }
             }
 
             await supabaseClient.from('ideas').update({ status, reward_amount, admin_reply }).eq('id', currentIdeaId);
