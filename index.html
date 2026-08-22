@@ -12,7 +12,6 @@
     <meta name="keywords" content="standoff 2, стандофф 2, голда, купить голду, дешевая голда, whunx shop, магазин голды, донат стандофф">
     <meta name="robots" content="index, follow">
 
-    <!-- Open Graph -->
     <meta property="og:title" content="Whunx Shop - Магазин голды Standoff 2">
     <meta property="og:description" content="Моментальная доставка голды прямо на твой аккаунт. Заходи и покупай по самым сочным ценам!">
     <meta property="og:image" content="https://whunx.shop/whunx_icon.png">
@@ -111,21 +110,23 @@
         .invisible-google-btn { position: absolute; top: -10px; left: -20px; right: -20px; bottom: -10px; opacity: 0.01; z-index: 50; overflow: hidden; display: flex; justify-content: center; align-items: center; }
 
         .balance-module { display: none; align-items: center; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        .balance-amount { padding: 0 15px; font-size: 16px; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); } .balance-amount span { color: var(--text-muted); font-size: 14px; margin-left: 4px; }
+        .balance-amount { padding: 0 15px; font-size: 16px; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); display: flex; align-items: baseline; gap: 4px; white-space: nowrap; } 
+        .balance-amount span { color: var(--text-muted); font-size: 14px; }
         .balance-add-btn { width: 40px; height: 40px; background: var(--accent-purple); color: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; transition: var(--transition); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); } .balance-add-btn:hover { background: var(--accent-purple-hover); transform: scale(1.05); box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); }
         
         .profile-module { display: none; position: relative; }
-        .profile-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 12px; transition: 0.2s; } .profile-trigger:hover { background: rgba(255,255,255,0.05); } .profile-trigger img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+        .profile-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 12px; transition: 0.2s; } .profile-trigger:hover { background: rgba(255,255,255,0.05); } .profile-trigger img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); background: var(--bg-input); }
         .dropdown-menu { position: absolute; top: calc(100% + 15px); right: 0; width: 240px; background: rgba(16, 18, 26, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 15px; opacity: 0; visibility: hidden; transform: translateY(10px); transition: 0.2s; z-index: 200; box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.02); } .profile-module.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
         .dropdown-header { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; }
         .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; color: var(--text-muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; } .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* =========================================
-           MAIN SHOP SECTION
+           MAIN SHOP SECTION & GIVEAWAY
         ========================================= */
         main { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 60px 20px; z-index: 10; position: relative; }
         .shop-header { text-align: center; margin-bottom: 50px; } .shop-header h1 { font-size: 36px; font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 20px rgba(255,255,255,0.2); } .shop-header p { color: var(--text-muted); font-size: 16px; }
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
+        
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-bottom: 60px; }
         
         .product-card { background: rgba(20, 22, 30, 0.4); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 30px 20px; text-align: center; transition: var(--transition); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
         .product-card:hover { transform: translateY(-5px); border-color: rgba(244, 199, 69, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(244,199,69,0.05); }
@@ -146,6 +147,22 @@
         
         .btn-buy { width: 100%; background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); border: 1px solid rgba(139, 92, 246, 0.2); padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 800; transition: 0.2s; position: relative; z-index: 2; } 
         .product-card:hover .btn-buy { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
+
+        /* РОЗЫГРЫШ */
+        .giveaway-banner { background: rgba(15, 15, 20, 0.7); backdrop-filter: blur(25px); border: 1px solid var(--accent-gold); border-radius: 30px; padding: 40px; display: flex; gap: 40px; align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(244, 199, 69, 0.05); position: relative; overflow: hidden; margin-bottom: 50px; }
+        .giveaway-banner::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at center, rgba(244,199,69,0.1) 0%, transparent 60%); animation: rotate 20s linear infinite reverse; pointer-events: none; z-index: 0; }
+        .giveaway-cover { position: relative; flex-shrink: 0; width: 200px; height: 200px; z-index: 1; border-radius: 20px; background: rgba(244, 199, 69, 0.1); border: 1px solid rgba(244, 199, 69, 0.3); display: flex; justify-content: center; align-items: center; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        .giveaway-cover i { font-size: 80px; color: var(--accent-gold); filter: drop-shadow(0 0 20px var(--accent-gold-glow)); animation: floatOrb 4s ease-in-out infinite alternate; }
+        .giveaway-info { flex: 1; z-index: 1; display: flex; flex-direction: column; gap: 15px; }
+        .gw-badge { display: inline-block; background: rgba(244, 199, 69, 0.1); color: var(--accent-gold); padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; border: 1px solid var(--accent-gold); box-shadow: 0 0 15px var(--accent-gold-glow); align-self: flex-start; }
+        .giveaway-info h2 { font-size: 3.5rem; font-weight: 900; line-height: 1.1; color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.2); letter-spacing: 1px; }
+        .giveaway-info p { color: var(--text-muted); font-size: 1rem; font-weight: 600; line-height: 1.5; }
+        
+        .countdown { display: flex; gap: 15px; margin-top: 10px; }
+        .cd-box { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 10px 15px; min-width: 80px; text-align: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
+        .cd-num { display: block; font-size: 2rem; font-weight: 900; font-variant-numeric: tabular-nums; transition: all 0.5s ease; color: var(--accent-gold); text-shadow: 0 0 15px var(--accent-gold-glow); }
+        .cd-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+        .cd-colon { font-size: 2rem; font-weight: 900; color: rgba(255,255,255,0.1); align-self: center; margin-top: -15px; }
 
         /* =========================================
            FOOTER & CHAT
@@ -198,14 +215,29 @@
            MOBILE RESPONSIVENESS
         ========================================= */
         @media (max-width: 768px) {
-            header { padding: 0 20px; height: 70px; }
-            .logo { font-size: 20px; }
-            .header-left { gap: 15px; }
-            .balance-amount { padding: 0 10px; font-size: 14px; }
-            .balance-add-btn { width: 35px; height: 35px; }
+            header { padding: 0 15px; height: 70px; }
+            .logo { font-size: 18px; }
+            .header-left { gap: 10px; }
+            .header-right { gap: 10px; }
+            
+            .balance-module { padding: 4px; border-radius: 10px; }
+            .balance-amount { padding: 0 8px; font-size: 14px; white-space: nowrap; display: flex; align-items: center; gap: 3px; }
+            .balance-amount span { margin-left: 0; }
+            .balance-add-btn { width: 32px; height: 32px; border-radius: 6px; }
+            .profile-trigger img { width: 34px; height: 34px; border-radius: 8px; }
+            
             main { padding: 30px 15px; }
             .shop-header h1 { font-size: 26px; }
             
+            .giveaway-banner { flex-direction: column; text-align: center; padding: 30px 20px; }
+            .giveaway-cover { width: 150px; height: 150px; }
+            .gw-badge { align-self: center; }
+            .giveaway-info h2 { font-size: 2.8rem; }
+            .countdown { justify-content: center; gap: 5px; width: 100%; }
+            .cd-box { min-width: 0; flex: 1; padding: 8px 2px; }
+            .cd-num { font-size: 1.3rem; }
+            .cd-colon { font-size: 1.3rem; margin: -10px -2px 0; }
+
             .products-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
             .product-card { padding: 20px 15px; }
             .product-img-wrapper { width: 90px; height: 90px; margin-bottom: 15px; }
@@ -279,34 +311,47 @@
     </header>
 
     <main>
+        <!-- ПЛАШКА РОЗЫГРЫША -->
+        <div class="promo-banner giveaway-banner fade-in" id="giveawayBanner" style="display: none;">
+            <div class="giveaway-cover">
+                <i class="fa-solid fa-gift"></i>
+            </div>
+            <div class="giveaway-info">
+                <div class="gw-badge" id="gwStatusBadge">Розыгрыш</div>
+                <h2 id="gwTitle">Загрузка...</h2>
+                <p id="gwCondText">Условия скоро появятся</p>
+                <p id="gwParticipants" style="color: var(--accent-gold); font-size: 14px; font-weight: 800;">Участников: 0 / ∞</p>
+                
+                <div class="countdown" id="gwCountdown">
+                    <div class="cd-box"><span class="cd-num" id="gwDays">00</span><span class="cd-label">Дней</span></div>
+                    <div class="cd-colon">:</div>
+                    <div class="cd-box"><span class="cd-num" id="gwHours">00</span><span class="cd-label">Часов</span></div>
+                    <div class="cd-colon">:</div>
+                    <div class="cd-box"><span class="cd-num" id="gwMinutes">00</span><span class="cd-label">Минут</span></div>
+                    <div class="cd-colon">:</div>
+                    <div class="cd-box"><span class="cd-num" id="gwSeconds">00</span><span class="cd-label">Секунд</span></div>
+                </div>
+
+                <div id="gwWinnerInfo" style="display: none; align-items: center; gap: 15px; background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 12px; border: 1px solid var(--accent-green); margin-top: 10px; width: fit-content;">
+                    <img id="gwWinnerAvatar" src="" style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover;">
+                    <div style="text-align: left;">
+                        <span style="display: block; font-size: 11px; color: var(--accent-green); font-weight: 800; text-transform: uppercase;">Победитель розыгрыша</span>
+                        <span id="gwWinnerName" style="font-size: 18px; font-weight: 900; color: #fff;">Name</span>
+                    </div>
+                </div>
+
+                <button class="btn-submit" id="gwActionBtn" style="width: auto; padding: 15px 40px; margin-top: 5px;">Принять участие</button>
+            </div>
+        </div>
+
         <div class="shop-header">
             <h1>Покупка игровой валюты</h1>
             <p>Моментальное начисление на ваш аккаунт Standoff 2</p>
         </div>
+        
         <div class="products-grid" id="productsGrid">
             <!-- Динамические товары из БД -->
         </div>
-        <!-- ПЛАШКА РОЗЫГРЫША -->
-<div class="promo-banner giveaway-banner fade-in" id="giveawayBanner" style="display: none; animation-delay: 0.2s; border: 1px solid var(--accent-gold);">
-    <div class="promo-cover-wrap" style="background: rgba(244, 199, 69, 0.1); display: flex; justify-content: center; align-items: center;">
-        <i class="fa-solid fa-gift" style="font-size: 80px; color: var(--accent-gold);"></i>
-    </div>
-    <div class="promo-info">
-        <div class="promo-badge" style="color: var(--accent-gold); border-color: var(--accent-gold);">Розыгрыш</div>
-        <h2 id="gwTitle">Загрузка...</h2>
-        <p id="gwCondText">Условия скоро появятся</p>
-        <div class="countdown" id="gwCountdown">
-            <div class="cd-box"><span class="cd-num" id="gwDays">00</span><span class="cd-label">Дней</span></div>
-            <div class="cd-colon">:</div>
-            <div class="cd-box"><span class="cd-num" id="gwHours">00</span><span class="cd-label">Часов</span></div>
-            <div class="cd-colon">:</div>
-            <div class="cd-box"><span class="cd-num" id="gwMinutes">00</span><span class="cd-label">Минут</span></div>
-            <div class="cd-colon">:</div>
-            <div class="cd-box"><span class="cd-num" id="gwSeconds">00</span><span class="cd-label">Секунд</span></div>
-        </div>
-        <button class="btn-submit" style="width: auto; padding: 15px 40px; margin-top: 15px;" onclick="participateGw()">Принять участие</button>
-    </div>
-</div>
     </main>
 
     <footer>
@@ -509,6 +554,7 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             loadDynamicShop();
+            loadActiveGiveaway();
             
             const savedGameAvatar = localStorage.getItem('gameAvatarTemp');
             if (savedGameAvatar) {
@@ -531,39 +577,6 @@
             });
         });
 
-        // --- ЛОГИКА РОЗЫГРЫША НА ГЛАВНОЙ ---
-        async function loadActiveGiveaway() {
-            const { data, error } = await supabaseClient.from('giveaways').select('*').eq('is_active', true).single();
-            if (data) {
-                const banner = document.getElementById('giveawayBanner');
-                banner.style.display = 'flex';
-                document.getElementById('gwTitle').innerText = data.amount + ' GOLD';
-                document.getElementById('gwCondText').innerText = data.conditions;
-                startGiveawayCountdown(new Date(data.end_time).getTime());
-            }
-        }
-
-        function startGiveawayCountdown(countDownDate) {
-            setInterval(function() {
-                const now = new Date().getTime();
-                const distance = countDownDate - now;
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                document.getElementById("gwDays").innerText = days < 10 ? '0' + days : days;
-                document.getElementById("gwHours").innerText = hours < 10 ? '0' + hours : hours;
-                document.getElementById("gwMinutes").innerText = minutes < 10 ? '0' + minutes : minutes;
-                document.getElementById("gwSeconds").innerText = seconds < 10 ? '0' + seconds : seconds;
-            }, 1000);
-        }
-
-        async function participateGw() {
-            if (!currentDbUser) { showToast('Ошибка', 'Авторизуйтесь для участия!', 'error'); return; }
-            // Тут мы будем проверять привязку ТГ, когда дойдем до этого
-            showToast('Участие', 'Функция привязки Telegram в разработке', 'info');
-        }
-        
         async function handleGoogleLogin(response) {
             const id_token = response.credential;
             const { data, error } = await supabaseClient.auth.signInWithIdToken({
@@ -727,6 +740,130 @@
         }
 
         // ==========================================
+        // ЛОГИКА РОЗЫГРЫША
+        // ==========================================
+        async function loadActiveGiveaway() {
+            const { data, error } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1).single();
+            if (!data) return;
+
+            const banner = document.getElementById('giveawayBanner');
+            const now = new Date().getTime();
+            const endTime = new Date(data.end_time).getTime();
+            let endedAt = data.ended_at ? new Date(data.ended_at).getTime() : null;
+
+            // Удаляем если прошел 1 час после завершения
+            if (data.is_active === false && endedAt && (now - endedAt > 3600000)) {
+                await supabaseClient.from('giveaways').delete().eq('id', data.id);
+                banner.style.display = 'none';
+                return;
+            }
+
+            banner.style.display = 'flex';
+            document.getElementById('gwTitle').innerText = data.amount + ' GOLD';
+            document.getElementById('gwCondText').innerText = data.conditions || '';
+            
+            const participants = data.participants || [];
+            const maxP = data.max_participants || '∞';
+            document.getElementById('gwParticipants').innerText = `Участников: ${participants.length} / ${maxP}`;
+
+            if (data.is_active && now < endTime) {
+                // АКТИВЕН
+                document.getElementById('gwWinnerInfo').style.display = 'none';
+                document.getElementById('gwCountdown').style.display = 'flex';
+                document.getElementById('gwActionBtn').style.display = 'block';
+                document.getElementById('gwActionBtn').innerText = 'Принять участие';
+                document.getElementById('gwActionBtn').onclick = () => participateGw(data.id, participants, maxP);
+                startGwTimer(endTime, data);
+            } else if (data.is_active && now >= endTime) {
+                // ВРЕМЯ ВЫШЛО, НО В БАЗЕ ЕЩЕ АКТИВЕН -> ВЫБИРАЕМ ПОБЕДИТЕЛЯ
+                endGiveaway(data);
+            } else if (!data.is_active && data.winner) {
+                // ЗАВЕРШЕН, ПОКАЗЫВАЕМ ПОБЕДИТЕЛЯ
+                document.getElementById('gwCountdown').style.display = 'none';
+                document.getElementById('gwActionBtn').style.display = 'none';
+                document.getElementById('gwWinnerInfo').style.display = 'flex';
+                document.getElementById('gwWinnerAvatar').src = getSafeAvatar(data.winner.avatar);
+                document.getElementById('gwWinnerName').innerText = data.winner.nickname;
+                
+                const badge = document.getElementById('gwStatusBadge');
+                badge.innerText = 'Розыгрыш завершен';
+                badge.style.color = 'var(--accent-green)';
+                badge.style.borderColor = 'var(--accent-green)';
+                badge.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.4)';
+            }
+        }
+
+        async function endGiveaway(data) {
+            const participants = data.participants || [];
+            let winner = null;
+            if (participants.length > 0) {
+                winner = participants[Math.floor(Math.random() * participants.length)];
+            } else {
+                winner = { nickname: 'Нет участников', avatar: 'whunx_pp.png' };
+            }
+            
+            const endedAt = new Date().toISOString();
+            await supabaseClient.from('giveaways').update({
+                is_active: false,
+                winner: winner,
+                ended_at: endedAt
+            }).eq('id', data.id);
+
+            loadActiveGiveaway(); // Перезагружаем интерфейс
+        }
+
+        function startGwTimer(endTime, data) {
+            if (window.gwInterval) clearInterval(window.gwInterval);
+            window.gwInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = endTime - now;
+                if (distance <= 0) {
+                    clearInterval(window.gwInterval);
+                    endGiveaway(data);
+                    return;
+                }
+                document.getElementById("gwDays").innerText = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
+                document.getElementById("gwHours").innerText = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                document.getElementById("gwMinutes").innerText = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                document.getElementById("gwSeconds").innerText = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+            }, 1000);
+        }
+
+        async function participateGw(gwId, participants, maxP) {
+            if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт для участия', 'info');
+            
+            // Проверка участия
+            if (participants.find(p => p.email === currentDbUser.email)) {
+                return showToast('Ошибка', 'Вы уже участвуете!', 'error');
+            }
+            
+            // Проверка лимита
+            if (maxP !== '∞' && participants.length >= maxP) {
+                return showToast('Ошибка', 'Мест больше нет!', 'error');
+            }
+
+            // Добавляем юзера
+            const newParticipant = {
+                email: currentDbUser.email,
+                nickname: currentDbUser.username,
+                avatar: currentDbUser.avatar_url
+            };
+
+            const updatedParticipants = [...participants, newParticipant];
+
+            const { error } = await supabaseClient.from('giveaways').update({
+                participants: updatedParticipants
+            }).eq('id', gwId);
+
+            if (error) {
+                showToast('Ошибка', 'Не удалось принять участие', 'error');
+            } else {
+                showToast('Успех', 'Вы успешно участвуете в розыгрыше!', 'success');
+                loadActiveGiveaway(); 
+            }
+        }
+
+        // ==========================================
         // ДИНАМИЧЕСКИЙ МАГАЗИН ИЗ БД
         // ==========================================
         let shopItemsCache = [];
@@ -756,13 +893,17 @@
                 
                 let priceHtml = `<div class="product-price">${item.price} ₸</div>`;
                 let badgeHtml = '';
+                let finalPrice = item.price;
 
-                // Логика скидок
+                // Настоящая логика скидок
                 if (item.discount_active && item.discount_percent > 0) {
-                    const originalPrice = Math.round(item.price / (1 - (item.discount_percent / 100)));
+                    finalPrice = Math.round(item.price * (1 - (item.discount_percent / 100)));
                     badgeHtml = `<div class="discount-badge">-${item.discount_percent}%</div>`;
-                    priceHtml = `<div class="product-price"><span class="old-price">${originalPrice} ₸</span> ${item.price} ₸</div>`;
+                    priceHtml = `<div class="product-price"><span class="old-price">${item.price} ₸</span> ${finalPrice} ₸</div>`;
                 }
+
+                // Записываем итоговую цену в кеш, чтобы её списывало
+                item.finalPrice = finalPrice;
 
                 card.innerHTML = `
                     ${badgeHtml}
@@ -778,8 +919,8 @@
         function attemptPurchase(itemId) {
             if (!currentDbUser) { showToast('Ошибка', 'Войдите в аккаунт для покупок.', 'error'); return; }
             const item = shopItemsCache.find(i => i.id === itemId);
-            if (currentDbUser.balance >= item.price) { pendingPurchaseItem = item; openPurchaseWithdrawModal(item); } 
-            else { showToast('Внимание', 'Недостаточно средств. Пополните баланс.', 'info'); openModal('topupModal'); document.getElementById('topupAmountInput').value = item.price; }
+            if (currentDbUser.balance >= item.finalPrice) { pendingPurchaseItem = item; openPurchaseWithdrawModal(item); } 
+            else { showToast('Внимание', 'Недостаточно средств. Пополните баланс.', 'info'); openModal('topupModal'); document.getElementById('topupAmountInput').value = item.finalPrice; }
         }
 
         function openPurchaseWithdrawModal(item) {
@@ -788,7 +929,7 @@
             let listingPrice = (item.gold * 1.25) + randomCents;
             document.getElementById('pwGoldAmount').value = item.gold + ' G';
             document.getElementById('pwListingPrice').innerText = listingPrice.toFixed(2) + ' G';
-            document.getElementById('pwBtnAction').innerText = `Списать ${item.price} ₸`;
+            document.getElementById('pwBtnAction').innerText = `Списать ${item.finalPrice} ₸`;
             document.getElementById('pwBtnAction').disabled = false;
         }
 
@@ -845,7 +986,7 @@
                 const response = await fetch(`${BACKEND_URL}/api/finance/withdraw`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
-                    body: JSON.stringify({ amount: pendingPurchaseItem.gold, gameId: gameId, gameAvatar: gameAvatar, targetSkin: targetSkin, pattern: pattern, spentTenge: pendingPurchaseItem.price })
+                    body: JSON.stringify({ amount: pendingPurchaseItem.gold, gameId: gameId, gameAvatar: gameAvatar, targetSkin: targetSkin, pattern: pattern, spentTenge: pendingPurchaseItem.finalPrice })
                 });
 
                 const result = await response.json();
@@ -858,11 +999,11 @@
                     pendingPurchaseItem = null;
                 } else {
                     showToast('Ошибка', result.error || 'Сбой. Деньги НЕ списаны.', 'error');
-                    document.getElementById('pwBtnAction').disabled = false; document.getElementById('pwBtnAction').innerText = `Списать ${pendingPurchaseItem.price} ₸`;
+                    document.getElementById('pwBtnAction').disabled = false; document.getElementById('pwBtnAction').innerText = `Списать ${pendingPurchaseItem.finalPrice} ₸`;
                 }
             } catch (err) {
                 showToast('Ошибка', 'Сбой соединения. Деньги НЕ списаны.', 'error');
-                document.getElementById('pwBtnAction').disabled = false; document.getElementById('pwBtnAction').innerText = `Списать ${pendingPurchaseItem.price} ₸`;
+                document.getElementById('pwBtnAction').disabled = false; document.getElementById('pwBtnAction').innerText = `Списать ${pendingPurchaseItem.finalPrice} ₸`;
             }
         }
 
