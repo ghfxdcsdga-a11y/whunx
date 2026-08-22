@@ -373,6 +373,9 @@
                 <div id="gwWinnerName" class="gw-winner-text" style="display:none;">Победитель: <span>Name</span></div>
                 
                 <p id="gwCondText">Условия скоро появятся</p>
+                <!-- СЮДА БУДУТ ВЫВОДИТЬСЯ КАНАЛЫ -->
+                <div id="gwChannelsDiv" style="display: none; margin-top: 5px; gap: 10px; flex-wrap: wrap;"></div>
+                
                 <p id="gwParticipants" style="color: var(--accent-gold); font-size: 14px; font-weight: 800;">Участников: 0 / ∞</p>
                 
                 <div class="countdown" id="gwCountdown">
@@ -849,6 +852,18 @@
             banner.style.display = 'flex';
             document.getElementById('gwTitle').innerText = data.amount + ' GOLD';
             document.getElementById('gwCondText').innerText = data.conditions || '';
+
+            // Вывод обязательных каналов для подписки
+            const channelsDiv = document.getElementById('gwChannelsDiv');
+            if (data.require_sub && data.tg_channels && data.tg_channels.length > 0) {
+                channelsDiv.style.display = 'flex';
+                channelsDiv.innerHTML = data.tg_channels.map(ch => {
+                    const cleanCh = ch.replace('@', '');
+                    return `<a href="https://t.me/${cleanCh}" target="_blank" class="gw-badge" style="text-decoration:none; border-color:var(--accent-purple); color:var(--accent-purple); box-shadow: 0 0 10px var(--accent-purple-glow);"><i class="fa-brands fa-telegram"></i> @${cleanCh}</a>`;
+                }).join('');
+            } else {
+                channelsDiv.style.display = 'none';
+            }
             
             const participants = data.participants || [];
             const maxP = data.max_participants || '∞';
