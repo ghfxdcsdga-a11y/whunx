@@ -350,6 +350,22 @@
             <div class="form-group"><label class="form-label">Макс. участников</label><input type="number" id="gwMax" class="form-input"></div>
             <div class="form-group"><label class="form-label">Дата завершения</label><input type="datetime-local" id="gwEnd" class="form-input"></div>
             <div class="form-group"><label class="form-label">Условия (текст)</label><textarea id="gwCond" class="form-input" rows="3" placeholder="Подписка на ТГ, привязать ТГ к аккаунту и т.д."></textarea></div>
+            
+            <!-- НОВОЕ: ГАЛОЧКА И КАНАЛЫ -->
+            <label class="checkbox-label" style="margin-bottom: 10px;">
+                <input type="checkbox" id="gwRequireSub" onchange="toggleGwChannels()"> Требовать подписку на Telegram-каналы
+            </label>
+            
+            <div id="gwChannelsContainer" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px dashed var(--glass-border);">
+                <label class="form-label">Список каналов (Юзернейм @channel или ID):</label>
+                <div id="gwChannelsList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Инпуты для каналов будут добавляться сюда -->
+                </div>
+                <button type="button" class="btn-sm" style="width: 100%; background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); margin-top: 5px;" onclick="addGwChannelInput()">
+                    <i class="fa-solid fa-plus"></i> Добавить канал
+                </button>
+            </div>
+
             <label class="checkbox-label"><input type="checkbox" id="gwActive" checked> Активен</label>
             <div class="modal-btns">
                 <button class="m-btn m-btn-cancel" onclick="closeModal('giveawayModal')">Отмена</button>
@@ -706,19 +722,39 @@
         }
         async function deleteIdea(id) { if(confirm("Удалить идею?")) { await supabaseClient.from('ideas').delete().eq('id', id); loadIdeas(); } }
 
-        // --- 5. РОЗЫГРЫШИ ---
+        // --- 5. РОЗЫГРЫШИ И ПОДПИСКИ ТГ ---
         let currentGwId = null;
+
+        // Вспомогательные функции для каналов
+        function toggleGwChannels() {
+            const isChecked = document.getElementById('gwRequireSub').checked;
+            document.getElementById('gwChannelsContainer').style.display = isChecked ? 'flex' : 'none';
+        }
+
+        function addGwChannelInput(val = '') {
+            const list = document.getElementById('gwChannelsList');
+            const wrapper = document.createElement('div');
+            wrapper.style.display = 'flex';
+            wrapper.style.gap = '10px';
+            wrapper.innerHTML = `
+                <input type="text" class="form-input gw-channel-input" value="${val}" placeholder="@channel_username" style="flex: 1;">
+                <button type="button" class="btn-sm ban" onclick="this.parentElement.remove()" style="width: 46px; height: 46px;"><i class="fa-solid fa-trash"></i></button>
+            `;
+            list.appendChild(wrapper);
+        }
+
         async function loadGiveaways() {
             const { data } = await supabaseClient.from('giveaways').select('*').order('created_at', {ascending: false});
             const tbody = document.getElementById('giveawaysTable');
             if(data && data.length) {
                 tbody.innerHTML = data.map(g => {
                     const dt = new Date(g.end_time).toLocaleString('ru-RU');
+                    const channelsJson = g.tg_channels ? JSON.stringify(g.tg_channels).replace(/"/g, '&quot;') : '[]';
                     return `<tr>
                         <td style="font-weight:900;">${g.amount} G</td><td>До ${g.max_participants} чел.</td><td>${dt}</td>
                         <td>${g.is_active ? '<span class="badge active">Активен</span>' : '<span class="badge inactive">Завершен</span>'}</td>
                         <td><div class="td-actions">
-                            <button class="btn-sm edit" onclick="openGwEdit(${g.id}, ${g.amount}, ${g.max_participants}, '${g.end_time}', '${g.conditions.replace(/'/g, "\\'")}', ${g.is_active})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-sm edit" onclick="openGwEdit(${g.id}, ${g.amount}, ${g.max_participants}, '${g.end_time}', '${(g.conditions || '').replace(/'/g, "\\'")}', ${g.is_active}, ${g.require_sub || false}, '${channelsJson}')"><i class="fa-solid fa-pen"></i></button>
                             <button class="btn-sm ban" onclick="deleteGw(${g.id})"><i class="fa-solid fa-trash"></i></button>
                         </div></td>
                     </tr>`;
@@ -726,7 +762,7 @@
             } else { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Пусто</td></tr>'; }
         }
 
-        function openGwEdit(id, amt, max, end, cond, act) {
+        function openGwEdit(id, amt, max, end, cond, act, reqSub = false, channelsStr = '[]') {
             currentGwId = id;
             document.getElementById('gwAmount').value = amt || '';
             document.getElementById('gwMax').value = max || '';
@@ -739,6 +775,22 @@
             
             document.getElementById('gwCond').value = cond || '';
             document.getElementById('gwActive').checked = act !== false;
+
+            // Настройка чекбокса каналов
+            document.getElementById('gwRequireSub').checked = reqSub;
+            const list = document.getElementById('gwChannelsList');
+            list.innerHTML = '';
+            
+            let channels = [];
+            try { channels = JSON.parse(channelsStr); } catch(e){}
+            
+            if (channels.length > 0) {
+                channels.forEach(ch => addGwChannelInput(ch));
+            } else {
+                addGwChannelInput(); // Один пустой по умолчанию
+            }
+            
+            toggleGwChannels();
             openModal('giveawayModal');
         }
 
@@ -750,13 +802,24 @@
             const conditions = document.getElementById('gwCond').value;
             const is_active = document.getElementById('gwActive').checked;
 
-            const payload = { amount, max_participants, end_time, conditions, is_active };
+            // Сбор данных о каналах
+            const require_sub = document.getElementById('gwRequireSub').checked;
+            const tg_channels = [];
+            if (require_sub) {
+                document.querySelectorAll('.gw-channel-input').forEach(input => {
+                    const val = input.value.trim();
+                    if (val) tg_channels.push(val);
+                });
+            }
+
+            const payload = { amount, max_participants, end_time, conditions, is_active, require_sub, tg_channels };
 
             if (currentGwId) { await supabaseClient.from('giveaways').update(payload).eq('id', currentGwId); } 
             else { await supabaseClient.from('giveaways').insert([payload]); }
             
             showToast('Розыгрыш сохранен', 'success'); closeModal('giveawayModal'); loadGiveaways();
         }
+        
         async function deleteGw(id) { if(confirm("Удалить розыгрыш?")) { await supabaseClient.from('giveaways').delete().eq('id', id); loadGiveaways(); } }
 
     </script>
