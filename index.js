@@ -57,6 +57,34 @@ bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
   }
 });
 
+// ==========================================
+// ПРИВЯЗКА ТЕЛЕГРАМА
+// ==========================================
+bot.onText(/^\/start BIND_(.+)$/, async (msg, match) => {
+  const secretId = match[1].trim();
+  const tgId = msg.from.id;
+  const tgUsername = msg.from.username || '';
+
+  // Ищем юзера по секретному ID
+  const { data: user } = await supabase.from('users').select('*').eq('secret_id', secretId).single();
+  
+  if (!user) {
+    return bot.sendMessage(msg.chat.id, '❌ Ошибка привязки: Аккаунт не найден. Попробуйте снова через сайт.');
+  }
+
+  // Обновляем данные юзера в БД
+  const { error } = await supabase.from('users').update({ 
+    tg_id: tgId, 
+    telegram_username: tgUsername 
+  }).eq('secret_id', secretId);
+
+  if (error) {
+    return bot.sendMessage(msg.chat.id, '❌ Ошибка привязки на стороне базы данных.');
+  }
+
+  bot.sendMessage(msg.chat.id, `✅ Аккаунт успешно привязан!\n👤 Никнейм: ${user.username}\n\nТеперь вы можете полноценно участвовать в розыгрышах.`);
+});
+
 bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
   if (msg.chat.id !== ADMIN_CHAT_ID) return;
   const secretId = match[1].trim();
