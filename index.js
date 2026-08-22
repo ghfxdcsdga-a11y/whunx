@@ -433,6 +433,7 @@ app.get('/api/reviews/list', async (req, res) => {
   res.json({ success: true, reviews: data });
 });
 
+// ЗДЕСЬ ОБНОВЛЕНО ДОБАВЛЕНИЕ НИКНЕЙМА И АВАТАРА В ИДЕИ
 app.post('/api/ideas/add', authenticateUser, async (req, res) => {
   const { idea_text } = req.body;
   if (!idea_text) return res.status(400).json({ error: 'Текст идеи не может быть пустым' });
@@ -441,7 +442,13 @@ app.post('/api/ideas/add', authenticateUser, async (req, res) => {
   const { data: recent } = await supabase.from('ideas').select('id').eq('user_email', req.user.email).gte('created_at', oneDayAgo.toISOString());
   if (recent && recent.length > 0) return res.status(403).json({ error: 'Предлагать идеи можно 1 раз в сутки!' });
 
-  const { error } = await supabase.from('ideas').insert([{ user_email: req.user.email, idea_text }]);
+  const { error } = await supabase.from('ideas').insert([{ 
+      user_email: req.user.email, 
+      username: req.user.username,
+      avatar_url: req.user.avatar_url,
+      idea_text: idea_text 
+  }]);
+  
   if (error) return res.status(500).json({ error: 'Ошибка при сохранении' });
   res.json({ success: true, message: 'Идея отправлена на модерацию!' });
 });
