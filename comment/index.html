@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Whunx Shop - Отзывы клиентов</title>
+    
+    <link rel="icon" type="image/png" href="https://whunx.shop/whunx_icon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <style>
+        /* =========================================
+           GLOBAL VARIABLES & RESET
+        ========================================= */
+        :root {
+            --bg-body: #08090d;
+            --bg-input: rgba(30, 34, 48, 0.6);
+            --accent-gold: #f4c745; 
+            --accent-gold-glow: rgba(244, 199, 69, 0.4);
+            --accent-purple: #8b5cf6; 
+            --accent-purple-hover: #7c3aed; 
+            --accent-purple-glow: rgba(139, 92, 246, 0.4);
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-main: #ffffff;
+            --text-muted: #a3a8b5;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-x: hidden; 
+        }
+        input, button, textarea, select { font-family: 'Montserrat', sans-serif; }
+
+        /* ФОН С СЕТКОЙ И СВЕЧЕНИЕМ */
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(140px); z-index: -2; pointer-events: none; opacity: 0.35; animation: floatOrb 20s infinite ease-in-out alternate; }
+        .orb-1 { width: 500px; height: 500px; background: var(--accent-purple); top: -10%; left: -10%; }
+        .orb-2 { width: 600px; height: 600px; background: var(--accent-gold); bottom: -20%; right: -10%; animation-delay: -5s; opacity: 0.15;}
+        @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(60px, 60px) scale(1.1); } }
+
+        body::before { 
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; 
+            background: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); 
+            background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%); 
+        }
+
+        button { cursor: pointer; border: none; outline: none; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; } ::-webkit-scrollbar-thumb:hover { background: var(--accent-purple); }
+
+        /* =========================================
+           CUSTOM TOAST ALERTS
+        ========================================= */
+        #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; pointer-events: none; }
+        .toast { background: rgba(15, 15, 20, 0.85); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); padding: 15px 20px; border-radius: 16px; color: #fff; box-shadow: 0 15px 35px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 15px; min-width: 320px; animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; pointer-events: all; }
+        .toast.success { border-left: 4px solid var(--accent-green); } .toast.error { border-left: 4px solid var(--accent-red); } .toast.info { border-left: 4px solid var(--accent-purple); }
+        .toast-icon { font-size: 24px; } .toast.success .toast-icon { color: var(--accent-green); text-shadow: 0 0 10px rgba(16,185,129,0.5); } .toast.error .toast-icon { color: var(--accent-red); text-shadow: 0 0 10px rgba(239,68,68,0.5); }
+        .toast-content h4 { font-size: 14px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;} .toast-content p { font-size: 13px; color: var(--text-muted); font-weight: 600; line-height: 1.4; }
+        @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* =========================================
+           HEADER & SIDEBAR MENU
+        ========================================= */
+        header { height: 80px; background: rgba(10, 12, 16, 0.6); backdrop-filter: blur(40px); border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: space-between; padding: 0 50px; position: sticky; top: 0; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+        
+        .header-left { display: flex; align-items: center; gap: 25px; }
+        .burger-btn { width: 45px; height: 45px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: #fff; cursor: pointer; transition: var(--transition); }
+        .burger-btn:hover { background: rgba(139, 92, 246, 0.15); border-color: var(--accent-purple); color: var(--accent-purple); box-shadow: 0 0 20px var(--accent-purple-glow); transform: scale(1.05); }
+        
+        .sidebar-menu { position: fixed; top: 0; left: -320px; width: 320px; height: 100vh; background: rgba(10, 12, 18, 0.95); backdrop-filter: blur(35px); border-right: 1px solid var(--glass-border); z-index: 1000; transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 40px 25px; box-shadow: 20px 0 60px rgba(0,0,0,0.7); display: flex; flex-direction: column; }
+        .sidebar-menu.active { left: 0; }
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 999; display: none; opacity: 0; transition: opacity 0.4s; }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+        
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border); }
+        .sidebar-header h2 { font-size: 1.2rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar-close { color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
+        .sidebar-close:hover { color: var(--accent-red); transform: rotate(90deg); }
+        
+        .sidebar-nav { display: flex; flex-direction: column; gap: 12px; }
+        .sidebar-link { display: flex; align-items: center; gap: 15px; padding: 16px 20px; border-radius: 14px; text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent;}
+        .sidebar-link i { font-size: 1.2rem; width: 25px; text-align: center; color: var(--accent-purple); transition: 0.3s;}
+        .sidebar-link:hover { background: rgba(255,255,255,0.03); color: #fff; border-color: var(--glass-border); transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2);}
+        .sidebar-link:hover i { text-shadow: 0 0 15px var(--accent-purple-glow); }
+
+        .logo { font-size: 26px; font-weight: 900; letter-spacing: 1px; cursor: pointer; color: #fff; text-transform: uppercase;} 
+        .logo span { color: var(--accent-purple); text-shadow: 0 0 20px var(--accent-purple-glow); }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        
+        .custom-google-wrapper { position: relative; display: inline-block; cursor: pointer; border-radius: 14px; z-index: 10; }
+        .login-btn { background: #fff; color: #000; height: 48px; min-width: 150px; padding: 0 25px; border-radius: 14px; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; transition: var(--transition); box-shadow: 0 0 25px rgba(255,255,255,0.15); pointer-events: none; text-transform: uppercase; letter-spacing: 1px;} 
+        .custom-google-wrapper:hover .login-btn { transform: translateY(-2px); box-shadow: 0 5px 30px rgba(255,255,255,0.3); }
+        .invisible-google-btn { position: absolute; top: -10px; left: -20px; right: -20px; bottom: -10px; opacity: 0.01; z-index: 50; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+
+        .balance-module { display: none; align-items: center; background: rgba(0,0,0,0.4); border-radius: 14px; padding: 5px; border: 1px solid var(--glass-border); box-shadow: inset 0 0 15px rgba(0,0,0,0.6); }
+        .balance-amount { padding: 0 15px; font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: baseline; gap: 4px; white-space: nowrap; } 
+        .balance-amount span { color: var(--text-muted); font-size: 14px; }
+        .balance-add-btn { width: 40px; height: 40px; background: var(--accent-purple); color: #fff; border-radius: 10px; display: flex; justify-content: center; align-items: center; transition: var(--transition); box-shadow: 0 0 15px var(--accent-purple-glow); } .balance-add-btn:hover { filter: brightness(1.15); transform: scale(1.05); box-shadow: 0 0 25px var(--accent-purple-glow); }
+        
+        .profile-module { display: none; position: relative; }
+        .profile-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 14px; transition: 0.3s; border: 1px solid transparent;} 
+        .profile-trigger:hover { background: rgba(255,255,255,0.03); border-color: var(--glass-border); } 
+        .profile-trigger img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); background: var(--bg-input); }
+        .dropdown-menu { position: absolute; top: calc(100% + 20px); right: 0; width: 260px; background: rgba(15, 18, 26, 0.85); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; opacity: 0; visibility: hidden; transform: translateY(15px); transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 200; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02); } .profile-module.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; }
+        .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; color: var(--text-muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;} .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+        /* =========================================
+           REVIEWS SECTION
+        ========================================= */
+        main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 60px 20px; z-index: 10; position: relative; }
+        .shop-header { text-align: center; margin-bottom: 40px; } 
+        .shop-header h1 { font-size: 38px; font-weight: 900; margin-bottom: 15px; background: linear-gradient(to right, #ffffff, #a3a8b5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 2px;} 
+        .shop-header p { color: var(--text-muted); font-size: 16px; font-weight: 600;}
+
+        /* ФОРМА ДОБАВЛЕНИЯ ОТЗЫВА */
+        .add-review-box { background: rgba(15, 18, 26, 0.6); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; margin-bottom: 50px; box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 0 20px rgba(255,255,255,0.02); }
+        .form-title { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;}
+        
+        .rating-area { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; margin-bottom: 20px;}
+        .rating-area input { display: none; }
+        .rating-area label { cursor: pointer; color: rgba(255,255,255,0.1); font-size: 30px; transition: 0.2s; }
+        .rating-area label:hover, .rating-area label:hover ~ label, .rating-area input:checked ~ label { color: var(--accent-gold); text-shadow: 0 0 15px var(--accent-gold-glow); }
+
+        .form-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; color: #fff; font-size: 15px; font-weight: 600; outline: none; transition: 0.3s; box-shadow: inset 0 5px 10px rgba(0,0,0,0.3); resize: none;}
+        .form-input:focus { border-color: var(--accent-purple); box-shadow: inset 0 5px 10px rgba(0,0,0,0.3), 0 0 15px var(--accent-purple-glow); }
+        
+        .upload-area { background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 14px; padding: 18px; text-align: center; cursor: pointer; transition: 0.3s; font-weight: 700; font-size: 14px; margin-bottom: 20px; } 
+        .upload-area:hover { border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.08); }
+
+        .btn-submit { width: 100%; background: var(--accent-purple); color: #fff; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 800; transition: 0.3s; box-shadow: 0 10px 25px var(--accent-purple-glow); text-transform: uppercase; letter-spacing: 1px;} 
+        .btn-submit:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 15px 35px var(--accent-purple-glow); } 
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+        /* КАРТОЧКА ОТЗЫВА */
+        .reviews-list { display: flex; flex-direction: column; gap: 20px; }
+        .review-card { background: linear-gradient(145deg, rgba(30, 34, 48, 0.3) 0%, rgba(15, 18, 26, 0.6) 100%); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; animation: fadeInUp 0.5s ease forwards; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .rev-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .rev-avatar { width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--glass-border); object-fit: cover; background: var(--bg-input);}
+        .rev-name { font-weight: 900; color: #fff; font-size: 16px; letter-spacing: 0.5px;}
+        .rev-date { color: var(--text-muted); font-size: 12px; font-weight: 700; margin-top: 3px;}
+        .rev-stars { color: var(--accent-gold); font-size: 14px; text-shadow: 0 0 10px var(--accent-gold-glow); display: flex; gap: 3px;}
+        
+        .rev-text { color: #fff; font-weight: 600; font-size: 15px; line-height: 1.6; margin-bottom: 15px; word-wrap: break-word; }
+        .rev-img { max-width: 100%; max-height: 250px; border-radius: 14px; margin-bottom: 15px; border: 1px solid var(--glass-border); object-fit: cover; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);}
+        .rev-img:hover { filter: brightness(1.1); }
+        
+        .admin-reply { background: rgba(139, 92, 246, 0.08); border-left: 4px solid var(--accent-purple); padding: 18px; border-radius: 0 14px 14px 0; margin-top: 20px; }
+        .admin-reply-title { font-size: 13px; color: var(--accent-purple); font-weight: 900; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; letter-spacing: 1px;}
+        .admin-reply-text { color: var(--text-muted); font-size: 14px; font-weight: 600; line-height: 1.5; }
+
+        /* =========================================
+           MOBILE RESPONSIVENESS
+        ========================================= */
+        @media (max-width: 768px) {
+            header { padding: 0 10px; height: 70px; }
+            .logo { font-size: 18px; }
+            .header-left { gap: 8px; }
+            .header-right { gap: 8px; }
+            .burger-btn { width: 40px; height: 40px; font-size: 1.1rem; border-radius: 10px; }
+            .balance-module { padding: 3px; border-radius: 10px; }
+            .balance-amount { padding: 0 8px; font-size: 13px; }
+            .balance-add-btn { width: 30px; height: 30px; border-radius: 6px; }
+            .profile-trigger { padding: 2px; }
+            .profile-trigger img { width: 32px; height: 32px; border-radius: 8px; }
+            
+            main { padding: 30px 15px; }
+            .shop-header h1 { font-size: 26px; }
+            
+            .add-review-box { padding: 20px; }
+            .form-title { font-size: 16px; flex-direction: column; align-items: flex-start; gap: 15px;}
+            .rating-area { justify-content: flex-start; }
+            
+            .review-card { padding: 20px; }
+            .rev-header { flex-wrap: wrap; }
+            .rev-stars { margin-left: 0; width: 100%; margin-top: 5px; }
+        }
+        @media (max-width: 400px) {
+            .logo span { display: none; }
+            .logo { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <div id="toastContainer"></div>
+
+    <!-- БОКОВОЕ МЕНЮ -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="sidebar-header">
+            <h2>Навигация</h2>
+            <i class="fa-solid fa-xmark sidebar-close" onclick="toggleSidebar()"></i>
+        </div>
+        <div class="sidebar-nav">
+            <a href="https://whunx.shop/" class="sidebar-link"><i class="fa-solid fa-store"></i> Магазин голды</a>
+            <a href="https://whunx.shop/comment" class="sidebar-link" style="background: rgba(255,255,255,0.05); border-color: var(--glass-border); color: #fff;"><i class="fa-solid fa-star"></i> Отзывы клиентов</a>
+            <a href="https://whunx.shop/idea" class="sidebar-link"><i class="fa-solid fa-lightbulb"></i> Предложить идею</a>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <div class="burger-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></div>
+            <div class="logo" onclick="window.location.href='https://whunx.shop/'">WHUNX<span>.SHOP</span></div>
+        </div>
+        <div class="header-right">
+            <div id="googleLoginWrapper" class="custom-google-wrapper">
+                <button class="login-btn">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 20px;"> 
+                    <span id="fakeGoogleText">Загрузка...</span>
+                </button>
+                <div id="googleLoginBtn" class="invisible-google-btn"></div>
+            </div>
+
+            <div class="balance-module" id="balanceModule">
+                <div class="balance-amount" id="balanceText">0 <span>₸</span></div>
+                <button class="balance-add-btn" onclick="window.location.href='https://whunx.shop/'"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div class="profile-module" id="profileModule">
+                <div class="profile-trigger" onclick="toggleDropdown()">
+                    <img id="headerAvatar" src="https://whunx.shop/whunx_pp.png" alt="Avatar">
+                </div>
+                <div class="dropdown-menu" id="profileDropdown">
+                    <div class="dropdown-header"><div class="dropdown-name" id="dropdownName">Player</div></div>
+                    <div class="dropdown-item logout" onclick="logout()" style="color: var(--accent-red);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Выйти</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="shop-header">
+            <h1>Отзывы клиентов</h1>
+            <p>Честные мнения о нашей работе. Оставить отзыв можно только после успешной покупки.</p>
+        </div>
+
+        <!-- ФОРМА ОТЗЫВА -->
+        <div class="add-review-box" id="addReviewBox">
+            <div class="form-title">
+                Оцените наш сервис
+                <div class="rating-area" id="ratingArea">
+                    <input type="radio" id="star-5" name="rating" value="5">
+                    <label for="star-5" title="Оценка «5»"><i class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star-4" name="rating" value="4">
+                    <label for="star-4" title="Оценка «4»"><i class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star-3" name="rating" value="3">
+                    <label for="star-3" title="Оценка «3»"><i class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star-2" name="rating" value="2">
+                    <label for="star-2" title="Оценка «2»"><i class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star-1" name="rating" value="1" checked>
+                    <label for="star-1" title="Оценка «1»"><i class="fa-solid fa-star"></i></label>
+                </div>
+            </div>
+            
+            <textarea id="reviewText" class="form-input" rows="4" placeholder="Напишите ваш отзыв здесь..." style="margin-bottom: 20px;"></textarea>
+            
+            <div class="upload-area" style="background:transparent; border-color:transparent; padding:0; text-align:left; display:flex; align-items:center; gap:15px; margin-bottom:20px; cursor:default; box-shadow:none;">
+                <img id="reviewPhotoPreview" src="" style="display:none; width:70px; height:70px; border-radius:14px; border:1px solid var(--glass-border); object-fit:cover; background: rgba(0,0,0,0.5);">
+                <span id="removeRevPhotoBtn" style="color:var(--accent-red); font-size:13px; font-weight:800; cursor:pointer; display:none; transition:0.3s;" onclick="removeReviewPhoto()">Удалить фото <i class="fa-solid fa-xmark"></i></span>
+            </div>
+            <input type="file" id="reviewPhotoInput" style="display:none;" accept="image/*" onchange="previewReviewPhoto(event)">
+            <div class="upload-area" id="reviewPhotoBtn" onclick="document.getElementById('reviewPhotoInput').click()">Прикрепить скриншот (необязательно) <i class="fa-solid fa-image" style="margin-left: 5px;"></i></div>
+
+            <button class="btn-submit" onclick="submitReview()" id="submitReviewBtn">Опубликовать отзыв</button>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:15px; text-align:center; font-weight: 700;">Система автоматически проверяет наличие успешных выводов на вашем аккаунте.</p>
+        </div>
+
+        <!-- КОНТЕЙНЕР ДЛЯ КАРТОЧЕК -->
+        <div class="reviews-list" id="reviewsContainer">
+            <div style="text-align:center; padding: 40px; color: var(--text-muted); font-weight: 700;">Загрузка отзывов...</div>
+        </div>
+    </main>
+
+    <script>
+        const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
+        const BACKEND_URL = 'https://whunx-backend.onrender.com';
+        const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhucGJibXl0dGV4cW10YnR5YmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2OTc4NDcsImV4cCI6MjEwMjI3Mzg0N30.7x3UDegy7zCeT88-2Fps-uF2nMR-PDAnnXcLt5we0zw';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentDbUser = null; 
+        let currentSessionToken = null;
+        let currentReviewImageBase64 = null;
+
+        function showToast(title, message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div'); toast.className = `toast ${type}`;
+            let iconClass = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info');
+            toast.innerHTML = `<i class="fa-solid ${iconClass} toast-icon"></i><div class="toast-content"><h4>${title}</h4><p>${message}</p></div>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'slideOutRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'; setTimeout(() => toast.remove(), 400); }, 7000);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebarMenu').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function toggleDropdown() { document.getElementById('profileModule').classList.toggle('active'); }
+        document.addEventListener('click', (e) => { const module = document.getElementById('profileModule'); if (module && module.classList.contains('active') && !module.contains(e.target)) module.classList.remove('active'); });
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            loadReviews(); // Загружаем отзывы сразу
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                handleUserLogin(session);
+            } else {
+                initGoogleAuth();
+            }
+
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN' && session) handleUserLogin(session);
+                else if (event === 'SIGNED_OUT') handleUserLogout();
+            });
+        });
+
+        function initGoogleAuth() {
+            const btn = document.getElementById("googleLoginBtn");
+            if (currentSessionToken) return;
+            if (window.google && window.google.accounts && btn) {
+                try {
+                    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin });
+                    google.accounts.id.renderButton(btn, { theme: "outline", size: "large", type: "standard", width: 250 });
+                    document.getElementById('fakeGoogleText').innerText = 'Войти';
+                } catch (e) {
+                    document.getElementById('fakeGoogleText').innerText = 'Ошибка';
+                }
+            } else {
+                setTimeout(initGoogleAuth, 100);
+            }
+        }
+
+        async function handleGoogleLogin(response) {
+            const { data, error } = await supabaseClient.auth.signInWithIdToken({ provider: 'google', token: response.credential });
+            if (error) showToast('Ошибка', 'Не удалось авторизоваться', 'error');
+            else { showToast('Успех', 'Успешный вход!', 'success'); handleUserLogin(data.session); }
+        }
+
+        async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); }
+
+        async function handleUserLogin(session) {
+            currentSessionToken = session.access_token;
+            const userAuth = session.user;
+            
+            document.getElementById('googleLoginWrapper').style.display = 'none';
+            document.getElementById('balanceModule').style.display = 'flex';
+            document.getElementById('profileModule').style.display = 'block';
+
+            let { data: dbUser } = await supabaseClient.from('users').select('*').eq('email', userAuth.email).single();
+            if (!dbUser) {
+                let defaultName = userAuth.user_metadata.full_name || 'whunx-user-' + Math.random().toString(36).substring(2, 8).toLowerCase();
+                const newUser = { email: userAuth.email, username: defaultName, avatar_url: 'whunx_pp.png', balance: 0, secret_id: crypto.randomUUID() };
+                const { data: insertedUser } = await supabaseClient.from('users').insert([newUser]).select().single();
+                dbUser = insertedUser;
+            }
+            currentDbUser = dbUser;
+            
+            document.getElementById('balanceText').innerHTML = `${currentDbUser.balance} <span>₸</span>`;
+            document.getElementById('dropdownName').innerText = currentDbUser.username;
+            
+            let safeAvatar = 'https://whunx.shop/whunx_pp.png';
+            if (currentDbUser.avatar_url) {
+                safeAvatar = currentDbUser.avatar_url.startsWith('http') || currentDbUser.avatar_url.startsWith('data:') ? currentDbUser.avatar_url : 'https://whunx.shop/' + currentDbUser.avatar_url;
+            }
+            document.getElementById('headerAvatar').src = safeAvatar;
+        }
+
+        function handleUserLogout() {
+            currentDbUser = null; currentSessionToken = null;
+            document.getElementById('googleLoginWrapper').style.display = 'inline-block';
+            document.getElementById('balanceModule').style.display = 'none';
+            document.getElementById('profileModule').style.display = 'none';
+            initGoogleAuth();
+        }
+
+        // ==========================================
+        // ЛОГИКА ОТЗЫВОВ
+        // ==========================================
+
+        function previewReviewPhoto(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    currentReviewImageBase64 = e.target.result;
+                    const preview = document.getElementById('reviewPhotoPreview');
+                    preview.src = currentReviewImageBase64;
+                    preview.style.display = 'block';
+                    document.getElementById('removeRevPhotoBtn').style.display = 'block';
+                    document.getElementById('reviewPhotoBtn').innerHTML = `Фото прикреплено <i class="fa-solid fa-check-double" style="color:var(--accent-green); margin-left: 5px;"></i>`;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeReviewPhoto() {
+            currentReviewImageBase64 = null;
+            const preview = document.getElementById('reviewPhotoPreview');
+            preview.src = '';
+            preview.style.display = 'none';
+            document.getElementById('removeRevPhotoBtn').style.display = 'none';
+            document.getElementById('reviewPhotoInput').value = '';
+            document.getElementById('reviewPhotoBtn').innerHTML = `Прикрепить скриншот (необязательно) <i class="fa-solid fa-image" style="margin-left: 5px;"></i>`;
+        }
+
+        async function submitReview() {
+            if (!currentSessionToken) return showToast('Внимание', 'Сначала войдите в аккаунт!', 'info');
+            
+            const text = document.getElementById('reviewText').value.trim();
+            if (!text) return showToast('Ошибка', 'Напишите текст отзыва!', 'error');
+
+            let rating = 5;
+            const radios = document.getElementsByName('rating');
+            for (let r of radios) {
+                if (r.checked) { rating = parseInt(r.value); break; }
+            }
+
+            document.getElementById('submitReviewBtn').disabled = true;
+            document.getElementById('submitReviewBtn').innerText = 'Публикация...';
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/reviews/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                    body: JSON.stringify({ rating: rating, comment: text, image: currentReviewImageBase64 })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Успех', 'Отзыв успешно опубликован!', 'success');
+                    document.getElementById('reviewText').value = '';
+                    removeReviewPhoto();
+                    loadReviews(); 
+                } else {
+                    showToast('Ошибка', result.error, 'error');
+                }
+            } catch(e) {
+                showToast('Ошибка', 'Сбой связи с сервером', 'error');
+            }
+
+            document.getElementById('submitReviewBtn').disabled = false;
+            document.getElementById('submitReviewBtn').innerText = 'Опубликовать отзыв';
+        }
+
+        async function loadReviews() {
+            const container = document.getElementById('reviewsContainer');
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/reviews/list`);
+                const result = await response.json();
+                container.innerHTML = '';
+                
+                if(result.success && result.reviews.length > 0) {
+                    result.reviews.forEach(r => {
+                        let starsHtml = '';
+                        for(let i = 1; i <= 5; i++) {
+                            starsHtml += `<i class="fa-solid fa-star" style="color: ${i <= r.rating ? 'var(--accent-gold)' : 'rgba(255,255,255,0.1)'};"></i>`;
+                        }
+                        
+                        let imgHtml = r.image_url ? `<img src="${r.image_url}" class="rev-img" onclick="window.open(this.src)">` : '';
+                        
+                        let replyHtml = r.admin_reply ? `
+                            <div class="admin-reply">
+                                <div class="admin-reply-title"><i class="fa-solid fa-headset"></i> Ответ Администрации</div>
+                                <div class="admin-reply-text">${r.admin_reply}</div>
+                            </div>
+                        ` : '';
+
+                        // Имя и аватар
+                        const userName = r.username || r.user_email.split('@')[0];
+                        let safeAvatar = 'https://whunx.shop/whunx_pp.png';
+                        if (r.avatar_url) {
+                            safeAvatar = r.avatar_url.startsWith('http') || r.avatar_url.startsWith('data:') ? r.avatar_url : 'https://whunx.shop/' + r.avatar_url;
+                        }
+                        
+                        const dateObj = new Date(r.created_at);
+                        const dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
+
+                        const card = document.createElement('div');
+                        card.className = 'review-card';
+                        card.innerHTML = `
+                            <div class="rev-header">
+                                <img src="${safeAvatar}" class="rev-avatar" onerror="this.src='https://whunx.shop/whunx_pp.png'">
+                                <div>
+                                    <div class="rev-name">${userName}</div>
+                                    <div class="rev-date">${dateStr}</div>
+                                </div>
+                                <div style="margin-left: auto;" class="rev-stars">${starsHtml}</div>
+                            </div>
+                            <div class="rev-text">${r.comment}</div>
+                            ${imgHtml}
+                            ${replyHtml}
+                        `;
+                        container.appendChild(card);
+                    });
+                } else {
+                    container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px; font-weight:700;">Отзывов пока нет. Будьте первыми!</div>';
+                }
+            } catch(e) {
+                container.innerHTML = '<div style="text-align:center; color:var(--error); padding:40px; font-weight:700;">Не удалось загрузить отзывы.</div>';
+            }
+        }
+    </script>
+</body>
+</html>
