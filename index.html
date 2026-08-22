@@ -167,7 +167,6 @@
             opacity: 0;
         }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        /* Stagger animation for cards */
         .product-card:nth-child(1) { animation-delay: 0.1s; } .product-card:nth-child(2) { animation-delay: 0.2s; } .product-card:nth-child(3) { animation-delay: 0.3s; } .product-card:nth-child(4) { animation-delay: 0.4s; }
 
         .product-card:hover { transform: translateY(-8px); border-color: rgba(244, 199, 69, 0.4); box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 0 30px rgba(244,199,69,0.05); }
@@ -262,26 +261,29 @@
         .h-status.cancelled { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3);}
 
         /* =========================================
-           MOBILE RESPONSIVENESS
+           MOBILE RESPONSIVENESS (ИСПРАВЛЕНА ШАПКА)
         ========================================= */
         @media (max-width: 768px) {
-            header { padding: 0 15px; height: 75px; }
-            .logo { font-size: 20px; }
-            .header-left { gap: 12px; }
-            .header-right { gap: 12px; }
+            header { padding: 0 10px; height: 70px; }
+            .logo { font-size: 18px; }
+            .header-left { gap: 8px; }
+            .header-right { gap: 8px; }
+            .burger-btn { width: 40px; height: 40px; font-size: 1.1rem; border-radius: 10px; }
             
-            .balance-module { padding: 5px; border-radius: 12px; }
-            .balance-amount { padding: 0 10px; font-size: 14px; }
-            .balance-add-btn { width: 34px; height: 34px; border-radius: 8px; }
-            .profile-trigger img { width: 36px; height: 36px; border-radius: 10px; }
+            .balance-module { padding: 3px; border-radius: 10px; }
+            .balance-amount { padding: 0 8px; font-size: 13px; }
+            .balance-add-btn { width: 30px; height: 30px; border-radius: 6px; }
             
-            main { padding: 40px 15px; }
-            .shop-header h1 { font-size: 28px; }
+            .profile-trigger { padding: 2px; }
+            .profile-trigger img { width: 32px; height: 32px; border-radius: 8px; }
             
-            .giveaway-banner { flex-direction: column; text-align: center; padding: 35px 20px; gap: 25px; border-radius: 24px;}
-            .giveaway-cover { width: 130px; height: 130px; border-radius: 20px;}
+            main { padding: 30px 15px; }
+            .shop-header h1 { font-size: 24px; }
+            
+            .giveaway-banner { flex-direction: column; text-align: center; padding: 35px 20px; gap: 20px; border-radius: 24px;}
+            .giveaway-cover { width: 120px; height: 120px; border-radius: 20px;}
             .gw-badge { align-self: center; }
-            .giveaway-info h2 { font-size: 2.8rem; }
+            .giveaway-info h2 { font-size: 2.5rem; }
             .countdown { justify-content: center; gap: 6px; width: 100%; }
             .cd-box { min-width: 0; flex: 1; padding: 10px 4px; border-radius: 10px;}
             .cd-num { font-size: 1.5rem; }
@@ -290,8 +292,8 @@
 
             .products-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
             .product-card { padding: 25px 15px; border-radius: 20px;}
-            .product-img-wrapper { width: 100px; height: 100px; margin-bottom: 20px; }
-            .product-img-wrapper::before { width: 70px; height: 70px; }
+            .product-img-wrapper { width: 90px; height: 90px; margin-bottom: 20px; }
+            .product-img-wrapper::before { width: 60px; height: 60px; }
             .product-gold { font-size: 20px; }
             .product-price { font-size: 15px; margin-bottom: 20px; }
             .btn-buy { padding: 12px; font-size: 14px; border-radius: 10px;}
@@ -301,6 +303,14 @@
             #chatWidget { width: calc(100% - 40px); bottom: 20px; right: 20px; border-radius: 18px; }
             footer { flex-direction: column; align-items: stretch; gap: 12px; padding: 30px 20px; }
             .btn-donate { justify-content: center; width: 100%; padding: 15px;}
+        }
+        
+        /* СКРЫВАЕМ ПРИСТАВКУ .SHOP НА ОЧЕНЬ УЗКИХ ЭКРАНАХ */
+        @media (max-width: 400px) {
+            .logo span { display: none; }
+            .logo { font-size: 16px; }
+            .header-left { gap: 5px; }
+            .header-right { gap: 5px; }
         }
     </style>
 </head>
@@ -373,8 +383,9 @@
                 <div id="gwWinnerName" class="gw-winner-text" style="display:none;">Победитель: <span>Name</span></div>
                 
                 <p id="gwCondText">Условия скоро появятся</p>
-                <!-- СЮДА БУДУТ ВЫВОДИТЬСЯ КАНАЛЫ -->
-                <div id="gwChannelsDiv" style="display: none; margin-top: 5px; gap: 10px; flex-wrap: wrap;"></div>
+                
+                <!-- БЛОК С КАНАЛАМИ ТЕЛЕГРАМ -->
+                <div id="gwChannelsDiv" style="display: none; margin-top: 5px; gap: 10px; flex-wrap: wrap; justify-content: center;"></div>
                 
                 <p id="gwParticipants" style="color: var(--accent-gold); font-size: 14px; font-weight: 800;">Участников: 0 / ∞</p>
                 
@@ -550,6 +561,7 @@
         let pendingPurchaseItem = null;
         let chatInterval = null;
         let socket = null;
+        let gwParticipantsInterval = null; // Интервал для живого обновления участников
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -625,7 +637,6 @@
                 else if (event === 'SIGNED_OUT') handleUserLogout();
             });
 
-            // Инициализация Socket.io для получения личной плашки
             try {
                 socket = io(BACKEND_URL);
                 socket.on('open_plashka', (data) => {
@@ -673,7 +684,6 @@
             
             if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
 
-            // Регистрация сокета при входе
             if (socket && socket.connected) {
                 socket.emit('register_client', { token: currentSessionToken });
             }
@@ -745,7 +755,6 @@
             initGoogleAuth();
         }
 
-        // Защита Base64 для аватарок
         function getSafeAvatar(url) {
             if (!url) return 'https://whunx.shop/whunx_pp.png';
             if (url.startsWith('http') || url.startsWith('data:')) return url;
@@ -764,7 +773,6 @@
             
             document.getElementById('inputSetNick').value = currentDbUser.username;
 
-            // ЛОГИКА ПРИВЯЗКИ ТГ
             const tgBtn = document.getElementById('tgBindBtn');
             const tgText = document.getElementById('tgBindText');
             const tgIcon = document.getElementById('tgBindIcon');
@@ -831,7 +839,7 @@
         }
 
         // ==========================================
-        // ЛОГИКА РОЗЫГРЫША
+        // ЛОГИКА РОЗЫГРЫША И ЖИВЫХ ОБНОВЛЕНИЙ
         // ==========================================
         async function loadActiveGiveaway() {
             const { data, error } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1).single();
@@ -842,10 +850,10 @@
             const endTime = new Date(data.end_time).getTime();
             let endedAt = data.ended_at ? new Date(data.ended_at).getTime() : null;
 
-            // Удаляем если прошел 1 час после завершения
             if (data.is_active === false && endedAt && (now - endedAt > 3600000)) {
                 await supabaseClient.from('giveaways').delete().eq('id', data.id);
                 banner.style.display = 'none';
+                if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 return;
             }
 
@@ -853,7 +861,6 @@
             document.getElementById('gwTitle').innerText = data.amount + ' GOLD';
             document.getElementById('gwCondText').innerText = data.conditions || '';
 
-            // Вывод обязательных каналов для подписки
             const channelsDiv = document.getElementById('gwChannelsDiv');
             if (data.require_sub && data.tg_channels && data.tg_channels.length > 0) {
                 channelsDiv.style.display = 'flex';
@@ -865,9 +872,9 @@
                 channelsDiv.style.display = 'none';
             }
             
-            const participants = data.participants || [];
+            const participantsCount = data.participants ? data.participants.length : 0;
             const maxP = data.max_participants || '∞';
-            document.getElementById('gwParticipants').innerText = `Участников: ${participants.length} / ${maxP}`;
+            document.getElementById('gwParticipants').innerText = `Участников: ${participantsCount} / ${maxP}`;
 
             if (data.is_active && now < endTime) {
                 // АКТИВЕН
@@ -876,14 +883,31 @@
                 document.getElementById('gwActionBtn').innerText = 'Принять участие';
                 document.getElementById('gwActionBtn').onclick = () => participateGw(data.id);
                 startGwTimer(endTime, data);
+
+                // ЗАПУСК ЖИВОГО ОБНОВЛЕНИЯ УЧАСТНИКОВ
+                if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
+                gwParticipantsInterval = setInterval(async () => {
+                    try {
+                        const { data: updateData } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).single();
+                        if (updateData) {
+                            const count = updateData.participants ? updateData.participants.length : 0;
+                            document.getElementById('gwParticipants').innerText = `Участников: ${count} / ${maxP}`;
+                            if (!updateData.is_active) {
+                                clearInterval(gwParticipantsInterval);
+                                loadActiveGiveaway(); 
+                            }
+                        }
+                    } catch(e) {}
+                }, 3000);
+
             } else if (data.is_active && now >= endTime) {
-                // ВРЕМЯ ВЫШЛО, НО В БАЗЕ ЕЩЕ АКТИВЕН -> БЭКЕНД ВЫБИРАЕТ ПОБЕДИТЕЛЯ
+                if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 await fetch(`${BACKEND_URL}/api/giveaways/end`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gwId: data.id })
                 });
-                setTimeout(loadActiveGiveaway, 1500); // перезагружаем плашку
+                setTimeout(loadActiveGiveaway, 1500); 
             } else if (!data.is_active && data.winner) {
-                // ЗАВЕРШЕН, ПОКАЗЫВАЕМ ПОБЕДИТЕЛЯ И ПРЯЧЕМ ПОДАРОК
+                if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 document.getElementById('gwCountdown').style.display = 'none';
                 document.getElementById('gwActionBtn').style.display = 'none';
                 
@@ -896,7 +920,6 @@
                 winnerName.innerHTML = `Победитель: <span style="color:#fff;">${data.winner.nickname}</span>`;
                 winnerName.style.display = 'block';
                 
-                // ВОЗВРАТ ЗОЛОТОГО ЦВЕТА 
                 const badge = document.getElementById('gwStatusBadge');
                 badge.innerText = 'Розыгрыш завершен';
                 badge.style.color = 'var(--accent-gold)';
@@ -912,7 +935,7 @@
                 const distance = endTime - now;
                 if (distance <= 0) {
                     clearInterval(window.gwInterval);
-                    loadActiveGiveaway(); // триггерим завершение
+                    loadActiveGiveaway(); 
                     return;
                 }
                 document.getElementById("gwDays").innerText = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
