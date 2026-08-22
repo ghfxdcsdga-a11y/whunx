@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
 const TelegramBot = require('node-telegram-bot-api');
 const https = require('https');
-const { Server } = require('socket.io'); // Для работы сокетов в реальном времени
+const { Server } = require('socket.io');
 
 const app = express();
 app.use(cors());
@@ -14,11 +14,10 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const PORT = process.env.PORT || 10000;
 
-// Подключаем Socket.io к нашему Express серверу
+// Подключаем Socket.io
 const server = require('http').createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-// Храним связи: email юзера -> ID его сокета (вкладки на сайте)
 const connectedUsers = {};
 
 io.on('connection', (socket) => {
@@ -42,7 +41,6 @@ io.on('connection', (socket) => {
 const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 const ADMIN_CHAT_ID = 1210777759;
 
-// КОМАНДА ВЫДАЧИ ПЛАШКИ ПРИЗА (Розыгрыш)
 bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
   if (msg.chat.id !== ADMIN_CHAT_ID) return;
   const userEmail = match[1].trim();
@@ -50,11 +48,9 @@ bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
 
   const socketId = connectedUsers[userEmail];
   if (socketId) {
-    // Юзер на сайте -> открываем ему плашку
     io.to(socketId).emit('open_plashka', { amount: goldAmount });
     bot.sendMessage(ADMIN_CHAT_ID, `✅ Модалка выдачи приза на ${goldAmount} G отправлена пользователю ${userEmail}.`);
   } else {
-    // Юзер не на сайте -> просим зайти
     bot.sendMessage(ADMIN_CHAT_ID, `⚠️ Пользователь ${userEmail} сейчас не онлайн (вкладка закрыта).\nПопросите его зайти на главную страницу сайта и повторите команду.`);
   }
 });
@@ -64,8 +60,10 @@ bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
   const secretId = match[1].trim();
   const { data: user } = await supabase.from('users').select('*').eq('secret_id', secretId).single();
   if (!user) return bot.sendMessage(ADMIN_CHAT_ID, '❌ Пользователь с таким ID не найден.');
+  
   const { data: txs } = await supabase.from('transactions').select('*').eq('user_email', user.email).order('created_at', { ascending: true });
   let response = `👤 **Пользователь:** ${user.username}\n📧 **Почта:** ${user.email}\n💰 **Текущий баланс:** ${user.balance} ₸\n\n**📊 История изменений баланса:**\n`;
+  
   if (!txs || txs.length === 0) { response += '`Транзакций пока нет.`'; } 
   else {
     txs.forEach(tx => {
@@ -77,34 +75,6 @@ bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
     });
   }
   bot.sendMessage(ADMIN_CHAT_ID, response, { parse_mode: 'Markdown' });
-});
-
-// ПРИВЯЗКА ТЕЛЕГРАМА ЧЕРЕЗ DEEP LINKING
-bot.onText(/^\/start\s+BIND_(.+)$/, async (msg, match) => {
-  const secretId = match[1].trim();
-  const tgId = msg.from.id;
-  const tgUsername = msg.from.username || '';
-
-  // 1. Ищем юзера на сайте по его секретному ID
-  const { data: user } = await supabase.from('users').select('*').eq('secret_id', secretId).single();
-  
-  if (!user) {
-    return bot.sendMessage(tgId, '❌ Ошибка: неверный или устаревший код привязки.');
-  }
-
-  // 2. Проверяем, не привязал ли кто-то уже этот ТГ к другому аккаунту на сайте (защита от абуза)
-  const { data: exist } = await supabase.from('users').select('id').eq('tg_id', tgId).single();
-  if (exist && exist.id !== user.id) {
-    return bot.sendMessage(tgId, '⚠️ Этот Telegram уже привязан к другому аккаунту на сайте.');
-  }
-
-  // 3. Записываем данные ТГ в профиль юзера
-  await supabase.from('users').update({ 
-    tg_id: tgId, 
-    telegram_username: tgUsername 
-  }).eq('id', user.id);
-
-  bot.sendMessage(tgId, `✅ Успешно!\nТвой Telegram привязан к аккаунту: **${user.email}**.\n\nТеперь ты можешь участвовать в розыгрышах голды на сайте! 🎁`, { parse_mode: 'Markdown' });
 });
 
 bot.on('message', async (msg) => {
@@ -154,7 +124,7 @@ bot.on('callback_query', async (query) => {
 
   if (action === 'cancel') {
     const { data: user } = await supabase.from('users').select('balance').eq('email', order.user_email).single();
-    if (user && order.spent_rubles > 0) { // Не возвращаем баланс, если это был приз (0 ₸)
+    if (user && order.spent_rubles > 0) { 
       const newBalance = Number(user.balance) + Number(order.spent_rubles);
       await supabase.from('users').update({ balance: newBalance }).eq('email', order.user_email);
       await supabase.from('transactions').insert([{ user_email: order.user_email, type: 'refund', amount: order.spent_rubles, description: `Возврат за отмену заказа #${order.id}` }]);
@@ -197,7 +167,6 @@ app.post('/api/me/update', authenticateUser, async (req, res) => {
   res.json({ success: true, user: data });
 });
 
-// Уведомления, Чат, Пополнение (Оставлено как было)
 app.get('/api/notifications', authenticateUser, async (req, res) => {
   const { data: withdrawals } = await supabase.from('withdrawals').select('*').eq('user_email', req.user.email).neq('status', 'pending').eq('is_notified', false);
   const { data: topups } = await supabase.from('topup_requests').select('*').eq('user_email', req.user.email).neq('status', 'pending').eq('is_notified', false);
@@ -223,6 +192,13 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
   res.json({ success: true });
 });
 
+// МАГАЗИН И ФИНАНСЫ
+app.get('/api/shop/items', async (req, res) => {
+  const { data, error } = await supabase.from('shop_items').select('*').order('id', { ascending: true });
+  if (error) return res.status(500).json({ error: 'Ошибка БД' });
+  res.json({ success: true, items: data });
+});
+
 app.post('/api/finance/topup', authenticateUser, async (req, res) => {
   let { amount } = req.body;
   if (Number(amount) < 100) return res.status(400).json({ error: 'Минимальная сумма 100 ₸' });
@@ -232,32 +208,6 @@ app.post('/api/finance/topup', authenticateUser, async (req, res) => {
   const tgMessage = `💵 **НОВАЯ ЗАЯВКА НА ПОПОЛНЕНИЕ (KASPI)!**\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n💰 **Сумма:** ${amount} ₸`;
   bot.sendMessage(ADMIN_CHAT_ID, tgMessage, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[ { text: '✅ Зачислить', callback_data: `approvetopup_${request.id}` }, { text: '❌ Не пришли', callback_data: `rejecttopup_${request.id}` } ]] } });
   res.json({ success: true, message: 'Заявка отправлена администратору' });
-});
-
-// 2. Оставить отзыв
-app.post('/api/reviews/add', authenticateUser, async (req, res) => {
-  const { rating, comment, image } = req.body;
-  if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Некорректная оценка' });
-
-  // Проверка: есть ли у юзера успешные выводы?
-  const { data: wList, error: wErr } = await supabase.from('withdrawals').select('id').eq('user_email', req.user.email).eq('status', 'completed');
-  if (wErr || !wList || wList.length === 0) return res.status(403).json({ error: 'Оставить отзыв могут только пользователи с успешными выводами!' });
-
-  // Проверка лимитов (1 успешный вывод = 1 отзыв)
-  const { data: rList } = await supabase.from('reviews').select('id').eq('user_email', req.user.email);
-  if (rList && rList.length >= wList.length) return res.status(403).json({ error: 'Вы исчерпали лимит отзывов. 1 покупка = 1 отзыв.' });
-
-  const { error } = await supabase.from('reviews').insert([{ 
-      user_email: req.user.email, 
-      username: req.user.username,
-      avatar_url: req.user.avatar_url,
-      rating: rating, 
-      comment: comment,
-      image_url: image
-  }]);
-  
-  if (error) return res.status(500).json({ error: 'Ошибка при сохранении отзыва' });
-  res.json({ success: true, message: 'Отзыв успешно добавлен!' });
 });
 
 app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
@@ -295,7 +245,64 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
 });
 
-// РОЗЫГРЫШИ: Завершение и выбор победителя
+// ОТЗЫВЫ
+app.post('/api/reviews/add', authenticateUser, async (req, res) => {
+  const { rating, comment, image } = req.body;
+  if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Некорректная оценка' });
+
+  const { data: wList, error: wErr } = await supabase.from('withdrawals').select('id').eq('user_email', req.user.email).eq('status', 'completed');
+  if (wErr || !wList || wList.length === 0) return res.status(403).json({ error: 'Оставить отзыв могут только пользователи с успешными выводами!' });
+
+  const { data: rList } = await supabase.from('reviews').select('id').eq('user_email', req.user.email);
+  if (rList && rList.length >= wList.length) return res.status(403).json({ error: 'Вы исчерпали лимит отзывов. 1 покупка = 1 отзыв.' });
+
+  const { error } = await supabase.from('reviews').insert([{ 
+      user_email: req.user.email, 
+      username: req.user.username,
+      avatar_url: req.user.avatar_url,
+      rating: rating, 
+      comment: comment,
+      image_url: image
+  }]);
+  
+  if (error) return res.status(500).json({ error: 'Ошибка при сохранении отзыва' });
+  res.json({ success: true, message: 'Отзыв успешно добавлен!' });
+});
+
+app.get('/api/reviews/list', async (req, res) => {
+  const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: 'Ошибка БД' });
+  res.json({ success: true, reviews: data });
+});
+
+// ИДЕИ
+app.post('/api/ideas/add', authenticateUser, async (req, res) => {
+  const { idea_text } = req.body;
+  if (!idea_text) return res.status(400).json({ error: 'Текст идеи не может быть пустым' });
+
+  const oneDayAgo = new Date();
+  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+  const { data: recent } = await supabase.from('ideas').select('id').eq('user_email', req.user.email).gte('created_at', oneDayAgo.toISOString());
+  if (recent && recent.length > 0) return res.status(403).json({ error: 'Предлагать идеи можно 1 раз в сутки!' });
+
+  const { error } = await supabase.from('ideas').insert([{ user_email: req.user.email, idea_text }]);
+  if (error) return res.status(500).json({ error: 'Ошибка при сохранении' });
+  res.json({ success: true, message: 'Идея отправлена на модерацию!' });
+});
+
+app.get('/api/ideas/list', async (req, res) => {
+  const { data, error } = await supabase.from('ideas').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: 'Ошибка БД' });
+  res.json({ success: true, ideas: data });
+});
+
+// РОЗЫГРЫШИ
+app.get('/api/giveaways/active', async (req, res) => {
+  const { data, error } = await supabase.from('giveaways').select('*').eq('is_active', true).order('end_time', { ascending: true });
+  if (error) return res.status(500).json({ error: 'Ошибка БД' });
+  res.json({ success: true, giveaways: data });
+});
+
 app.post('/api/giveaways/end', async (req, res) => {
   const { gwId } = req.body;
   const { data: gw } = await supabase.from('giveaways').select('*').eq('id', gwId).single();
@@ -306,8 +313,7 @@ app.post('/api/giveaways/end', async (req, res) => {
 
   if (participants.length > 0) {
       winner = participants[Math.floor(Math.random() * participants.length)];
-      // Уведомляем админа о победителе
-      bot.sendMessage(ADMIN_CHAT_ID, `🎉 **Розыгрыш на ${gw.amount} G завершен!**\n\n🏆 **Победитель:** ${winner.nickname}\n📧 **Email:** ${winner.email}\n✈️ **Telegram:** @${winner.tg || 'Не указан'}\n\nЧтобы выдать приз, отправь команду:\n\`/setplash ${winner.email} ${gw.amount}\``, { parse_mode: 'Markdown' });
+      bot.sendMessage(ADMIN_CHAT_ID, `🎉 **Розыгрыш на ${gw.amount} G завершен!**\n\n🏆 **Победитель:** ${winner.nickname}\n📧 **Email:** ${winner.email}\n✈️ **Telegram:** ${winner.tg || 'Не указан'}\n\nЧтобы выдать приз, отправь команду:\n\`/setplash ${winner.email} ${gw.amount}\``, { parse_mode: 'Markdown' });
   } else {
       winner = { nickname: 'Нет участников', avatar: 'whunx_pp.png' };
       bot.sendMessage(ADMIN_CHAT_ID, `📢 **Розыгрыш на ${gw.amount} G завершен!**\nПобедителей нет, никто не участвовал.`);
@@ -317,11 +323,9 @@ app.post('/api/giveaways/end', async (req, res) => {
   res.json({ success: true });
 });
 
-// РОЗЫГРЫШИ: Участие юзера с проверкой подписки
 app.post('/api/giveaways/participate', authenticateUser, async (req, res) => {
   const { gwId } = req.body;
 
-  // ПРОВЕРКА ПРИВЯЗКИ ТГ
   if (!req.user.tg_id) { 
       return res.status(400).json({ error: 'Для участия необходимо привязать Telegram в настройках!' });
   }
@@ -329,22 +333,16 @@ app.post('/api/giveaways/participate', authenticateUser, async (req, res) => {
   const { data: gw } = await supabase.from('giveaways').select('*').eq('id', gwId).single();
   if (!gw || !gw.is_active) return res.status(400).json({ error: 'Розыгрыш не активен' });
 
-  // ПРОВЕРКА ПОДПИСКИ НА КАНАЛЫ (Если галочка включена)
   if (gw.require_sub && gw.tg_channels && gw.tg_channels.length > 0) {
       for (let channel of gw.tg_channels) {
           try {
-              // Форматируем юзернейм (убеждаемся что есть @)
               const chatId = channel.startsWith('@') ? channel : '@' + channel;
-              
-              // Запрашиваем у телеги статус юзера в этом канале
               const member = await bot.getChatMember(chatId, req.user.tg_id);
-              
               if (member.status === 'left' || member.status === 'kicked' || member.status === 'restricted') {
                   return res.status(400).json({ error: `Вы не подписаны на канал ${channel}!` });
               }
           } catch (err) {
               console.error(`Ошибка проверки подписки на ${channel}:`, err.message);
-              // Если бот не админ в канале, вылетит эта ошибка
               return res.status(400).json({ error: `Системная ошибка проверки канала ${channel}. Бот не является администратором канала!` });
           }
       }
@@ -368,8 +366,8 @@ app.post('/api/giveaways/participate', authenticateUser, async (req, res) => {
   res.json({ success: true });
 });
 
+// АВТОПИНГ
 app.get('/api/ping', (req, res) => res.send('Сервер не спит!'));
 setInterval(() => { https.get('https://whunx-backend.onrender.com/api/ping', (resp) => {}); }, 14 * 60 * 1000);
 
-// Важно: запускаем server (socket.io), а не просто app
 server.listen(PORT, () => console.log(`Backend Server Live on port ${PORT}`));
