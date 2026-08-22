@@ -14,7 +14,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const PORT = process.env.PORT || 10000;
 
-// Подключаем Socket.io
+// ==========================================
+// SOCKET.IO (Для выдачи призов)
+// ==========================================
 const server = require('http').createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
@@ -145,7 +147,7 @@ bot.on('callback_query', async (query) => {
 });
 
 // ==========================================
-// МИДЛВАРЫ И РОУТЫ
+// МИДЛВАРЫ
 // ==========================================
 const authenticateUser = async (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -158,6 +160,9 @@ const authenticateUser = async (req, res, next) => {
   next();
 };
 
+// ==========================================
+// БАЗОВЫЕ РОУТЫ
+// ==========================================
 app.get('/api/me', authenticateUser, (req, res) => { res.json(req.user); });
 
 app.post('/api/me/update', authenticateUser, async (req, res) => {
@@ -192,7 +197,9 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
   res.json({ success: true });
 });
 
-// МАГАЗИН И ФИНАНСЫ
+// ==========================================
+// ФИНАНСЫ И МАГАЗИН
+// ==========================================
 app.get('/api/shop/items', async (req, res) => {
   const { data, error } = await supabase.from('shop_items').select('*').order('id', { ascending: true });
   if (error) return res.status(500).json({ error: 'Ошибка БД' });
@@ -245,7 +252,48 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
 });
 
-// ОТЗЫВЫ
+// ==========================================
+// ПРОМОКОДЫ
+// ==========================================
+app.post('/api/promocodes/activate', authenticateUser, async (req, res) => {
+  const { code } = req.body;
+  
+  const { data: promo } = await supabase.from('promocodes').select('*').eq('code', code).single();
+  if (!promo || !promo.is_active) return res.status(404).json({ error: 'Промокод не найден или недействителен' });
+  
+  if (promo.expires_at && new Date() > new Date(promo.expires_at)) {
+      return res.status(400).json({ error: 'Срок действия промокода истек' });
+  }
+  
+  if (promo.max_activations > 0 && promo.used_activations >= promo.max_activations) {
+      return res.status(400).json({ error: 'Лимит активаций этого промокода исчерпан' });
+  }
+
+  const { data: used } = await supabase.from('used_promocodes').select('id').eq('user_email', req.user.email).eq('promo_code', code).single();
+  if (used) return res.status(400).json({ error: 'Вы уже активировали этот промокод' });
+
+  if (promo.reward_type === 'balance') {
+      const newBalance = Number(req.user.balance) + Number(promo.reward_value);
+      await supabase.from('users').update({ balance: newBalance }).eq('id', req.user.id);
+      
+      await supabase.from('transactions').insert([{ user_email: req.user.email, type: 'deposit', amount: promo.reward_value, description: `Промокод: ${code}` }]);
+      await supabase.from('used_promocodes').insert([{ user_email: req.user.email, promo_code: code }]);
+      await supabase.from('promocodes').update({ used_activations: promo.used_activations + 1 }).eq('id', promo.id);
+
+      return res.json({ success: true, type: 'balance', value: promo.reward_value, new_balance: newBalance });
+  } 
+  else if (promo.reward_type === 'discount') {
+      await supabase.from('used_promocodes').insert([{ user_email: req.user.email, promo_code: code }]);
+      await supabase.from('promocodes').update({ used_activations: promo.used_activations + 1 }).eq('id', promo.id);
+      
+      return res.json({ success: true, type: 'discount', value: promo.reward_value });
+  }
+});
+
+
+// ==========================================
+// ОТЗЫВЫ И ИДЕИ
+// ==========================================
 app.post('/api/reviews/add', authenticateUser, async (req, res) => {
   const { rating, comment, image } = req.body;
   if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Некорректная оценка' });
@@ -257,12 +305,7 @@ app.post('/api/reviews/add', authenticateUser, async (req, res) => {
   if (rList && rList.length >= wList.length) return res.status(403).json({ error: 'Вы исчерпали лимит отзывов. 1 покупка = 1 отзыв.' });
 
   const { error } = await supabase.from('reviews').insert([{ 
-      user_email: req.user.email, 
-      username: req.user.username,
-      avatar_url: req.user.avatar_url,
-      rating: rating, 
-      comment: comment,
-      image_url: image
+      user_email: req.user.email, username: req.user.username, avatar_url: req.user.avatar_url, rating: rating, comment: comment, image_url: image
   }]);
   
   if (error) return res.status(500).json({ error: 'Ошибка при сохранении отзыва' });
@@ -275,13 +318,11 @@ app.get('/api/reviews/list', async (req, res) => {
   res.json({ success: true, reviews: data });
 });
 
-// ИДЕИ
 app.post('/api/ideas/add', authenticateUser, async (req, res) => {
   const { idea_text } = req.body;
   if (!idea_text) return res.status(400).json({ error: 'Текст идеи не может быть пустым' });
 
-  const oneDayAgo = new Date();
-  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+  const oneDayAgo = new Date(); oneDayAgo.setDate(oneDayAgo.getDate() - 1);
   const { data: recent } = await supabase.from('ideas').select('id').eq('user_email', req.user.email).gte('created_at', oneDayAgo.toISOString());
   if (recent && recent.length > 0) return res.status(403).json({ error: 'Предлагать идеи можно 1 раз в сутки!' });
 
@@ -296,7 +337,9 @@ app.get('/api/ideas/list', async (req, res) => {
   res.json({ success: true, ideas: data });
 });
 
+// ==========================================
 // РОЗЫГРЫШИ
+// ==========================================
 app.get('/api/giveaways/active', async (req, res) => {
   const { data, error } = await supabase.from('giveaways').select('*').eq('is_active', true).order('end_time', { ascending: true });
   if (error) return res.status(500).json({ error: 'Ошибка БД' });
@@ -356,10 +399,7 @@ app.post('/api/giveaways/participate', authenticateUser, async (req, res) => {
   }
   
   participants.push({
-      email: req.user.email,
-      nickname: req.user.username,
-      avatar: req.user.avatar_url,
-      tg: req.user.telegram_username || req.user.tg_id
+      email: req.user.email, nickname: req.user.username, avatar: req.user.avatar_url, tg: req.user.telegram_username || req.user.tg_id
   });
   
   await supabase.from('giveaways').update({ participants }).eq('id', gwId);
