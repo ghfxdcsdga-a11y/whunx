@@ -481,40 +481,51 @@ app.post('/api/giveaways/end', async (req, res) => {
   res.json({ success: true });
 });
 
-app.post('/api/giveaways/participate', authenticateUser, async (req, res) => {
-  const { gwId } = req.body;
+app.post('/api/giveaways/participate', async (req, res) => {
+  const { gwId, userEmail } = req.body;
 
-  if (!req.user.tg_id) { 
+  if (!userEmail) {
+    return res.status(400).json({ error: 'Не указана почта пользователя' });
+  }
+
+  // Достаем юзера из базы по почте
+  const { data: user, error: userErr } = await supabase.from('users').select('*').eq('email', userEmail).single();
+  if (userErr || !user) {
+    return res.status(404).json({ error: 'Пользователь не найден в базе данных' });
+  }
+
+  if (!user.tg_id) { 
       return res.status(400).json({ error: 'Для участия необходимо привязать Telegram в настройках!' });
   }
   
   const { data: gw } = await supabase.from('giveaways').select('*').eq('id', gwId).single();
   if (!gw || !gw.is_active) return res.status(400).json({ error: 'Розыгрыш не активен' });
 
+  // ПРОВЕРКА ПОДПИСОК ЧЕРЕЗ ТЕЛЕГРАМ БОТА
   if (gw.require_sub && gw.tg_channels && gw.tg_channels.length > 0) {
       for (let channel of gw.tg_channels) {
           try {
               const chatId = channel.startsWith('@') ? channel : '@' + channel;
-              const member = await bot.getChatMember(chatId, req.user.tg_id);
+              const member = await bot.getChatMember(chatId, user.tg_id);
               if (member.status === 'left' || member.status === 'kicked' || member.status === 'restricted') {
                   return res.status(400).json({ error: `Вы не подписаны на канал ${channel}!` });
               }
           } catch (err) {
               console.error(`Ошибка проверки подписки на ${channel}:`, err.message);
-              return res.status(400).json({ error: `Системная ошибка проверки канала ${channel}. Бот не является администратором канала!` });
+              return res.status(400).json({ error: `Сначала подпишитесь на канал ${channel}, чтобы бот смог проверить подписку!` });
           }
       }
   }
   
   let participants = gw.participants || [];
-  if (participants.find(p => p.email === req.user.email)) return res.status(400).json({ error: 'Вы уже участвуете!' });
+  if (participants.find(p => p.email === user.email)) return res.status(400).json({ error: 'Вы уже участвуете!' });
   
   if (gw.max_participants && gw.max_participants !== '∞' && participants.length >= gw.max_participants) {
       return res.status(400).json({ error: 'Мест больше нет!' });
   }
   
   participants.push({
-      email: req.user.email, nickname: req.user.username, avatar: req.user.avatar_url, tg: req.user.telegram_username || req.user.tg_id
+      email: user.email, nickname: user.username, avatar: user.avatar_url, tg: user.telegram_username || user.tg_id
   });
   
   await supabase.from('giveaways').update({ participants }).eq('id', gwId);
