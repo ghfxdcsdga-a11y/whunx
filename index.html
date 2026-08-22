@@ -1138,12 +1138,11 @@
         }
 
         // ==========================================
-        // ЛОГИКА РОЗЫГРЫША
+        // ЛОГИКА РОЗЫГРЫША (С РЕАЛ-ТАЙМ ОБНОВЛЕНИЕМ УЧАСТНИКОВ)
         // ==========================================
         async function loadActiveGiveaway() {
-            const { data: gwList } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1);
-            if (!gwList || gwList.length === 0) return;
-            const data = gwList[0];
+            const { data, error } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1).maybeSingle();
+            if (!data) return;
 
             const banner = document.getElementById('giveawayBanner');
             const now = new Date().getTime();
@@ -1181,12 +1180,12 @@
                 document.getElementById('gwActionBtn').onclick = () => participateGw(data.id);
                 startGwTimer(endTime, data);
 
+                // РЕАЛ-ТАЙМ ПУЛЬС: тихо обновляем только количество участников каждые 3 секунды без дергания интерфейса
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 gwParticipantsInterval = setInterval(async () => {
                     try {
-                        const { data: updateDataList } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).limit(1);
-                        if (updateDataList && updateDataList.length > 0) {
-                            const updateData = updateDataList[0];
+                        const { data: updateData } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).maybeSingle();
+                        if (updateData) {
                             const count = updateData.participants ? updateData.participants.length : 0;
                             document.getElementById('gwParticipants').innerText = `Участников: ${count} / ${maxP}`;
                             if (!updateData.is_active) { clearInterval(gwParticipantsInterval); loadActiveGiveaway(); }
