@@ -144,9 +144,7 @@
         .lightbox-img { max-width: 90%; max-height: 85vh; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); object-fit: contain; }
     </style>
     
-    <!-- Скрипт Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Скрипт Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -170,7 +168,6 @@
                 <div id="googleLoginBtn" class="invisible-google-btn"></div>
             </div>
 
-            <!-- Кнопка возврата в магазин -->
             <a href="https://whunx.shop/" class="btn-back" id="btnBack">
                 <i class="fa-solid fa-arrow-left"></i> Вернуться в магазин
             </a>
@@ -467,6 +464,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhucGJibXl0dGV4cW10YnR5YmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2OTc4NDcsImV4cCI6MjEwMjI3Mzg0N30.7x3UDegy7zCeT88-2Fps-uF2nMR-PDAnnXcLt5we0zw';
         
         let supabaseClient;
+        let authListenerSet = false;
 
         function showToast(msg, type='info') {
             const container = document.getElementById('toast-container');
@@ -539,9 +537,7 @@
                         btn,
                         { theme: "outline", size: "large", type: "standard", width: 300 }
                     );
-                } catch (e) {
-                    console.error("Ошибка загрузки Google Auth:", e);
-                }
+                } catch (e) {}
             } else {
                 setTimeout(initGoogleAuth, 100);
             }
@@ -580,13 +576,16 @@
                 initGoogleAuth();
             }
 
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_IN' && session) {
-                    checkSession();
-                } else if (event === 'SIGNED_OUT') {
-                    location.reload();
-                }
-            });
+            if (!authListenerSet) {
+                authListenerSet = true;
+                supabaseClient.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_IN' && session) {
+                        checkSession();
+                    } else if (event === 'SIGNED_OUT') {
+                        location.reload();
+                    }
+                });
+            }
         }
 
         async function handleGoogleLogin(response) {
@@ -628,7 +627,7 @@
 
         // --- 1. ТОВАРЫ ---
         let currentShopId = null;
-        let adminShopCache = []; // Кэш для селектов промокодов
+        let adminShopCache = []; 
 
         async function loadShop() {
             const { data, error } = await supabaseClient.from('shop_items').select('*').order('id', {ascending: true});
@@ -738,8 +737,12 @@
             const rawEnd = document.getElementById('promoEnd').value;
             payload.expires_at = rawEnd ? new Date(rawEnd).toISOString() : null;
 
-            if (currentPromoId) { await supabaseClient.from('promocodes').update(payload).eq('id', currentPromoId); } 
-            else { await supabaseClient.from('promocodes').insert([payload]); }
+            if (currentPromoId) { 
+                await supabaseClient.from('promocodes').update(payload).eq('id', currentPromoId); 
+            } else { 
+                payload.used_activations = 0; 
+                await supabaseClient.from('promocodes').insert([payload]); 
+            }
             
             showToast('Промокод сохранен', 'success'); closeModal('promoModal'); loadPromocodes();
         }
@@ -1007,7 +1010,6 @@
             document.getElementById('gwCond').value = cond || '';
             document.getElementById('gwActive').checked = act !== false;
 
-            // Настройка чекбокса каналов
             document.getElementById('gwRequireSub').checked = reqSub;
             const list = document.getElementById('gwChannelsList');
             list.innerHTML = '';
