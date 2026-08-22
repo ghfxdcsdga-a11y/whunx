@@ -27,7 +27,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <!-- БИБЛИОТЕКА ДЛЯ КОНФЕТТИ -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
@@ -241,8 +240,6 @@
         .upload-area { background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 14px; padding: 18px; text-align: center; cursor: pointer; transition: 0.3s; font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #fff;} 
         .upload-area:hover { border-color: var(--accent-gold); background: rgba(244, 199, 69, 0.08); }
 
-        .checkbox-label { cursor: pointer; color: #fff; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 15px;}
-
         .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 600px; }
         .history-table th { color: var(--text-muted); font-weight: 800; text-align: left; padding: 18px 10px; border-bottom: 1px solid var(--glass-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;}
         .history-table td { padding: 18px 10px; border-bottom: 1px solid rgba(255,255,255,0.02); color: #fff; font-weight: 700; font-size: 14px; vertical-align: middle; }
@@ -358,7 +355,7 @@
     <div id="toastContainer"></div>
 
     <!-- БОКОВОЕ МЕНЮ -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display: none;"></div>
     <div class="sidebar-menu" id="sidebarMenu">
         <div class="sidebar-header">
             <h2>Навигация</h2>
@@ -458,7 +455,7 @@
         </button>
     </footer>
 
-    <div id="chatWidget">
+    <div id="chatWidget" style="display: none;">
         <div class="chat-header">
             <h4><i class="fa-solid fa-headset" style="color:var(--accent-purple);"></i> Поддержка онлайн</h4>
             <i class="fa-solid fa-xmark" style="cursor:pointer; color:var(--text-muted);" onclick="toggleChat()"></i>
@@ -471,7 +468,7 @@
     </div>
 
     <!-- МОДАЛКА: ПРОМОКОД -->
-    <div class="modal-overlay" id="promoActivationModal">
+    <div class="modal-overlay" id="promoActivationModal" style="display: none;">
         <div class="modal-box" style="max-width: 450px; border-top-color: var(--accent-gold);">
             <button class="modal-close" onclick="closeModal('promoActivationModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title" style="text-align: center; border-bottom: none; margin-bottom: 10px;">Активация промокода</div>
@@ -491,7 +488,7 @@
     </div>
 
     <!-- МОДАЛКА: ПОПОЛНЕНИЕ -->
-    <div class="modal-overlay" id="topupModal">
+    <div class="modal-overlay" id="topupModal" style="display: none;">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('topupModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">Пополнить баланс</div>
@@ -526,7 +523,7 @@
     </div>
 
     <!-- МОДАЛКИ (Настройки, История, Вывод) -->
-    <div class="modal-overlay" id="settingsModal">
+    <div class="modal-overlay" id="settingsModal" style="display: none;">
         <div class="modal-box" style="max-width: 550px;">
             <button class="modal-close" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">Настройки аккаунта</div>
@@ -543,15 +540,21 @@
                     <input type="text" id="inputSetNick" class="f-input" value="Player">
                 </div>
             </div>
-            <div class="tg-bind-btn" id="tgBindBtn">
-                <div class="tg-info"><i class="fa-brands fa-telegram"></i><span id="tgBindText">Привязать Telegram</span></div>
+            
+            <!-- ПРИВЯЗКА ТЕЛЕГРАМА (ИНЛАЙН СТИЛИ ДЛЯ ЖЕСТКОЙ ФИКСАЦИИ) -->
+            <div class="tg-bind-btn" id="tgBindBtn" style="background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 14px; padding: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.3s; margin-bottom: 15px;">
+                <div class="tg-info" style="display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 800;">
+                    <i class="fa-brands fa-telegram" style="font-size: 26px; color: #24A1DE; text-shadow: 0 0 15px rgba(36,161,222,0.5);"></i>
+                    <span id="tgBindText">Привязать Telegram</span>
+                </div>
                 <i class="fa-solid fa-link" id="tgBindIcon" style="color: var(--text-muted);"></i>
             </div>
+            
             <button class="btn-submit" onclick="saveSettings()">Сохранить изменения</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="historyModal">
+    <div class="modal-overlay" id="historyModal" style="display: none;">
         <div class="modal-box" style="max-width: 600px;"> 
             <button class="modal-close" onclick="closeModal('historyModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">История выводов</div>
@@ -559,7 +562,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="purchaseWithdrawModal">
+    <div class="modal-overlay" id="purchaseWithdrawModal" style="display: none;">
         <div class="modal-box" style="max-width: 550px;">
             <button class="modal-close" onclick="closeModal('purchaseWithdrawModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title" id="pwModalTitle">Получение голды</div>
@@ -591,7 +594,7 @@
     </div>
 
     <!-- ЛАЙТБОКС ДЛЯ ПРОСМОТРА СКРИНШОТОВ -->
-    <div class="lightbox-overlay" id="imageLightbox" onclick="closeLightbox(event)">
+    <div class="lightbox-overlay" id="imageLightbox" onclick="closeLightbox(event)" style="display: none;">
         <i class="fa-solid fa-xmark lightbox-close" onclick="closeLightbox(event, true)"></i>
         <img id="lightboxImg" class="lightbox-img" src="">
     </div>
@@ -610,6 +613,7 @@
         let chatInterval = null;
         let socket = null;
         let gwParticipantsInterval = null; 
+        let isLoggingIn = false; // Флаг для защиты от зависаний входа
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -690,47 +694,60 @@
         async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); }
 
         async function handleUserLogin(session) {
-            currentSessionToken = session.access_token;
-            const userAuth = session.user;
+            if (isLoggingIn) return; // Защита от двойного запуска
+            isLoggingIn = true;
             
-            document.getElementById('googleLoginWrapper').style.display = 'none';
-            document.getElementById('balanceModule').style.display = 'flex';
-            document.getElementById('profileModule').style.display = 'block';
-
-            let { data: dbUser } = await supabaseClient.from('users').select('*').eq('email', userAuth.email).single();
-            if (!dbUser) {
-                let defaultName = userAuth.user_metadata.full_name || 'whunx-user-' + Math.random().toString(36).substring(2, 8).toLowerCase();
-                const newUser = { email: userAuth.email, username: defaultName, avatar_url: 'whunx_pp.png', balance: 0, secret_id: crypto.randomUUID() };
-                const { data: insertedUser } = await supabaseClient.from('users').insert([newUser]).select().single();
-                dbUser = insertedUser;
-            }
-
             try {
-                const { data: usedList } = await supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', dbUser.email).eq('is_spent', false).limit(1);
-                if (usedList && usedList.length > 0) {
-                    const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedList[0].promo_code).single();
+                currentSessionToken = session.access_token;
+                const userAuth = session.user;
+                
+                // МОМЕНТАЛЬНО показываем крутилку загрузки баланса
+                document.getElementById('googleLoginWrapper').style.display = 'none';
+                document.getElementById('balanceModule').style.display = 'flex';
+                document.getElementById('profileModule').style.display = 'block';
+                document.getElementById('balanceText').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>₸</span>`;
+
+                // ПАРАЛЛЕЛЬНАЯ ЗАГРУЗКА ИЗ БАЗЫ: Грузим юзера и скидку одновременно (в 2 раза быстрее)
+                const [userRes, usedPromoRes] = await Promise.all([
+                    supabaseClient.from('users').select('*').eq('email', userAuth.email).maybeSingle(),
+                    supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', userAuth.email).eq('is_spent', false).limit(1)
+                ]);
+
+                let dbUser = userRes.data;
+                if (!dbUser) {
+                    let defaultName = userAuth.user_metadata.full_name || 'whunx-user-' + Math.random().toString(36).substring(2, 8).toLowerCase();
+                    const newUser = { email: userAuth.email, username: defaultName, avatar_url: 'whunx_pp.png', balance: 0, secret_id: crypto.randomUUID() };
+                    const { data: insertedUser } = await supabaseClient.from('users').insert([newUser]).select().maybeSingle();
+                    dbUser = insertedUser;
+                }
+
+                if (usedPromoRes.data && usedPromoRes.data.length > 0) {
+                    const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedPromoRes.data[0].promo_code).maybeSingle();
                     if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
                         dbUser.active_discount = { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
                     }
                 }
-            } catch(e) {}
-            
-            currentDbUser = dbUser;
-            updateUI();
-            renderDynamicShop(); 
-            
-            if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
-            if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
+                
+                currentDbUser = dbUser;
+                updateUI();
+                renderDynamicShop(); // Сразу перерисовываем карточки со скидками при входе
+                
+                if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
+                if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
+            } finally {
+                isLoggingIn = false; // Освобождаем флаг
+            }
         }
 
         async function syncUserData() {
             if (!currentSessionToken || !currentDbUser) return;
             try {
-                const { data: freshUser } = await supabaseClient.from('users').select('*').eq('email', currentDbUser.email).single();
+                const { data: freshUser } = await supabaseClient.from('users').select('*').eq('email', currentDbUser.email).maybeSingle();
+                
                 if (freshUser) {
                     const { data: usedList } = await supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', freshUser.email).eq('is_spent', false).limit(1);
                     if (usedList && usedList.length > 0) {
-                        const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedList[0].promo_code).single();
+                        const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedList[0].promo_code).maybeSingle();
                         if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
                             freshUser.active_discount = { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
                         }
@@ -738,12 +755,15 @@
                     
                     let oldDisc = currentDbUser.active_discount?.code;
                     let newDisc = freshUser.active_discount?.code;
+                    let oldBalance = currentDbUser.balance;
                     
                     currentDbUser = freshUser;
-                    updateUI(); 
                     
+                    if (oldBalance !== freshUser.balance) updateUI(); 
                     if (oldDisc !== newDisc) renderDynamicShop();
                 }
+                
+                // Проверка уведомлений идет в фоне, не блокируя UI
                 checkNotifications(); 
             } catch(e) {}
         }
@@ -874,7 +894,7 @@
         async function saveSettings() {
             const newName = document.getElementById('inputSetNick').value;
             const newAvatar = document.getElementById('settingsAvatar').src;
-            const { data, error } = await supabaseClient.from('users').update({ username: newName, avatar_url: newAvatar }).eq('email', currentDbUser.email).select().single();
+            const { data, error } = await supabaseClient.from('users').update({ username: newName, avatar_url: newAvatar }).eq('email', currentDbUser.email).select().maybeSingle();
             if (!error) { currentDbUser = data; updateUI(); closeModal('settingsModal'); showToast('Успех', 'Настройки сохранены!', 'success'); } 
             else { showToast('Ошибка', 'Не удалось сохранить', 'error'); }
         }
@@ -1054,7 +1074,7 @@
         // ЛОГИКА РОЗЫГРЫША
         // ==========================================
         async function loadActiveGiveaway() {
-            const { data, error } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1).single();
+            const { data, error } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1).maybeSingle();
             if (!data) return;
 
             const banner = document.getElementById('giveawayBanner');
@@ -1096,7 +1116,7 @@
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 gwParticipantsInterval = setInterval(async () => {
                     try {
-                        const { data: updateData } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).single();
+                        const { data: updateData } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).maybeSingle();
                         if (updateData) {
                             const count = updateData.participants ? updateData.participants.length : 0;
                             document.getElementById('gwParticipants').innerText = `Участников: ${count} / ${maxP}`;
