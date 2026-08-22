@@ -192,14 +192,29 @@ bot.on('callback_query', async (query) => {
 // МИДЛВАРЫ
 // ==========================================
 const authenticateUser = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Нет токена авторизации' });
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) return res.status(401).json({ error: 'Неверный токен' });
-  const { data: dbUser } = await supabase.from('users').select('*').eq('email', user.email).single();
-  if (!dbUser) return res.status(404).json({ error: 'Пользователь не найден в БД' });
-  req.user = dbUser;
-  next();
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Нет токена авторизации' });
+  }
+  
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Неверный токен' });
+    }
+    
+    const { data: dbUser } = await supabase.from('users').select('*').eq('email', user.email).single();
+    if (!dbUser) {
+      return res.status(404).json({ error: 'Пользователь не найден в БД' });
+    }
+    
+    req.user = dbUser;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Ошибка авторизации токена' });
+  }
 };
 
 // ==========================================
