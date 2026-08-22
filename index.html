@@ -293,14 +293,6 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-6px); } }
         .promo-reward-text { display: inline-block; padding: 15px 30px; border-radius: 14px; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); color: var(--accent-green); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);}
 
-        /* СТИЛЬ ПРИВЯЗКИ ТГ (ИСПРАВЛЕНО ДЛЯ МОБИЛОК) */
-        .tg-bind-btn { background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 14px; padding: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(36, 161, 222, 0.1); margin-bottom: 15px; gap: 10px;} 
-        .tg-bind-btn:hover { background: rgba(36, 161, 222, 0.2); box-shadow: 0 10px 25px rgba(36, 161, 222, 0.2); transform: translateY(-2px); }
-        .tg-info { display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 800; overflow: hidden; white-space: nowrap; } 
-        .tg-info i { font-size: 26px; color: #24A1DE; text-shadow: 0 0 15px rgba(36,161,222,0.5); flex-shrink: 0; }
-        #tgBindText { text-overflow: ellipsis; overflow: hidden; }
-        #tgBindIcon { flex-shrink: 0; }
-
         /* =========================================
            MOBILE RESPONSIVENESS
         ========================================= */
@@ -386,7 +378,7 @@
             <div id="googleLoginWrapper" class="custom-google-wrapper">
                 <button class="login-btn">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 20px;"> 
-                    <span id="fakeGoogleText">Загрузка...</span>
+                    <span id="fakeGoogleText"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...</span>
                 </button>
                 <div id="googleLoginBtn" class="invisible-google-btn"></div>
             </div>
@@ -549,12 +541,12 @@
             </div>
             
             <!-- ПРИВЯЗКА ТЕЛЕГРАМА (Защита от сжатия) -->
-            <div class="tg-bind-btn" id="tgBindBtn">
-                <div class="tg-info">
-                    <i class="fa-brands fa-telegram"></i>
-                    <span id="tgBindText">Привязать Telegram</span>
+            <div class="tg-bind-btn" id="tgBindBtn" style="background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 14px; padding: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.3s; margin-bottom: 15px; gap: 10px;">
+                <div class="tg-info" style="display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 800; overflow: hidden; white-space: nowrap;">
+                    <i class="fa-brands fa-telegram" style="font-size: 26px; color: #24A1DE; text-shadow: 0 0 15px rgba(36,161,222,0.5); flex-shrink: 0;"></i>
+                    <span id="tgBindText" style="text-overflow: ellipsis; overflow: hidden;">Привязать Telegram</span>
                 </div>
-                <i class="fa-solid fa-link" id="tgBindIcon"></i>
+                <i class="fa-solid fa-link" id="tgBindIcon" style="color: var(--text-muted); flex-shrink: 0;"></i>
             </div>
             
             <button class="btn-submit" onclick="saveSettings()">Сохранить изменения</button>
@@ -619,8 +611,6 @@
         let chatInterval = null;
         let socket = null;
         let gwParticipantsInterval = null; 
-        let isLoggingIn = false;
-        let lastLoginTimestamp = 0; // Защита от фантомных вылетов Supabase
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -639,8 +629,6 @@
         function toggleSidebar() {
             const menu = document.getElementById('sidebarMenu');
             const overlay = document.getElementById('sidebarOverlay');
-            
-            // Если меню скрыто жестким инлайном - убираем его, чтобы классы работали
             if (menu.style.left === '-100vw') menu.style.left = '';
             
             menu.classList.toggle('active');
@@ -680,24 +668,18 @@
                 document.getElementById('gameAvatarPreview').src = DEFAULT_GAME_AVATAR;
             }
 
+            // ИЗМЕНЕНИЕ ЛОГИКИ ВХОДА: Игнорируем багованые SIGNED_OUT от Супабейза
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
-                lastLoginTimestamp = Date.now();
                 handleUserLogin(session);
             } else {
                 initGoogleAuth();
             }
 
-            // БРОНЯ: Игнорируем фантомные вылеты в первые 5 секунд после входа
+            // Слушаем только успешные входы (например из соседней вкладки)
             supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_IN' && session) {
-                    lastLoginTimestamp = Date.now();
+                if (event === 'SIGNED_IN' && session && !currentDbUser) {
                     handleUserLogin(session);
-                }
-                else if (event === 'SIGNED_OUT') {
-                    if (Date.now() - lastLoginTimestamp > 5000) {
-                        handleUserLogout();
-                    }
                 }
             });
 
@@ -718,27 +700,27 @@
                 document.getElementById('fakeGoogleText').innerHTML = 'Войти';
             } else { 
                 showToast('Успех', 'Успешный вход!', 'success'); 
-                // Не вызываем handleUserLogin вручную, onAuthStateChange поймает событие SIGNED_IN
             }
         }
 
-        async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); }
+        async function logout() { 
+            // Ручной выход: стираем сессию и принудительно очищаем UI
+            await supabaseClient.auth.signOut(); 
+            document.getElementById('profileDropdown').classList.remove('active'); 
+            handleUserLogout();
+        }
 
         async function handleUserLogin(session) {
-            if (isLoggingIn) return;
-            isLoggingIn = true;
-            
             try {
                 currentSessionToken = session.access_token;
                 const userAuth = session.user;
                 
-                // МОМЕНТАЛЬНО показываем крутилку
                 document.getElementById('googleLoginWrapper').style.display = 'none';
                 document.getElementById('balanceModule').style.display = 'flex';
                 document.getElementById('profileModule').style.display = 'block';
                 document.getElementById('balanceText').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>₸</span>`;
 
-                // ПАРАЛЛЕЛЬНАЯ ЗАГРУЗКА ИЗ БАЗЫ
+                // ПАРАЛЛЕЛЬНАЯ ЗАГРУЗКА (Сверхбыстрая)
                 const [userRes, usedPromoRes] = await Promise.all([
                     supabaseClient.from('users').select('*').eq('email', userAuth.email).maybeSingle(),
                     supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', userAuth.email).eq('is_spent', false).limit(1)
@@ -746,15 +728,13 @@
 
                 let dbUser = userRes.data;
                 
-                // Если юзера еще нет в БД (первый вход)
                 if (!dbUser) {
                     let defaultName = userAuth.user_metadata?.full_name || 'whunx-user-' + Math.random().toString(36).substring(2, 8).toLowerCase();
                     const newUser = { email: userAuth.email, username: defaultName, avatar_url: 'whunx_pp.png', balance: 0, secret_id: crypto.randomUUID() };
-                    const { data: insertedUser, error: insErr } = await supabaseClient.from('users').insert([newUser]).select().maybeSingle();
+                    const { data: insertedUser } = await supabaseClient.from('users').insert([newUser]).select().maybeSingle();
                     dbUser = insertedUser || newUser;
                 }
 
-                // Если есть активная скидка
                 if (usedPromoRes.data && usedPromoRes.data.length > 0) {
                     const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedPromoRes.data[0].promo_code).maybeSingle();
                     if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
@@ -769,19 +749,25 @@
                 if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
                 if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
             } catch (err) {
-                showToast('Ошибка', 'Сбой при загрузке профиля', 'error');
-                handleUserLogout();
-            } finally {
-                isLoggingIn = false; 
+                // Если база отвалилась, ничего не делаем, чтобы не сбросить юзера в логаут
             }
         }
 
         async function syncUserData() {
             if (!currentSessionToken || !currentDbUser) return;
             try {
-                const { data: freshUser } = await supabaseClient.from('users').select('*').eq('email', currentDbUser.email).maybeSingle();
+                // ПУЛЬС: Проверяем реальность токена через бэкенд
+                const response = await fetch(`${BACKEND_URL}/api/me`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
                 
-                if (freshUser) {
+                if (response.status === 401 || response.status === 404) {
+                    handleUserLogout(); // Токен протух - выкидываем
+                    return;
+                }
+
+                const freshUser = await response.json();
+                
+                if (freshUser && !freshUser.error) {
+                    // Подтягиваем скидку
                     const { data: usedList } = await supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', freshUser.email).eq('is_spent', false).limit(1);
                     if (usedList && usedList.length > 0) {
                         const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedList[0].promo_code).maybeSingle();
@@ -848,8 +834,6 @@
             document.getElementById('googleLoginWrapper').style.display = 'inline-block';
             document.getElementById('balanceModule').style.display = 'none';
             document.getElementById('profileModule').style.display = 'none';
-            
-            // Возвращаем кнопку Google в исходное состояние
             document.getElementById('fakeGoogleText').innerHTML = 'Войти';
             
             if (window.syncInterval) { clearInterval(window.syncInterval); window.syncInterval = null; }
@@ -1287,7 +1271,6 @@
 
         function toggleChat() { 
             const widget = document.getElementById('chatWidget'); 
-            // Убираем жесткий стиль если он есть
             if (widget.style.display === 'none') widget.style.display = '';
             
             widget.classList.toggle('active'); 
@@ -1329,7 +1312,6 @@
             document.getElementById('profileDropdown').classList.remove('active'); 
             if (id === 'topupModal') resetTopupModal(); 
             const modal = document.getElementById(id); 
-            // Убираем display:none чтобы классы сработали
             modal.style.display = 'flex'; 
             setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
         }
@@ -1341,7 +1323,6 @@
             setTimeout(() => { modal.style.display = 'none'; }, 300); 
         }
 
-        // Таймер для контроля истечения скидки в реальном времени
         setInterval(() => {
             if (currentDbUser && currentDbUser.active_discount && currentDbUser.active_discount.expires_at) {
                 const expires = new Date(currentDbUser.active_discount.expires_at).getTime();
@@ -1353,7 +1334,6 @@
             }
         }, 1000);
 
-        // Lightbox функции
         function openLightbox(src) {
             document.getElementById('lightboxImg').src = src;
             const lb = document.getElementById('imageLightbox');
