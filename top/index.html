@@ -128,7 +128,7 @@
 
         .top-avatar { width: 45px; height: 45px; border-radius: 14px; object-fit: cover; border: 1px solid var(--glass-border); flex-shrink: 0;}
         .top-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;}
-        .top-name { font-weight: 800; font-size: 15px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;} /* padding to avoid arrow overlap */
+        .top-name { font-weight: 800; font-size: 15px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;}
         .top-value { font-weight: 900; font-size: 14px; }
         .top-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;}
 
@@ -148,12 +148,13 @@
         .modal-box { transform: scale(0.9); transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; margin: auto; width: 100%; max-width: 600px; }
         .modal-overlay.active .modal-box { transform: scale(1); }
         
-        .modal-close { position: absolute; top: -50px; right: 0; background: transparent; color: var(--text-muted); font-size: 30px; transition: 0.3s; z-index: 10; } 
+        /* Исправленный крестик (внутри карточки) */
+        .modal-close { position: absolute; top: 20px; right: 25px; background: transparent; color: var(--text-muted); font-size: 24px; transition: 0.3s; z-index: 20; border: none; outline: none; cursor: pointer; } 
         .modal-close:hover { color: var(--accent-red); transform: rotate(90deg); }
 
         /* СТИЛИ ОРИГИНАЛЬНОЙ КАРТОЧКИ ИДЕИ ИЗ IDEA.HTML */
-        .review-card { background: linear-gradient(145deg, rgba(30, 34, 48, 0.9) 0%, rgba(15, 18, 26, 0.95) 100%); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 35px; box-shadow: 0 25px 50px rgba(0,0,0,0.6); width: 100%;}
-        .rev-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
+        .review-card { background: linear-gradient(145deg, rgba(30, 34, 48, 0.95) 0%, rgba(15, 18, 26, 0.98) 100%); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 35px; box-shadow: 0 25px 50px rgba(0,0,0,0.8); width: 100%; position: relative;}
+        .rev-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; padding-right: 30px;}
         .rev-avatar { width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--glass-border); object-fit: cover; background: rgba(0,0,0,0.5);}
         .rev-name { font-weight: 900; color: #fff; font-size: 16px; letter-spacing: 0.5px;}
         .rev-date { color: var(--text-muted); font-size: 12px; font-weight: 700; margin-top: 3px;}
@@ -178,7 +179,8 @@
             main { padding: 30px 15px; }
             .page-header h1 { font-size: 28px; }
             .top-card { padding: 25px 20px; }
-            .review-card { padding: 25px 20px; }
+            .review-card { padding: 25px 20px; } 
+            .modal-box { width: 100%; margin: 0; }
             .idea-status { margin-left: 0; width: 100%; margin-top: 5px; justify-content: flex-start; }
             .admin-reply-text { margin-left: 0; margin-top: 10px; }
         }
@@ -267,9 +269,9 @@
     </main>
 
     <!-- МОДАЛКА ДЛЯ ПРОСМОТРА ИДЕИ -->
-    <div class="modal-overlay" id="ideaViewModal">
+    <!-- ДОБАВЛЕН ЗАКРЫТИЕ ПО КЛИКУ НА ФОН -->
+    <div class="modal-overlay" id="ideaViewModal" onclick="if(event.target === this) closeIdeaModal()">
         <div class="modal-box">
-            <button class="modal-close" onclick="closeIdeaModal()"><i class="fa-solid fa-xmark"></i></button>
             <div class="review-card" id="ideaViewCard">
                 <!-- Контент идеи будет загружен через JS -->
             </div>
@@ -454,7 +456,9 @@
                 dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
             }
 
+            // КРЕСТИК ВШИТ ПРЯМО СЮДА
             document.getElementById('ideaViewCard').innerHTML = `
+                <button class="modal-close" onclick="closeIdeaModal()"><i class="fa-solid fa-xmark"></i></button>
                 <div class="rev-header">
                     <img src="${getSafeAvatar(idea.avatar_url)}" class="rev-avatar">
                     <div>
