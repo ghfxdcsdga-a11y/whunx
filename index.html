@@ -716,8 +716,14 @@
                 const freshUser = await response.json();
                 
                 if (freshUser && !freshUser.error) {
+                    // Проверяем, изменилась ли скидка на аккаунте
+                    let oldDisc = currentDbUser.active_discount?.code;
+                    let newDisc = freshUser.active_discount?.code;
+                    
                     currentDbUser = freshUser;
                     updateUI(); 
+                    
+                    if (oldDisc !== newDisc) renderDynamicShop(); // Автоматом подгрузит скидку с ПК на телефон!
                 }
                 checkNotifications(); 
             } catch(e) {}
@@ -877,18 +883,28 @@
 
                 if (result.success) {
                     input.classList.add('input-success');
-                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#f4c745', '#8b5cf6', '#10b981'] });
                     msgBox.style.display = 'block';
 
-                    if (result.type === 'balance') {
-                        msgBox.innerHTML = `<div class="promo-reward-text">Успешно! +${result.value} ₸ на баланс! 🎉</div>`;
+                    if (result.restored) {
+                        // Если юзер ввел код во второй раз
+                        msgBox.innerHTML = `<div class="promo-reward-text" style="color: var(--accent-purple); border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.1); text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);">Уже активирован и действует! 🔥</div>`;
+                    } else {
+                        // НОВАЯ АКТИВАЦИЯ - Конфетти ПОВЕРХ ВСЕГО (zIndex: 100005)
+                        confetti({ zIndex: 100005, particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#f4c745', '#8b5cf6', '#10b981'] });
+                        
+                        if (result.type === 'balance') {
+                            msgBox.innerHTML = `<div class="promo-reward-text">Успешно! +${result.value} ₸ на баланс! 🎉</div>`;
+                        } else if (result.type === 'discount') {
+                            msgBox.innerHTML = `<div class="promo-reward-text">Успешно! Скидка -${result.value}% 🔥</div>`;
+                        }
+                    }
+
+                    if (result.type === 'balance' && !result.restored) {
                         currentDbUser.balance = result.new_balance; updateUI();
                     } else if (result.type === 'discount') {
-                        msgBox.innerHTML = `<div class="promo-reward-text">Успешно! Скидка -${result.value}% 🔥</div>`;
-                        // ДОБАВЛЕН expires_at для реального времени
-                        const activePromo = { code: result.code, percent: result.value, target: result.target, expires_at: result.expires_at };
-                        localStorage.setItem('activeDiscountPromo', JSON.stringify(activePromo));
-                        loadDynamicShop();
+                        // ПРИВЯЗЫВАЕМ СКИДКУ К АККАУНТУ
+                        currentDbUser.active_discount = { code: result.code, percent: result.value, target: result.target, expires_at: result.expires_at };
+                        renderDynamicShop(); // Обновляем цены
                     }
                     btn.style.display = 'none'; 
                 } else {
@@ -1040,12 +1056,14 @@
             } catch (err) {}
         }
 
+        // ==========================================
+        // ДИНАМИЧЕСКИЙ МАГАЗИН ИЗ БД
+        // ==========================================
         function renderDynamicShop() {
             const grid = document.getElementById('productsGrid'); grid.innerHTML = '';
             
-            // Достаем сохраненный промокод
-            let activePromo = null;
-            try { activePromo = JSON.parse(localStorage.getItem('activeDiscountPromo')); } catch(e){}
+            // Берем скидку напрямую из аккаунта (убрали localStorage)
+            let activePromo = currentDbUser ? currentDbUser.active_discount : null;
             
             shopItemsCache.forEach(item => {
                 const card = document.createElement('div'); card.className = 'product-card';
@@ -1056,7 +1074,6 @@
                 let activeDiscount = 0;
                 if (item.discount_active && item.discount_percent > 0) activeDiscount = item.discount_percent;
                 
-                // Проверяем, применяется ли промокод к этому товару
                 let promoApplies = false;
                 if (activePromo && (activePromo.target === null || activePromo.target === item.id)) {
                     if (activePromo.percent > activeDiscount) {
@@ -1072,7 +1089,7 @@
                 }
 
                 item.finalPrice = finalPrice;
-                item.appliedPromoCode = promoApplies ? activePromo.code : null; // Привязываем код к кнопке
+                item.appliedPromoCode = promoApplies ? activePromo.code : null;
 
                 card.innerHTML = `
                     ${badgeHtml}
@@ -1084,7 +1101,7 @@
                 grid.appendChild(card);
             });
         }
-
+        
         function attemptPurchase(itemId) {
             if (!currentDbUser) return showToast('Ошибка', 'Войдите в аккаунт для покупок.', 'error');
             const item = shopItemsCache.find(i => i.id === itemId);
@@ -1158,10 +1175,10 @@
                     closeModal('purchaseWithdrawModal');
                     showToast('Успех', `Заказ создан! На ваш аккаунт скоро будет зачислено ${pendingPurchaseItem.gold} G.`, 'success');
                     
-                    // ЕСЛИ БЫЛ ПРОМОКОД - УДАЛЯЕМ ЕГО ИЗ ПАМЯТИ
+                    // ЕСЛИ БЫЛ ПРОМОКОД - УДАЛЯЕМ ЕГО ИЗ АККАУНТА (чтобы скидка исчезла)
                     if (pendingPurchaseItem.appliedPromoCode) {
-                        localStorage.removeItem('activeDiscountPromo');
-                        loadDynamicShop();
+                        currentDbUser.active_discount = null;
+                        renderDynamicShop();
                     }
 
                     document.getElementById('pwIdInput').value = ''; document.getElementById('pwPatternInput').value = '';
@@ -1254,21 +1271,15 @@
         function openModal(id) { document.getElementById('profileDropdown').classList.remove('active'); if (id === 'topupModal') resetTopupModal(); const modal = document.getElementById(id); modal.style.display = 'flex'; setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); }
         function closeModal(id) { const modal = document.getElementById(id); modal.style.opacity = '0'; modal.querySelector('.modal-box').style.transform = 'scale(0.9)'; setTimeout(() => { modal.style.display = 'none'; }, 300); }
 
-// РЕАЛЬНОЕ ВРЕМЯ: Проверка истечения промокода на скидку
+// РЕАЛЬНОЕ ВРЕМЯ: Проверка истечения промокода на скидку (в самом низу скриптов)
         setInterval(() => {
-            const promoData = localStorage.getItem('activeDiscountPromo');
-            if (promoData) {
-                try {
-                    const activePromo = JSON.parse(promoData);
-                    if (activePromo.expires_at) {
-                        const expires = new Date(activePromo.expires_at).getTime();
-                        if (Date.now() > expires) {
-                            localStorage.removeItem('activeDiscountPromo');
-                            showToast('Время вышло', 'Срок действия промокода на скидку истек!', 'error');
-                            loadDynamicShop(); // Возвращаем цены обратно
-                        }
-                    }
-                } catch(e){}
+            if (currentDbUser && currentDbUser.active_discount && currentDbUser.active_discount.expires_at) {
+                const expires = new Date(currentDbUser.active_discount.expires_at).getTime();
+                if (Date.now() > expires) {
+                    currentDbUser.active_discount = null; // удаляем скидку из сессии
+                    showToast('Время вышло', 'Срок действия промокода истек!', 'error');
+                    renderDynamicShop(); // Возвращаем цены обратно
+                }
             }
         }, 1000);
     </script>
