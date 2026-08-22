@@ -259,7 +259,23 @@
         .h-status.pending { background: rgba(244, 199, 69, 0.1); color: var(--accent-gold); border: 1px solid rgba(244, 199, 69, 0.3);}
         .h-status.completed { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3);}
         .h-status.cancelled { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3);}
-
+        
+        /* КАРТОЧКИ ИСТОРИИ (ВМЕСТО ТАБЛИЦЫ) */
+        .history-list { display: flex; flex-direction: column; gap: 15px; max-height: 60vh; overflow-y: auto; padding-right: 5px; }
+        .history-card { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; transition: 0.3s; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .history-card:hover { border-color: rgba(255,255,255,0.15); background: rgba(0,0,0,0.4); }
+        
+        .hc-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
+        .hc-price { font-size: 18px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
+        
+        .hc-mid { display: flex; gap: 25px; flex-wrap: wrap; }
+        .hc-item { display: flex; flex-direction: column; gap: 6px; }
+        .hc-item-label { font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .hc-item-val { font-size: 14px; font-weight: 700; color: #fff; }
+        
+        .hc-bot { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; flex-wrap: wrap; gap: 10px;}
+        .hc-date { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+        
         /* =========================================
            MOBILE RESPONSIVENESS (ИСПРАВЛЕНА ШАПКА)
         ========================================= */
@@ -496,23 +512,13 @@
     </div>
 
     <div class="modal-overlay" id="historyModal">
-        <div class="modal-box" style="max-width: 1000px;">
+        <div class="modal-box" style="max-width: 600px;"> <!-- Сделали модалку поуже для красоты -->
             <button class="modal-close" onclick="closeModal('historyModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">История выводов</div>
-            <div style="overflow-x: auto;">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Скин</th>
-                            <th>Pattern</th>
-                            <th>ID</th>
-                            <th>Цена</th>
-                            <th>Дата</th>
-                            <th style="text-align: right;">Статус</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTableBody"></tbody>
-                </table>
+            
+            <!-- Вместо таблицы теперь контейнер для карточек -->
+            <div class="history-list" id="historyListContainer">
+                <!-- JS будет вставлять карточки сюда -->
             </div>
         </div>
     </div>
@@ -1118,20 +1124,21 @@
 
         async function openHistoryModal() {
             openModal('historyModal');
-            const tbody = document.getElementById('historyTableBody'); 
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 30px;">Загрузка...</td></tr>';
+            const container = document.getElementById('historyListContainer'); 
+            container.innerHTML = '<div style="text-align:center; padding: 30px; color: var(--text-muted);">Загрузка...</div>';
             
             const { data, error } = await supabaseClient.from('withdrawals').select('*').eq('user_email', currentDbUser.email).order('created_at', { ascending: false });
             
             if (error || !data || !data.length) { 
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding: 30px;">История пуста</td></tr>'; 
+                container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 30px;">История пуста</div>'; 
                 return; 
             }
 
-            tbody.innerHTML = '';
+            container.innerHTML = '';
             data.forEach(order => {
                 const d = new Date(order.created_at);
-                const dateStr = d.toLocaleDateString('ru-RU') + ', ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit', second:'2-digit' });
+                // Делаем красивую дату
+                const dateStr = d.toLocaleDateString('ru-RU') + ' в ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
                 
                 let statusHtml = '';
                 if (order.status === 'pending') {
@@ -1144,24 +1151,33 @@
 
                 const price = (order.target_skin || order.amount).toString().replace(' G', '');
 
-                tbody.innerHTML += `
-                <tr>
-                    <td>
+                // Вставляем карточку
+                container.innerHTML += `
+                <div class="history-card">
+                    <div class="hc-top">
                         <div class="h-skin-badge">
                             <img src="USP_G.png" alt="USP">
                             <span>USP "Ghosts"</span>
                         </div>
-                    </td>
-                    <td>
-                        <div class="h-pattern">
-                            <i class="fa-solid fa-cube"></i> ${order.pattern || '000'}
+                        <div class="hc-price">${price} G</div>
+                    </div>
+                    <div class="hc-mid">
+                        <div class="hc-item">
+                            <span class="hc-item-label">Игровой ID</span>
+                            <span class="hc-item-val">${order.game_id}</span>
                         </div>
-                    </td>
-                    <td style="font-weight: 700;">${order.game_id}</td>
-                    <td style="font-weight: 700;">${price}</td>
-                    <td style="color: var(--text-muted); font-size: 13px; font-weight: 600;">${dateStr}</td>
-                    <td style="text-align: right;">${statusHtml}</td>
-                </tr>`;
+                        <div class="hc-item">
+                            <span class="hc-item-label">Паттерн</span>
+                            <span class="hc-item-val">
+                                <div class="h-pattern"><i class="fa-solid fa-cube"></i> ${order.pattern || '000'}</div>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="hc-bot">
+                        <div class="hc-date"><i class="fa-regular fa-calendar" style="margin-right: 5px;"></i>${dateStr}</div>
+                        <div>${statusHtml}</div>
+                    </div>
+                </div>`;
             });
         }
 
