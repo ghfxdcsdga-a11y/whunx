@@ -24,6 +24,8 @@
             --bg-input: rgba(30, 34, 48, 0.6);
             --accent-gold: #f4c745; 
             --accent-gold-glow: rgba(244, 199, 69, 0.4);
+            --accent-diamond: #00e5ff; /* НОВЫЙ АЛМАЗНЫЙ ЦВЕТ */
+            --accent-diamond-glow: rgba(0, 229, 255, 0.4);
             --accent-purple: #8b5cf6; 
             --accent-purple-glow: rgba(139, 92, 246, 0.4);
             --accent-green: #10b981;
@@ -64,11 +66,13 @@
         .sidebar-header h2 { font-size: 1.2rem; font-weight: 900; color: #fff; text-transform: uppercase; }
         .sidebar-close { color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
         .sidebar-close:hover { color: var(--accent-red); transform: rotate(90deg); }
-        .sidebar-link { display: flex; align-items: center; gap: 15px; padding: 16px 20px; border-radius: 14px; text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; transition: 0.3s; text-transform: uppercase; }
-        .sidebar-link i { font-size: 1.2rem; width: 25px; text-align: center; color: var(--accent-purple); }
-        .sidebar-link:hover { background: rgba(255,255,255,0.03); color: #fff; transform: translateX(5px); }
-        .sidebar-link.active { background: rgba(244, 199, 69, 0.1); border: 1px solid rgba(244, 199, 69, 0.3); color: var(--accent-gold); box-shadow: 0 5px 15px var(--accent-gold-glow);}
-        .sidebar-link.active i { color: var(--accent-gold); }
+        .sidebar-nav { display: flex; flex-direction: column; gap: 12px; }
+        .sidebar-link { display: flex; align-items: center; gap: 15px; padding: 16px 20px; border-radius: 14px; text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent;}
+        .sidebar-link i { font-size: 1.2rem; width: 25px; text-align: center; color: var(--accent-purple); transition: 0.3s;}
+        .sidebar-link:hover { background: rgba(255,255,255,0.03); color: #fff; border-color: var(--glass-border); transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2);}
+        .sidebar-link:hover i { text-shadow: 0 0 15px var(--accent-purple-glow); }
+        
+        .sidebar-link.active { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #fff; box-shadow: 0 5px 15px var(--accent-purple-glow);}
 
         .header-right { display: flex; align-items: center; gap: 20px; }
         .custom-google-wrapper { position: relative; display: inline-block; cursor: pointer; border-radius: 14px; }
@@ -105,8 +109,9 @@
             animation: fadeInUp 0.5s ease forwards;
         }
 
-        .card-donators { border-top-color: var(--accent-gold); }
-        .card-withdrawals { border-top-color: var(--accent-purple); }
+        /* ИЗМЕНЕННЫЕ ЦВЕТА БОРДЕРОВ */
+        .card-donators { border-top-color: var(--accent-diamond); }
+        .card-withdrawals { border-top-color: var(--accent-gold); }
         .card-ideas { border-top-color: var(--accent-green); }
 
         .top-card-title { font-size: 20px; font-weight: 900; text-transform: uppercase; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
@@ -127,8 +132,9 @@
         .top-value { font-weight: 900; font-size: 14px; }
         .top-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+        /* ИЗМЕНЕННЫЕ ЦВЕТА ЗНАЧЕНИЙ */
+        .val-diamond { color: var(--accent-diamond); text-shadow: 0 0 10px var(--accent-diamond-glow); }
         .val-gold { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
-        .val-purple { color: var(--accent-purple); text-shadow: 0 0 10px var(--accent-purple-glow); }
         .val-green { color: var(--accent-green); text-shadow: 0 0 10px rgba(16,185,129,0.4); }
 
         .empty-state { text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600; padding: 20px 0; }
@@ -205,7 +211,7 @@
         <div class="tops-grid">
             <!-- ТОП ДОНАТЕРОВ -->
             <div class="top-card card-donators">
-                <h3 class="top-card-title"><i class="fa-solid fa-gem" style="color: var(--accent-gold);"></i> Топ Донатеров</h3>
+                <h3 class="top-card-title"><i class="fa-solid fa-gem" style="color: var(--accent-diamond);"></i> Топ Донатеров</h3>
                 <div class="top-list" id="donatorsList">
                     <div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...</div>
                 </div>
@@ -213,7 +219,7 @@
 
             <!-- ТОП ВЫВОДОВ -->
             <div class="top-card card-withdrawals">
-                <h3 class="top-card-title"><i class="fa-solid fa-crown" style="color: var(--accent-purple);"></i> Крупнейшие Выводы</h3>
+                <h3 class="top-card-title"><i class="fa-solid fa-crown" style="color: var(--accent-gold);"></i> Крупнейшие Выводы</h3>
                 <div class="top-list" id="withdrawalsList">
                     <div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...</div>
                 </div>
@@ -338,7 +344,7 @@
                             <img src="${getSafeAvatar(item.avatar_url)}" class="top-avatar">
                             <div class="top-info">
                                 <div class="top-name">${item.username}</div>
-                                <div class="top-value val-gold">${item.total_donated} ₸</div>
+                                <div class="top-value val-diamond">${item.total_donated} ₸</div>
                             </div>
                         </div>
                     `).join('');
@@ -353,7 +359,7 @@
                             <img src="${getSafeAvatar(item.avatar_url)}" class="top-avatar">
                             <div class="top-info">
                                 <div class="top-name">${item.username}</div>
-                                <div class="top-value val-purple">${item.gold_amount} G</div>
+                                <div class="top-value val-gold">${item.gold_amount} G</div>
                             </div>
                         </div>
                     `).join('');
