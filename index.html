@@ -426,10 +426,10 @@
                     <input type="text" id="inputSetNick" class="f-input" value="Player">
                 </div>
             </div>
-            <div class="tg-bind-btn" onclick="showToast('В разработке', 'Бот авторизации Telegram скоро будет доступен.', 'info')">
-                <div class="tg-info"><i class="fa-brands fa-telegram"></i><span>Привязать Telegram</span></div>
-                <i class="fa-solid fa-link" style="color: var(--text-muted);"></i>
-            </div>
+            <div class="tg-bind-btn" id="tgBindBtn">
+    <div class="tg-info"><i class="fa-brands fa-telegram"></i><span id="tgBindText">Привязать Telegram</span></div>
+    <i class="fa-solid fa-link" id="tgBindIcon" style="color: var(--text-muted);"></i>
+</div>
             <button class="btn-submit" onclick="saveSettings()">Сохранить изменения</button>
         </div>
     </div>
@@ -704,16 +704,46 @@
         }
 
         function updateUI() {
-            if(!currentDbUser) return;
-            document.getElementById('balanceText').innerHTML = `${currentDbUser.balance} <span>₸</span>`;
-            document.getElementById('dropdownName').innerText = currentDbUser.username;
-            
-            const safeAvatar = getSafeAvatar(currentDbUser.avatar_url);
-            document.getElementById('headerAvatar').src = safeAvatar;
-            document.getElementById('settingsAvatar').src = safeAvatar;
-            
-            document.getElementById('inputSetNick').value = currentDbUser.username;
-        }
+    if(!currentDbUser) return;
+    document.getElementById('balanceText').innerHTML = `${currentDbUser.balance} <span>₸</span>`;
+    document.getElementById('dropdownName').innerText = currentDbUser.username;
+    
+    const safeAvatar = getSafeAvatar(currentDbUser.avatar_url);
+    document.getElementById('headerAvatar').src = safeAvatar;
+    document.getElementById('settingsAvatar').src = safeAvatar;
+    
+    document.getElementById('inputSetNick').value = currentDbUser.username;
+
+    // ЛОГИКА ПРИВЯЗКИ ТГ
+    const tgBtn = document.getElementById('tgBindBtn');
+    const tgText = document.getElementById('tgBindText');
+    const tgIcon = document.getElementById('tgBindIcon');
+
+    if (currentDbUser.tg_id) {
+        // Если ТГ уже привязан
+        tgBtn.style.background = 'rgba(16, 185, 129, 0.05)';
+        tgBtn.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+        tgText.innerText = currentDbUser.telegram_username ? `@${currentDbUser.telegram_username}` : 'Привязан';
+        tgIcon.className = 'fa-solid fa-check';
+        tgIcon.style.color = 'var(--accent-green)';
+        tgBtn.onclick = null; // Отключаем клик, чтобы не привязывать дважды
+        tgBtn.style.cursor = 'default';
+    } else {
+        // Если ТГ НЕ привязан
+        tgBtn.style.background = 'rgba(36, 161, 222, 0.1)';
+        tgBtn.style.borderColor = 'rgba(36, 161, 222, 0.3)';
+        tgText.innerText = 'Привязать Telegram';
+        tgIcon.className = 'fa-solid fa-link';
+        tgIcon.style.color = 'var(--text-muted)';
+        tgBtn.style.cursor = 'pointer';
+        
+        // ВАЖНО: ЗАМЕНИ 'ТВОЙ_БОТ' на реальный юзернейм твоего бота без @
+        tgBtn.onclick = () => {
+            const botUsername = 'WhunxShopAdmin_bot'; // <-- ВПИШИ СЮДА ЮЗЕРНЕЙМ БОТА
+            window.open(`https://t.me/${botUsername}?start=BIND_${currentDbUser.secret_id}`, '_blank');
+        };
+    }
+}
 
         function previewSiteAvatar(event) {
             const file = event.target.files[0];
