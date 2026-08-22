@@ -310,12 +310,24 @@
         </div>
     </div>
 
-    <!-- Модал: Ответ на отзыв -->
+    <!-- Модал: Управление отзывом -->
     <div class="modal-overlay" id="reviewModal">
-        <div class="modal-box">
-            <h3>Управление отзывом</h3>
-            <div class="form-group"><label class="form-label">Текст отзыва (можно ред.)</label><textarea id="revText" class="form-input" rows="3"></textarea></div>
-            <div class="form-group"><label class="form-label">Ответ администратора</label><textarea id="revReply" class="form-input" rows="3"></textarea></div>
+        <div class="modal-box" style="max-width: 550px;">
+            <button class="modal-close" onclick="closeModal('reviewModal')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title">Управление отзывом</div>
+            
+            <div class="form-group"><label class="form-label">Текст отзыва</label><textarea id="revText" class="form-input" rows="3"></textarea></div>
+            
+            <label class="form-label" style="margin-bottom:8px;">Скриншот отзыва (если есть)</label>
+            <div class="upload-area" style="background:transparent; border-color:transparent; padding:0; text-align:left; display:flex; align-items:center; gap:15px; margin-bottom:20px; cursor:default; box-shadow:none;">
+                <img id="revAdminPhotoPreview" src="" style="display:none; width:70px; height:70px; border-radius:14px; border:1px solid var(--glass-border); object-fit:cover; background: rgba(0,0,0,0.5);" onclick="window.open(this.src)">
+                <span id="removeRevAdminPhotoBtn" style="color:var(--accent-red); font-size:13px; font-weight:800; cursor:pointer; display:none; transition:0.3s;" onclick="removeRevAdminPhoto()">Удалить фото <i class="fa-solid fa-xmark"></i></span>
+            </div>
+            <input type="file" id="revAdminPhotoInput" style="display:none;" accept="image/*" onchange="previewRevAdminPhoto(event)">
+            <div class="upload-area" id="revAdminPhotoBtn" onclick="document.getElementById('revAdminPhotoInput').click()">Прикрепить скриншот <i class="fa-solid fa-image" style="margin-left: 5px;"></i></div>
+
+            <div class="form-group" style="margin-top: 20px;"><label class="form-label">Ответ администратора</label><textarea id="revReply" class="form-input" rows="3"></textarea></div>
+            
             <div class="modal-btns">
                 <button class="m-btn m-btn-cancel" onclick="closeModal('reviewModal')">Отмена</button>
                 <button class="m-btn m-btn-confirm" onclick="saveReview()">Сохранить</button>
