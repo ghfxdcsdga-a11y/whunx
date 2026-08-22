@@ -218,27 +218,51 @@ app.post('/api/finance/topup', authenticateUser, async (req, res) => {
 });
 
 app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
-  const { amount, gameId, gameAvatar, targetSkin, pattern, spentTenge } = req.body;
+  const { amount, gameId, gameAvatar, targetSkin, pattern, spentTenge, appliedPromoCode } = req.body;
   const withdrawAmount = Number(amount);
 
+  // 1. Проверяем, хватает ли денег на балансе (с учетом возможной скидки)
   if (req.user.balance < spentTenge) return res.status(400).json({ error: 'Недостаточно средств на балансе' });
 
+  // 2. СЖИГАЕМ ПРОМОКОД ВО ВРЕМЯ ПОКУПКИ (если он был применен)
+  if (appliedPromoCode) {
+      const { data: promo } = await supabase.from('promocodes').select('*').eq('code', appliedPromoCode).single();
+      
+      // Проверяем валидность промокода еще раз на всякий случай
+      if (!promo || !promo.is_active || (promo.expires_at && new Date() > new Date(promo.expires_at)) || (promo.max_activations > 0 && promo.used_activations >= promo.max_activations)) {
+          return res.status(400).json({ error: 'Промокод больше недействителен или истек' });
+      }
+      
+      const { data: used } = await supabase.from('used_promocodes').select('id').eq('user_email', req.user.email).eq('promo_code', appliedPromoCode).single();
+      if (used) return res.status(400).json({ error: 'Вы уже использовали этот промокод' });
+      
+      // Отмечаем промокод как использованный
+      await supabase.from('used_promocodes').insert([{ user_email: req.user.email, promo_code: appliedPromoCode }]);
+      await supabase.from('promocodes').update({ used_activations: promo.used_activations + 1 }).eq('id', promo.id);
+  }
+
+  // 3. Создаем заявку на вывод в БД
   const { data: order, error } = await supabase.from('withdrawals').insert([{
     user_email: req.user.email, amount: withdrawAmount, game_id: gameId, game_avatar: gameAvatar, target_skin: targetSkin, pattern: pattern, spent_rubles: spentTenge, status: 'pending'
   }]).select().single();
 
   if (error) return res.status(500).json({ error: 'Сбой базы данных. Заказ не создан.' });
 
+  // 4. Списываем деньги с баланса пользователя
   let newBalance = req.user.balance;
   if (spentTenge > 0) {
     newBalance = Number(req.user.balance) - Number(spentTenge);
     await supabase.from('users').update({ balance: newBalance }).eq('id', req.user.id);
+    
+    // Записываем транзакцию
     await supabase.from('transactions').insert([{ user_email: req.user.email, type: 'withdrawal', amount: spentTenge, description: `Покупка ${withdrawAmount} G` }]);
   }
 
+  // 5. Отправляем уведомление администратору в Telegram
   if (order) {
     const title = spentTenge === 0 ? '🎁 **ВЫДАЧА ПРИЗА РОЗЫГРЫША!**' : '🔥 **НОВЫЙ ЗАКАЗ ГОЛДЫ!**';
     const tgMessage = `${title}\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID:** \`${req.user.secret_id}\`\n💰 **Количество:** ${withdrawAmount} G\n💵 **Списано:** ${spentTenge} ₸\n🔫 **Скин:** ${targetSkin}\n🎮 **Игровой ID:** ${gameId}\n🎲 **Паттерн:** ${pattern}`;
+    
     const tgOptions = { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[ { text: '✅ Выведено', callback_data: `complete_${order.id}` }, { text: '❌ Отменено', callback_data: `cancel_${order.id}` } ]] } };
 
     if (gameAvatar && gameAvatar !== 'default' && gameAvatar.startsWith('data:image')) {
@@ -249,6 +273,8 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
       bot.sendMessage(ADMIN_CHAT_ID, tgMessage, tgOptions);
     }
   }
+
+  // 6. Возвращаем успешный ответ и новый баланс на сайт
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
 });
 
@@ -273,6 +299,7 @@ app.post('/api/promocodes/activate', authenticateUser, async (req, res) => {
   if (used) return res.status(400).json({ error: 'Вы уже активировали этот промокод' });
 
   if (promo.reward_type === 'balance') {
+      // Баланс начисляем и "сжигаем" код сразу
       const newBalance = Number(req.user.balance) + Number(promo.reward_value);
       await supabase.from('users').update({ balance: newBalance }).eq('id', req.user.id);
       
@@ -283,10 +310,8 @@ app.post('/api/promocodes/activate', authenticateUser, async (req, res) => {
       return res.json({ success: true, type: 'balance', value: promo.reward_value, new_balance: newBalance });
   } 
   else if (promo.reward_type === 'discount') {
-      await supabase.from('used_promocodes').insert([{ user_email: req.user.email, promo_code: code }]);
-      await supabase.from('promocodes').update({ used_activations: promo.used_activations + 1 }).eq('id', promo.id);
-      
-      return res.json({ success: true, type: 'discount', value: promo.reward_value });
+      // ЕСЛИ ЭТО СКИДКА — ничего не пишем в БД, просто возвращаем данные на фронт! Код сгорит при покупке.
+      return res.json({ success: true, type: 'discount', value: promo.reward_value, target: promo.target_item_id, code: promo.code });
   }
 });
 
