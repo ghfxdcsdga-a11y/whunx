@@ -1239,51 +1239,70 @@
         async function participateGw(gwId) {
             if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт для участия', 'info');
             
+            // Проверяем, привязан ли Telegram
+            if (!currentDbUser.tg_id) {
+                return showToast('Ошибка', 'Для участия необходимо привязать Telegram в настройках аккаунта!', 'error');
+            }
+
             const btn = document.getElementById('gwActionBtn');
             const originalText = btn.innerText;
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Обработка...';
 
             try {
-                // БЕРЕМ СВЕЖИЙ ТОКЕН ИЗ SUPABASE ПЕРЕД ЗАПРОСОМ
-                const { data: sessionData } = await supabaseClient.auth.getSession();
-                const freshToken = sessionData?.session?.access_token || currentSessionToken;
-
-                if (!freshToken) {
-                    showToast('Ошибка', 'Сессия истекла. Пожалуйста, перезайдите в аккаунт.', 'error');
+                // 1. Достаем актуальные данные розыгрыша из базы
+                const { data: gw, error: gwErr } = await supabaseClient.from('giveaways').select('*').eq('id', gwId).maybeSingle();
+                
+                if (gwErr || !gw || !gw.is_active) {
+                    showToast('Ошибка', 'Розыгрыш не активен или завершен', 'error');
                     btn.disabled = false;
                     btn.innerText = originalText;
                     return;
                 }
 
-                const response = await fetch(`${BACKEND_URL}/api/giveaways/participate`, {
-                    method: 'POST', 
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'Authorization': `Bearer ${freshToken}` 
-                    }, 
-                    body: JSON.stringify({ gwId })
-                });
-                
-                const result = await response.json();
-                if (result.success) { 
-                    showToast('Успех', 'Вы успешно участвуете в розыгрыше!', 'success'); 
+                let participants = gw.participants || [];
+
+                // 2. Проверяем, не участвует ли уже
+                if (participants.find(p => p.email === currentDbUser.email)) {
+                    showToast('Внимание', 'Вы уже участвуете в этом розыгрыше!', 'info');
                     btn.innerHTML = '<i class="fa-solid fa-check"></i> Вы участник';
-                    btn.onclick = null; // Отключаем повторное нажатие
-                    loadActiveGiveaway(); 
-                } 
-                else { 
-                    showToast('Ошибка', result.error, 'error'); 
+                    return;
+                }
+
+                // 3. Проверяем лимит мест
+                if (gw.max_participants && gw.max_participants !== '∞' && participants.length >= gw.max_participants) {
+                    showToast('Ошибка', 'Места в розыгрыше закончились!', 'error');
                     btn.disabled = false;
                     btn.innerText = originalText;
+                    return;
                 }
+
+                // 4. Добавляем юзера в массив участников
+                participants.push({
+                    email: currentDbUser.email, 
+                    nickname: currentDbUser.username, 
+                    avatar: currentDbUser.avatar_url, 
+                    tg: currentDbUser.telegram_username || currentDbUser.tg_id
+                });
+
+                // 5. Сохраняем обратно в Supabase прямо с клиента
+                const { error: updateErr } = await supabaseClient.from('giveaways').update({ participants }).eq('id', gwId);
+
+                if (updateErr) {
+                    throw new Error(updateErr.message);
+                }
+
+                showToast('Успех', 'Вы успешно участвуете в розыгрыше!', 'success');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Вы участник';
+                btn.onclick = null;
+                loadActiveGiveaway();
+
             } catch(e) { 
-                showToast('Ошибка', 'Сбой связи с сервером', 'error'); 
+                showToast('Ошибка', 'Не удалось записать вас в участники. Попробуйте позже.', 'error'); 
                 btn.disabled = false;
                 btn.innerText = originalText;
             }
         }
-
         function openGiftWithdrawModal(goldAmount) {
             document.getElementById('pwModalTitle').innerText = "Выдача приза";
             pendingPurchaseItem = { gold: goldAmount, finalPrice: 0, isGift: true };
