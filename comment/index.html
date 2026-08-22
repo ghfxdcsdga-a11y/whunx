@@ -174,9 +174,13 @@
         .rev-img { max-width: 100%; max-height: 250px; border-radius: 14px; margin-bottom: 15px; border: 1px solid var(--glass-border); object-fit: cover; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);}
         .rev-img:hover { filter: brightness(1.1); }
         
-        .admin-reply { background: rgba(244, 199, 69, 0.08); border-left: 4px solid var(--accent-gold); padding: 18px; border-radius: 0 14px 14px 0; margin-top: 20px; }
-        .admin-reply-title { font-size: 13px; color: var(--accent-gold); font-weight: 900; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; letter-spacing: 1px;}
-        .admin-reply-text { color: var(--text-muted); font-size: 14px; font-weight: 600; line-height: 1.5; }
+        /* РОСКОШНЫЙ ОТВЕТ АДМИНИСТРАЦИИ */
+        .admin-reply { background: linear-gradient(135deg, rgba(244, 199, 69, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%); border: 1px solid rgba(244, 199, 69, 0.2); padding: 20px; border-radius: 16px; margin-top: 20px; position: relative; box-shadow: inset 0 0 20px rgba(244, 199, 69, 0.02); }
+        .admin-reply::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-gold); border-radius: 16px 0 0 16px; box-shadow: 0 0 15px var(--accent-gold-glow); }
+        .admin-reply-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .admin-reply-avatar { width: 32px; height: 32px; border-radius: 10px; background: var(--accent-gold); display: flex; justify-content: center; align-items: center; color: #000; font-size: 14px; box-shadow: 0 0 10px var(--accent-gold-glow);}
+        .admin-reply-title { font-size: 14px; color: var(--accent-gold); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px var(--accent-gold-glow);}
+        .admin-reply-text { color: #e2e8f0; font-size: 14px; font-weight: 600; line-height: 1.6; margin-left: 44px; }
 
         /* =========================================
            MOBILE RESPONSIVENESS
@@ -200,6 +204,7 @@
             .review-card { padding: 20px; }
             .rev-header { flex-wrap: wrap; }
             .rev-stars { margin-left: 0; width: 100%; margin-top: 5px; }
+            .admin-reply-text { margin-left: 0; margin-top: 10px; }
         }
         @media (max-width: 400px) {
             .logo span { display: none; }
@@ -300,10 +305,10 @@
                 <span id="removeRevPhotoBtn" style="color:var(--accent-red); font-size:13px; font-weight:800; cursor:pointer; display:none; transition:0.3s;" onclick="removeReviewPhoto()">Удалить фото <i class="fa-solid fa-xmark"></i></span>
             </div>
             <input type="file" id="reviewPhotoInput" style="display:none;" accept="image/*" onchange="previewReviewPhoto(event)">
-            <div class="upload-area" id="reviewPhotoBtn" onclick="document.getElementById('reviewPhotoInput').click()">Прикрепить скриншот <i class="fa-solid fa-image" style="margin-left: 5px;"></i></div>
+            <div class="upload-area" id="reviewPhotoBtn" onclick="document.getElementById('reviewPhotoInput').click()">Прикрепить скриншот (необязательно) <i class="fa-solid fa-image" style="margin-left: 5px;"></i></div>
 
             <button class="btn-submit" onclick="submitReview()" id="submitReviewBtn">Опубликовать отзыв</button>
-            <p style="font-size:12px; color:var(--text-muted); margin-top:15px; text-align:center; font-weight: 700;">Система проверяет наличие успешных выводов на вашем аккаунте.</p>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:15px; text-align:center; font-weight: 700;">Система автоматически проверяет наличие успешных выводов на вашем аккаунте.</p>
         </div>
     </div>
 
@@ -317,6 +322,7 @@
         let currentDbUser = null; 
         let currentSessionToken = null;
         let currentReviewImageBase64 = null;
+        let reviewsCache = ''; // Для проверки обновлений
 
         function showToast(title, message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -348,7 +354,8 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            loadReviews(); // Загружаем отзывы сразу
+            loadReviews(); // Моментальная загрузка
+            setInterval(loadReviews, 3000); // Живое обновление каждые 3 сек
 
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
@@ -480,6 +487,7 @@
                     document.getElementById('reviewText').value = '';
                     removeReviewPhoto();
                     closeModal('addReviewModal');
+                    reviewsCache = ''; // Сбрасываем кэш, чтобы форсировать загрузку
                     loadReviews(); 
                 } else {
                     showToast('Ошибка', result.error, 'error');
@@ -495,12 +503,20 @@
         async function loadReviews() {
             const container = document.getElementById('reviewsContainer');
             try {
-                const response = await fetch(`${BACKEND_URL}/api/reviews/list`);
-                const result = await response.json();
+                // Обращаемся напрямую к БД для моментальной скорости (как мы делаем с магазином)
+                const { data: reviews, error } = await supabaseClient.from('reviews').select('*').order('created_at', { ascending: false });
+                
+                if (error) throw new Error('DB Error');
+
+                // Проверяем, изменились ли данные (чтобы не перерисовывать страницу просто так каждые 3 секунды)
+                const newDataString = JSON.stringify(reviews);
+                if (newDataString === reviewsCache) return; 
+                reviewsCache = newDataString; // Обновляем кэш
+                
                 container.innerHTML = '';
                 
-                if(result.success && result.reviews.length > 0) {
-                    result.reviews.forEach(r => {
+                if(reviews && reviews.length > 0) {
+                    reviews.forEach(r => {
                         let starsHtml = '';
                         for(let i = 1; i <= 5; i++) {
                             starsHtml += `<i class="fa-solid fa-star" style="color: ${i <= r.rating ? 'var(--accent-gold)' : 'rgba(255,255,255,0.1)'};"></i>`;
@@ -508,9 +524,13 @@
                         
                         let imgHtml = r.image_url ? `<img src="${r.image_url}" class="rev-img" onclick="window.open(this.src)">` : '';
                         
+                        // РОСКОШНЫЙ ОТВЕТ АДМИНА
                         let replyHtml = r.admin_reply ? `
                             <div class="admin-reply">
-                                <div class="admin-reply-title"><i class="fa-solid fa-headset"></i> Ответ Администрации</div>
+                                <div class="admin-reply-header">
+                                    <div class="admin-reply-avatar"><i class="fa-solid fa-crown"></i></div>
+                                    <div class="admin-reply-title">Ответ Администрации</div>
+                                </div>
                                 <div class="admin-reply-text">${r.admin_reply}</div>
                             </div>
                         ` : '';
@@ -545,7 +565,9 @@
                     container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px; font-weight:700;">Отзывов пока нет. Будьте первыми!</div>';
                 }
             } catch(e) {
-                container.innerHTML = '<div style="text-align:center; color:var(--error); padding:40px; font-weight:700;">Не удалось загрузить отзывы.</div>';
+                if (container.innerHTML.includes('Загрузка')) {
+                    container.innerHTML = '<div style="text-align:center; color:var(--error); padding:40px; font-weight:700;">Не удалось загрузить отзывы.</div>';
+                }
             }
         }
     </script>
