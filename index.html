@@ -608,8 +608,6 @@
         let chatInterval = null;
         let socket = null;
         let gwParticipantsInterval = null; 
-        
-        let localDiscountValue = 0; // Для хранения скидки от промокода
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -868,64 +866,48 @@
             if (!code) return;
             if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт!', 'info');
 
-            btn.disabled = true;
-            btn.innerText = 'Проверка...';
-            input.classList.remove('input-error', 'input-success');
-            msgBox.style.display = 'none';
+            btn.disabled = true; btn.innerText = 'Проверка...';
+            input.classList.remove('input-error', 'input-success'); msgBox.style.display = 'none';
 
             try {
                 const response = await fetch(`${BACKEND_URL}/api/promocodes/activate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
-                    body: JSON.stringify({ code })
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ code })
                 });
-                
                 const result = await response.json();
 
                 if (result.success) {
                     input.classList.add('input-success');
-                    
-                    // Эффект конфетти
                     confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#f4c745', '#8b5cf6', '#10b981'] });
-
                     msgBox.style.display = 'block';
+
                     if (result.type === 'balance') {
                         msgBox.innerHTML = `<div class="promo-reward-text">Успешно! +${result.value} ₸ на баланс! 🎉</div>`;
-                        currentDbUser.balance = result.new_balance;
-                        updateUI();
+                        currentDbUser.balance = result.new_balance; updateUI();
                     } else if (result.type === 'discount') {
                         msgBox.innerHTML = `<div class="promo-reward-text">Успешно! Скидка -${result.value}% 🔥</div>`;
-                        localDiscountValue = result.value;
+                        // СОХРАНЯЕМ В ПАМЯТЬ БРАУЗЕРА
+                        const activePromo = { code: result.code, percent: result.value, target: result.target };
+                        localStorage.setItem('activeDiscountPromo', JSON.stringify(activePromo));
                         loadDynamicShop();
                     }
                     btn.style.display = 'none'; 
                 } else {
-                    // Ошибка с бэкенда (например, лимит или неверный код)
                     input.classList.add('input-error');
                     msgBox.innerHTML = `<div class="promo-reward-text" style="color: var(--accent-red); border-color: var(--accent-red); background: rgba(239, 68, 68, 0.1); text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);">${result.error}</div>`;
-                    msgBox.style.display = 'block';
-                    btn.style.display = 'none';
+                    msgBox.style.display = 'block'; btn.style.display = 'none';
                 }
             } catch (err) {
-                // Ошибка сети
                 input.classList.add('input-error');
                 msgBox.innerHTML = `<div class="promo-reward-text" style="color: var(--accent-red); border-color: var(--accent-red); background: rgba(239, 68, 68, 0.1); text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);">Ошибка соединения</div>`;
-                msgBox.style.display = 'block';
-                btn.style.display = 'none';
+                msgBox.style.display = 'block'; btn.style.display = 'none';
             }
 
-            // АВТОМАТИЧЕСКИЙ СБРОС ФОРМЫ ЧЕРЕЗ 2.5 СЕКУНДЫ
             setTimeout(() => {
-                input.value = '';
-                input.classList.remove('input-error', 'input-success');
-                msgBox.style.display = 'none';
-                msgBox.innerHTML = '';
-                btn.style.display = 'block';
-                btn.disabled = false;
-                btn.innerText = 'Активировать';
+                input.value = ''; input.classList.remove('input-error', 'input-success');
+                msgBox.style.display = 'none'; msgBox.innerHTML = '';
+                btn.style.display = 'block'; btn.disabled = false; btn.innerText = 'Активировать';
             }, 2500);
         }
-
 
         // ==========================================
         // ЛОГИКА РОЗЫГРЫША
@@ -1059,21 +1041,29 @@
         }
 
         function renderDynamicShop() {
-            const grid = document.getElementById('productsGrid'); 
-            grid.innerHTML = '';
+            const grid = document.getElementById('productsGrid'); grid.innerHTML = '';
+            
+            // Достаем сохраненный промокод
+            let activePromo = null;
+            try { activePromo = JSON.parse(localStorage.getItem('activeDiscountPromo')); } catch(e){}
             
             shopItemsCache.forEach(item => {
-                const card = document.createElement('div'); 
-                card.className = 'product-card';
-                
+                const card = document.createElement('div'); card.className = 'product-card';
                 let priceHtml = `<div class="product-price">${item.price} ₸</div>`;
                 let badgeHtml = '';
                 let finalPrice = item.price;
 
-                // Учитываем скидку из базы или из промокода
                 let activeDiscount = 0;
                 if (item.discount_active && item.discount_percent > 0) activeDiscount = item.discount_percent;
-                if (localDiscountValue > activeDiscount) activeDiscount = localDiscountValue; // Промокод сильнее базы
+                
+                // Проверяем, применяется ли промокод к этому товару
+                let promoApplies = false;
+                if (activePromo && (activePromo.target === null || activePromo.target === item.id)) {
+                    if (activePromo.percent > activeDiscount) {
+                        activeDiscount = activePromo.percent;
+                        promoApplies = true;
+                    }
+                }
 
                 if (activeDiscount > 0) {
                     finalPrice = Math.round(item.price * (1 - (activeDiscount / 100)));
@@ -1082,6 +1072,7 @@
                 }
 
                 item.finalPrice = finalPrice;
+                item.appliedPromoCode = promoApplies ? activePromo.code : null; // Привязываем код к кнопке
 
                 card.innerHTML = `
                     ${badgeHtml}
@@ -1097,8 +1088,10 @@
         function attemptPurchase(itemId) {
             if (!currentDbUser) return showToast('Ошибка', 'Войдите в аккаунт для покупок.', 'error');
             const item = shopItemsCache.find(i => i.id === itemId);
-            if (currentDbUser.balance >= item.finalPrice) { pendingPurchaseItem = { gold: item.gold, finalPrice: item.finalPrice, isGift: false }; openPurchaseWithdrawModal(item.gold, item.finalPrice); } 
-            else { showToast('Внимание', 'Недостаточно средств. Пополните баланс.', 'info'); openModal('topupModal'); document.getElementById('topupAmountInput').value = item.finalPrice; }
+            if (currentDbUser.balance >= item.finalPrice) { 
+                pendingPurchaseItem = { gold: item.gold, finalPrice: item.finalPrice, isGift: false, appliedPromoCode: item.appliedPromoCode }; 
+                openPurchaseWithdrawModal(item.gold, item.finalPrice); 
+            } else { showToast('Внимание', 'Недостаточно средств. Пополните баланс.', 'info'); openModal('topupModal'); document.getElementById('topupAmountInput').value = item.finalPrice; }
         }
 
         function openGiftWithdrawModal(goldAmount) {
@@ -1153,14 +1146,24 @@
             document.getElementById('pwBtnAction').disabled = true; document.getElementById('pwBtnAction').innerText = 'Обработка...';
 
             try {
-                const response = await fetch(`${BACKEND_URL}/api/finance/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ amount: pendingPurchaseItem.gold, gameId: gameId, gameAvatar: gameAvatar, targetSkin: targetSkin, pattern: pattern, spentTenge: pendingPurchaseItem.finalPrice }) });
+                const response = await fetch(`${BACKEND_URL}/api/finance/withdraw`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                    // Передаем прикрепленный промокод
+                    body: JSON.stringify({ amount: pendingPurchaseItem.gold, gameId: gameId, gameAvatar: gameAvatar, targetSkin: targetSkin, pattern: pattern, spentTenge: pendingPurchaseItem.finalPrice, appliedPromoCode: pendingPurchaseItem.appliedPromoCode })
+                });
+
                 const result = await response.json();
-                
                 if (result.success) {
                     currentDbUser.balance = result.balance; updateUI();
                     closeModal('purchaseWithdrawModal');
                     showToast('Успех', `Заказ создан! На ваш аккаунт скоро будет зачислено ${pendingPurchaseItem.gold} G.`, 'success');
                     
+                    // ЕСЛИ БЫЛ ПРОМОКОД - УДАЛЯЕМ ЕГО ИЗ ПАМЯТИ
+                    if (pendingPurchaseItem.appliedPromoCode) {
+                        localStorage.removeItem('activeDiscountPromo');
+                        loadDynamicShop();
+                    }
+
                     document.getElementById('pwIdInput').value = ''; document.getElementById('pwPatternInput').value = '';
                     pendingPurchaseItem = null;
                     document.getElementById('pwModalTitle').innerText = "Получение голды"; 
