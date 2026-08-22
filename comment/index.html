@@ -210,6 +210,13 @@
             .logo span { display: none; }
             .logo { font-size: 16px; }
         }
+
+        /* ЛАЙТБОКС ДЛЯ КАРТИНОК */
+        .lightbox-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 100000; display: none; justify-content: center; align-items: center; opacity: 0; transition: 0.3s; flex-direction: column; }
+        .lightbox-close { position: absolute; top: 30px; right: 40px; font-size: 35px; color: #fff; cursor: pointer; transition: 0.3s; text-shadow: 0 0 15px rgba(0,0,0,0.5); z-index: 100001; }
+        .lightbox-close:hover { color: var(--accent-red); transform: rotate(90deg); }
+        .lightbox-img { max-width: 90%; max-height: 85vh; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); object-fit: contain; }
+        
     </style>
 </head>
 <body>
@@ -345,6 +352,20 @@
             const modal = document.getElementById(id); 
             modal.style.display = 'flex'; 
             setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
+        }
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            const lb = document.getElementById('imageLightbox');
+            lb.style.display = 'flex';
+            setTimeout(() => lb.style.opacity = '1', 10);
+        }
+
+        function closeLightbox(e, force = false) {
+            if (force || e.target.id === 'imageLightbox') {
+                const lb = document.getElementById('imageLightbox');
+                lb.style.opacity = '0';
+                setTimeout(() => lb.style.display = 'none', 300);
+            }
         }
         function closeModal(id) { 
             const modal = document.getElementById(id); 
@@ -522,7 +543,7 @@
                             starsHtml += `<i class="fa-solid fa-star" style="color: ${i <= r.rating ? 'var(--accent-gold)' : 'rgba(255,255,255,0.1)'};"></i>`;
                         }
                         
-                        let imgHtml = r.image_url ? `<img src="${r.image_url}" class="rev-img" onclick="window.open(this.src)">` : '';
+                        let imgHtml = r.image_url ? `<img src="${r.image_url}" class="rev-img" onclick="openLightbox(this.src)">` : '';
                         
                         // РОСКОШНЫЙ ОТВЕТ АДМИНА
                         let replyHtml = r.admin_reply ? `
@@ -571,5 +592,10 @@
             }
         }
     </script>
+    <!-- ЛАЙТБОКС ДЛЯ ПРОСМОТРА СКРИНШОТОВ -->
+    <div class="lightbox-overlay" id="imageLightbox" onclick="closeLightbox(event)">
+        <i class="fa-solid fa-xmark lightbox-close" onclick="closeLightbox(event, true)"></i>
+        <img id="lightboxImg" class="lightbox-img" src="">
+    </div>
 </body>
 </html>
