@@ -345,6 +345,10 @@
             .header-left { gap: 5px; }
             .header-right { gap: 5px; }
         }
+        /* Выравнивание каналов розыгрыша */
+        .gw-channels-list { margin-top: 5px; gap: 10px; flex-wrap: wrap; justify-content: flex-start !important; }
+        @media (max-width: 768px) { .gw-channels-list { justify-content: center !important; } }
+        
     </style>
 </head>
 <body>
@@ -419,7 +423,7 @@
                 
                 <p id="gwCondText">Условия скоро появятся</p>
                 
-                <div id="gwChannelsDiv" style="display: none; margin-top: 5px; gap: 10px; flex-wrap: wrap; justify-content: center;"></div>
+                <div id="gwChannelsDiv" class="gw-channels-list" style="display: none;"></div>
                 
                 <p id="gwParticipants" style="color: var(--accent-gold); font-size: 14px; font-weight: 800;">Участников: 0 / ∞</p>
                 
