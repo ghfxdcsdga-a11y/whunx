@@ -238,14 +238,10 @@
         
         .btn-submit { width: 100%; background: var(--accent-purple); color: #fff; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 800; transition: 0.3s; margin-top: 15px; box-shadow: 0 10px 25px var(--accent-purple-glow); text-transform: uppercase; letter-spacing: 1px;} .btn-submit:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 15px 35px var(--accent-purple-glow); } .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
         
-        .upload-area { background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 14px; padding: 18px; text-align: center; cursor: pointer; transition: 0.3s; font-weight: 700; font-size: 14px; margin-bottom: 5px; } .upload-area:hover { border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.08); }
-        
-        .market-price-tag { background: rgba(255,255,255,0.03); padding: 18px; border-radius: 14px; font-weight: 800; font-size: 18px; color: var(--accent-gold); display: flex; align-items: center; gap: 10px; margin-bottom: 10px; border: 1px solid rgba(244,199,69,0.3); box-shadow: inset 0 0 15px rgba(244,199,69,0.05), 0 5px 15px rgba(0,0,0,0.2); }
-        .market-item-target { background: rgba(0,0,0,0.4); border-radius: 14px; padding: 18px; display: flex; align-items: center; gap: 18px; margin-bottom: 5px; border: 1px solid var(--glass-border); box-shadow: inset 0 0 10px rgba(0,0,0,0.5);} .market-item-target img { width: 85px; height: 65px; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.6)); } .market-item-info h5 { font-size: 15px; font-weight: 800; margin-bottom: 4px; color: #fff; } .market-item-info span { font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;}
-        .f-warning-text { color: var(--accent-red); font-size: 12px; font-weight: 700; display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; margin-bottom: 25px; line-height: 1.5; }
-        
-        .tg-bind-btn { background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 14px; padding: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(36, 161, 222, 0.1); } .tg-bind-btn:hover { background: rgba(36, 161, 222, 0.2); box-shadow: 0 10px 25px rgba(36, 161, 222, 0.2); transform: translateY(-2px); }
-        .tg-info { display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 800; } .tg-info i { font-size: 26px; color: #24A1DE; text-shadow: 0 0 15px rgba(36,161,222,0.5); }
+        .upload-area { background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 14px; padding: 18px; text-align: center; cursor: pointer; transition: 0.3s; font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #fff;} 
+        .upload-area:hover { border-color: var(--accent-gold); background: rgba(244, 199, 69, 0.08); }
+
+        .checkbox-label { cursor: pointer; color: #fff; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 15px;}
 
         .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; min-width: 600px; }
         .history-table th { color: var(--text-muted); font-weight: 800; text-align: left; padding: 18px 10px; border-bottom: 1px solid var(--glass-border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -594,6 +590,12 @@
         </div>
     </div>
 
+    <!-- ЛАЙТБОКС ДЛЯ ПРОСМОТРА СКРИНШОТОВ -->
+    <div class="lightbox-overlay" id="imageLightbox" onclick="closeLightbox(event)">
+        <i class="fa-solid fa-xmark lightbox-close" onclick="closeLightbox(event, true)"></i>
+        <img id="lightboxImg" class="lightbox-img" src="">
+    </div>
+
     <script>
         const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
 
@@ -695,7 +697,6 @@
             document.getElementById('balanceModule').style.display = 'flex';
             document.getElementById('profileModule').style.display = 'block';
 
-            // 1. Создаем юзера в БД, если он новый
             let { data: dbUser } = await supabaseClient.from('users').select('*').eq('email', userAuth.email).single();
             if (!dbUser) {
                 let defaultName = userAuth.user_metadata.full_name || 'whunx-user-' + Math.random().toString(36).substring(2, 8).toLowerCase();
@@ -704,21 +705,19 @@
                 dbUser = insertedUser;
             }
 
-            // 2. МОМЕНТАЛЬНО запрашиваем бэкенд, чтобы сразу подтянуть скидку!
             try {
-                const response = await fetch(`${BACKEND_URL}/api/me`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
-                const freshUser = await response.json();
-                if (freshUser && !freshUser.error) {
-                    currentDbUser = freshUser;
-                } else {
-                    currentDbUser = dbUser;
+                const { data: usedList } = await supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', dbUser.email).eq('is_spent', false).limit(1);
+                if (usedList && usedList.length > 0) {
+                    const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedList[0].promo_code).single();
+                    if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
+                        dbUser.active_discount = { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
+                    }
                 }
-            } catch(e) {
-                currentDbUser = dbUser;
-            }
+            } catch(e) {}
             
+            currentDbUser = dbUser;
             updateUI();
-            renderDynamicShop(); // Сразу перерисовываем карточки со скидками!
+            renderDynamicShop(); 
             
             if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
             if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
@@ -727,10 +726,16 @@
         async function syncUserData() {
             if (!currentSessionToken || !currentDbUser) return;
             try {
-                const response = await fetch(`${BACKEND_URL}/api/me`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
-                const freshUser = await response.json();
-                
-                if (freshUser && !freshUser.error) {
+                const { data: freshUser } = await supabaseClient.from('users').select('*').eq('email', currentDbUser.email).single();
+                if (freshUser) {
+                    const { data: usedList } = await supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', freshUser.email).eq('is_spent', false).limit(1);
+                    if (usedList && usedList.length > 0) {
+                        const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedList[0].promo_code).single();
+                        if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
+                            freshUser.active_discount = { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
+                        }
+                    }
+                    
                     let oldDisc = currentDbUser.active_discount?.code;
                     let newDisc = freshUser.active_discount?.code;
                     
@@ -968,7 +973,6 @@
                 
                 let promoApplies = false;
                 
-                // ВАЖНОЕ ИСПРАВЛЕНИЕ: Number() для точного совпадения
                 if (activePromo && (!activePromo.target || Number(activePromo.target) === Number(item.id))) {
                     if (Number(activePromo.percent) > activeDiscount) {
                         activeDiscount = Number(activePromo.percent);
@@ -1273,6 +1277,20 @@
             }
         }, 1000);
 
+        // Lightbox функции
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            const lb = document.getElementById('imageLightbox');
+            lb.style.display = 'flex';
+            setTimeout(() => lb.style.opacity = '1', 10);
+        }
+        function closeLightbox(e, force = false) {
+            if (force || e.target.id === 'imageLightbox') {
+                const lb = document.getElementById('imageLightbox');
+                lb.style.opacity = '0';
+                setTimeout(() => lb.style.display = 'none', 300);
+            }
+        }
     </script>
 </body>
 </html>
