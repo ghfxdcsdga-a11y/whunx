@@ -63,26 +63,40 @@ bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
 bot.onText(/^\/start BIND_(.+)$/, async (msg, match) => {
   const secretId = match[1].trim();
   const tgId = msg.from.id;
-  const tgUsername = msg.from.username || '';
+  const tgUsername = msg.from.username || null;
 
-  // Ищем юзера по секретному ID
-  const { data: user } = await supabase.from('users').select('*').eq('secret_id', secretId).single();
+  // 1. Ищем юзера по секретному ID (на которого сейчас пытаются привязать)
+  const { data: targetUser } = await supabase.from('users').select('*').eq('secret_id', secretId).single();
   
-  if (!user) {
-    return bot.sendMessage(msg.chat.id, '❌ Ошибка привязки: Аккаунт не найден. Попробуйте снова через сайт.');
+  if (!targetUser) {
+    return bot.sendMessage(msg.chat.id, '❌ Ошибка привязки: Аккаунт не найден. Попробуйте снова нажать кнопку "Привязать" на сайте.');
   }
 
-  // Обновляем данные юзера в БД
+  // 2. Проверяем, не привязан ли этот Telegram УЖЕ к кому-то в базе
+  const { data: existingUser } = await supabase.from('users').select('*').eq('tg_id', tgId).maybeSingle();
+  
+  if (existingUser) {
+      // Если этот ТГ привязан РОВНО К ЭТОМУ ЖЕ аккаунту — просто говорим, что всё ок
+      if (existingUser.secret_id === secretId) {
+          return bot.sendMessage(msg.chat.id, `✅ Этот Telegram уже успешно привязан к вашему аккаунту (${targetUser.username})!\n\nМожете возвращаться на сайт.`);
+      }
+      
+      // Если этот ТГ привязан к СОВСЕМ ДРУГОМУ аккаунту
+      return bot.sendMessage(msg.chat.id, `❌ Ошибка: Этот Telegram уже привязан к другому аккаунту на сайте: *${existingUser.username}*.\n\nОдин Telegram можно использовать только на одном профиле.`, { parse_mode: 'Markdown' });
+  }
+
+  // 3. Если всё чисто — привязываем
   const { error } = await supabase.from('users').update({ 
     tg_id: tgId, 
     telegram_username: tgUsername 
   }).eq('secret_id', secretId);
 
   if (error) {
-    return bot.sendMessage(msg.chat.id, '❌ Ошибка привязки на стороне базы данных.');
+    console.error("🔥 ОШИБКА ПРИВЯЗКИ ТГ В БД:", error);
+    return bot.sendMessage(msg.chat.id, '❌ Произошла системная ошибка при сохранении в базу данных.');
   }
 
-  bot.sendMessage(msg.chat.id, `✅ Аккаунт успешно привязан!\n👤 Никнейм: ${user.username}\n\nТеперь вы можете полноценно участвовать в розыгрышах.`);
+  bot.sendMessage(msg.chat.id, `✅ Аккаунт успешно привязан!\n👤 Никнейм: ${targetUser.username}\n\nТеперь вы можете полноценно участвовать в розыгрышах.`);
 });
 
 bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
