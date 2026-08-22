@@ -27,6 +27,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- БИБЛИОТЕКА ДЛЯ КОНФЕТТИ -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
@@ -378,7 +379,7 @@
             <div id="googleLoginWrapper" class="custom-google-wrapper">
                 <button class="login-btn">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 20px;"> 
-                    <span id="fakeGoogleText"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...</span>
+                    <span id="fakeGoogleText">Загрузка...</span>
                 </button>
                 <div id="googleLoginBtn" class="invisible-google-btn"></div>
             </div>
@@ -396,6 +397,7 @@
                     <div class="dropdown-item" onclick="openHistoryModal()"><i class="fa-solid fa-clock-rotate-left"></i> История покупок</div>
                     <div class="dropdown-item" onclick="openModal('settingsModal')"><i class="fa-solid fa-gear"></i> Настройки</div>
                     <div class="dropdown-item" onclick="openModal('topupModal')"><i class="fa-solid fa-wallet"></i> Пополнить баланс</div>
+                    <!-- НОВЫЙ ПУНКТ ПРОМОКОДА -->
                     <div class="dropdown-item" onclick="openModal('promoActivationModal')" style="color: var(--accent-gold); border-top: 1px solid rgba(255,255,255,0.05); border-radius: 0; padding-top: 15px; margin-top: 5px;"><i class="fa-solid fa-ticket"></i> Ввести промокод</div>
                     <div class="dropdown-item logout" onclick="logout()" style="color: var(--accent-red);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Выйти</div>
                 </div>
@@ -612,7 +614,6 @@
         let socket = null;
         let gwParticipantsInterval = null; 
         let isLoggingIn = false;
-        let googleAuthInitialized = false;
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -641,16 +642,15 @@
         }
 
         function initGoogleAuth() {
-            if (currentSessionToken || googleAuthInitialized) return;
             const btn = document.getElementById("googleLoginBtn");
             const fakeText = document.getElementById('fakeGoogleText');
+            if (currentSessionToken) return;
 
             if (window.google && window.google.accounts && btn && fakeText) {
                 try {
                     google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin });
                     google.accounts.id.renderButton(btn, { theme: "outline", size: "large", type: "standard", width: 250 });
                     fakeText.innerText = 'Войти';
-                    googleAuthInitialized = true;
                 } catch (e) {
                     fakeText.innerText = 'Ошибка';
                 }
@@ -671,8 +671,6 @@
                 document.getElementById('gameAvatarPreview').src = DEFAULT_GAME_AVATAR;
             }
 
-            document.getElementById('fakeGoogleText').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...';
-
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 handleUserLogin(session);
@@ -682,11 +680,14 @@
 
             supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_IN' && session) {
-                    handleUserLogin(session);
+                    if (!currentDbUser) {
+                        handleUserLogin(session);
+                    } else if (currentSessionToken !== session.access_token) {
+                        currentSessionToken = session.access_token;
+                    }
                 } else if (event === 'TOKEN_REFRESHED' && session) {
                     currentSessionToken = session.access_token;
                 }
-                // Полностью игнорируем ложные сигналы SIGNED_OUT от Supabase! Выход только вручную.
             });
 
             try {
@@ -706,13 +707,37 @@
                 document.getElementById('fakeGoogleText').innerHTML = 'Войти';
             } else { 
                 showToast('Успех', 'Успешный вход!', 'success'); 
+                handleUserLogin(data.session);
             }
         }
 
-        async function logout() { 
-            await supabaseClient.auth.signOut(); 
-            document.getElementById('profileDropdown').classList.remove('active'); 
-            handleUserLogout(); // Принудительно очищаем UI
+        // БЕЗОПАСНАЯ ФУНКЦИЯ ПОИСКА СКИДКИ БЕЗ ОШИБОК 406
+        async function fetchActiveDiscount(email) {
+            try {
+                const { data: usedList } = await supabaseClient.from('used_promocodes')
+                    .select('promo_code')
+                    .eq('user_email', email)
+                    .eq('is_spent', false)
+                    .order('id', { ascending: false });
+
+                if (usedList && usedList.length > 0) {
+                    for (let used of usedList) {
+                        const { data: promoList } = await supabaseClient.from('promocodes')
+                            .select('*')
+                            .eq('code', used.promo_code)
+                            .eq('reward_type', 'discount')
+                            .limit(1);
+
+                        if (promoList && promoList.length > 0) {
+                            const promo = promoList[0];
+                            if (promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
+                                return { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
+                            }
+                        }
+                    }
+                }
+            } catch(e) { console.error(e); }
+            return null;
         }
 
         async function handleUserLogin(session) {
@@ -728,27 +753,19 @@
                 document.getElementById('profileModule').style.display = 'block';
                 document.getElementById('balanceText').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>₸</span>`;
 
-                // ПАРАЛЛЕЛЬНАЯ ЗАГРУЗКА ИЗ БАЗЫ
-                const [userRes, usedPromoRes] = await Promise.all([
-                    supabaseClient.from('users').select('*').eq('email', userAuth.email).maybeSingle(),
-                    supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', userAuth.email).eq('is_spent', false).limit(1)
-                ]);
+                // ИЩЕМ ЮЗЕРА ЧЕРЕЗ БЕЗОПАСНЫЙ LIMIT(1)
+                let { data: usersData } = await supabaseClient.from('users').select('*').eq('email', userAuth.email).limit(1);
+                let dbUser = usersData && usersData.length > 0 ? usersData[0] : null;
 
-                let dbUser = userRes.data;
-                
                 if (!dbUser) {
                     let defaultName = userAuth.user_metadata?.full_name || 'whunx-user-' + Math.random().toString(36).substring(2, 8).toLowerCase();
                     const newUser = { email: userAuth.email, username: defaultName, avatar_url: 'whunx_pp.png', balance: 0, secret_id: crypto.randomUUID() };
-                    const { data: insertedUser } = await supabaseClient.from('users').insert([newUser]).select().maybeSingle();
-                    dbUser = insertedUser || newUser;
+                    await supabaseClient.from('users').insert([newUser]);
+                    const { data: insertedUsers } = await supabaseClient.from('users').select('*').eq('email', userAuth.email).limit(1);
+                    dbUser = insertedUsers && insertedUsers.length > 0 ? insertedUsers[0] : newUser;
                 }
 
-                if (usedPromoRes.data && usedPromoRes.data.length > 0) {
-                    const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedPromoRes.data[0].promo_code).maybeSingle();
-                    if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
-                        dbUser.active_discount = { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
-                    }
-                }
+                dbUser.active_discount = await fetchActiveDiscount(userAuth.email);
                 
                 currentDbUser = dbUser;
                 updateUI();
@@ -757,7 +774,7 @@
                 if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
                 if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
             } catch (err) {
-                console.error("Ошибка при входе", err);
+                console.error(err);
             } finally {
                 isLoggingIn = false; 
             }
@@ -766,17 +783,11 @@
         async function syncUserData() {
             if (!currentSessionToken || !currentDbUser) return;
             try {
-                // Больше никаких fetch /api/me! Общаемся напрямую с БД.
-                const { data: freshUser } = await supabaseClient.from('users').select('*').eq('email', currentDbUser.email).maybeSingle();
+                const { data: usersData } = await supabaseClient.from('users').select('*').eq('email', currentDbUser.email).limit(1);
                 
-                if (freshUser) {
-                    const { data: usedList } = await supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', freshUser.email).eq('is_spent', false).limit(1);
-                    if (usedList && usedList.length > 0) {
-                        const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedList[0].promo_code).maybeSingle();
-                        if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
-                            freshUser.active_discount = { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
-                        }
-                    }
+                if (usersData && usersData.length > 0) {
+                    const freshUser = usersData[0];
+                    freshUser.active_discount = await fetchActiveDiscount(freshUser.email);
                     
                     let oldDisc = currentDbUser.active_discount?.code;
                     let newDisc = freshUser.active_discount?.code;
@@ -832,18 +843,13 @@
         }
 
         function handleUserLogout() {
-            currentDbUser = null; 
-            currentSessionToken = null;
+            currentDbUser = null; currentSessionToken = null;
             document.getElementById('googleLoginWrapper').style.display = 'inline-block';
             document.getElementById('balanceModule').style.display = 'none';
             document.getElementById('profileModule').style.display = 'none';
             document.getElementById('fakeGoogleText').innerHTML = 'Войти';
-            
             if (window.syncInterval) { clearInterval(window.syncInterval); window.syncInterval = null; }
-            
-            googleAuthInitialized = false;
             initGoogleAuth();
-            renderDynamicShop(); // Убираем все скидки
         }
 
         function getSafeAvatar(url) {
@@ -923,8 +929,8 @@
         async function saveSettings() {
             const newName = document.getElementById('inputSetNick').value;
             const newAvatar = document.getElementById('settingsAvatar').src;
-            const { data, error } = await supabaseClient.from('users').update({ username: newName, avatar_url: newAvatar }).eq('email', currentDbUser.email).select().maybeSingle();
-            if (!error && data) { currentDbUser = data; updateUI(); closeModal('settingsModal'); showToast('Успех', 'Настройки сохранены!', 'success'); } 
+            const { data, error } = await supabaseClient.from('users').update({ username: newName, avatar_url: newAvatar }).eq('email', currentDbUser.email).select().limit(1);
+            if (!error && data && data.length > 0) { currentDbUser = data[0]; updateUI(); closeModal('settingsModal'); showToast('Успех', 'Настройки сохранены!', 'success'); } 
             else { showToast('Ошибка', 'Не удалось сохранить', 'error'); }
         }
 
@@ -1103,8 +1109,9 @@
         // ЛОГИКА РОЗЫГРЫША
         // ==========================================
         async function loadActiveGiveaway() {
-            const { data, error } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1).maybeSingle();
-            if (!data) return;
+            const { data: gwList } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1);
+            if (!gwList || gwList.length === 0) return;
+            const data = gwList[0];
 
             const banner = document.getElementById('giveawayBanner');
             const now = new Date().getTime();
@@ -1145,8 +1152,9 @@
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 gwParticipantsInterval = setInterval(async () => {
                     try {
-                        const { data: updateData } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).maybeSingle();
-                        if (updateData) {
+                        const { data: updateDataList } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).limit(1);
+                        if (updateDataList && updateDataList.length > 0) {
+                            const updateData = updateDataList[0];
                             const count = updateData.participants ? updateData.participants.length : 0;
                             document.getElementById('gwParticipants').innerText = `Участников: ${count} / ${maxP}`;
                             if (!updateData.is_active) { clearInterval(gwParticipantsInterval); loadActiveGiveaway(); }
