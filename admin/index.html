@@ -655,10 +655,14 @@
 
         // --- 3. ОТЗЫВЫ ---
         let currentReviewId = null;
+        let currentAdminReviewImage = null;
+        let adminReviewsCache = []; // Кешируем отзывы, чтобы не передавать картинки через HTML
+
         async function loadReviews() {
             const { data } = await supabaseClient.from('reviews').select('*').order('created_at', {ascending: false});
             const tbody = document.getElementById('reviewsTable');
             if(data && data.length) {
+                adminReviewsCache = data;
                 tbody.innerHTML = data.map(r => `
                     <tr>
                         <td style="font-size:0.85rem;">${r.user_email}</td>
@@ -666,7 +670,7 @@
                         <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.comment}</td>
                         <td>${r.admin_reply ? '<span class="badge active">Дан</span>' : '<span class="badge inactive">Нет</span>'}</td>
                         <td><div class="td-actions">
-                            <button class="btn-sm edit" onclick="openReviewEdit(${r.id}, '${r.comment.replace(/'/g, "\\'")}', '${(r.admin_reply || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-reply"></i></button>
+                            <button class="btn-sm edit" onclick="openReviewEdit(${r.id})"><i class="fa-solid fa-pen"></i></button>
                             <button class="btn-sm ban" onclick="deleteReview(${r.id})"><i class="fa-solid fa-trash"></i></button>
                         </div></td>
                     </tr>
@@ -674,19 +678,69 @@
             } else { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Пусто</td></tr>'; }
         }
 
-        function openReviewEdit(id, text, reply) {
+        function openReviewEdit(id) {
             currentReviewId = id;
-            document.getElementById('revText').value = text;
-            document.getElementById('revReply').value = reply;
+            const rev = adminReviewsCache.find(r => r.id === id);
+            
+            document.getElementById('revText').value = rev.comment || '';
+            document.getElementById('revReply').value = rev.admin_reply || '';
+            
+            // Настройка превью картинки
+            currentAdminReviewImage = rev.image_url || null;
+            const preview = document.getElementById('revAdminPhotoPreview');
+            const removeBtn = document.getElementById('removeRevAdminPhotoBtn');
+            const uploadBtn = document.getElementById('revAdminPhotoBtn');
+
+            if (currentAdminReviewImage) {
+                preview.src = currentAdminReviewImage;
+                preview.style.display = 'block';
+                removeBtn.style.display = 'block';
+                uploadBtn.innerHTML = `Изменить скриншот <i class="fa-solid fa-pen"></i>`;
+            } else {
+                preview.style.display = 'none';
+                removeBtn.style.display = 'none';
+                uploadBtn.innerHTML = `Прикрепить скриншот <i class="fa-solid fa-image" style="margin-left: 5px;"></i>`;
+            }
             openModal('reviewModal');
+        }
+
+        function previewRevAdminPhoto(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) { 
+                    currentAdminReviewImage = e.target.result;
+                    document.getElementById('revAdminPhotoPreview').src = currentAdminReviewImage;
+                    document.getElementById('revAdminPhotoPreview').style.display = 'block';
+                    document.getElementById('removeRevAdminPhotoBtn').style.display = 'block';
+                    document.getElementById('revAdminPhotoBtn').innerHTML = `Изменить скриншот <i class="fa-solid fa-pen"></i>`;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeRevAdminPhoto() {
+            currentAdminReviewImage = null;
+            document.getElementById('revAdminPhotoPreview').src = '';
+            document.getElementById('revAdminPhotoPreview').style.display = 'none';
+            document.getElementById('removeRevAdminPhotoBtn').style.display = 'none';
+            document.getElementById('revAdminPhotoInput').value = '';
+            document.getElementById('revAdminPhotoBtn').innerHTML = `Прикрепить скриншот <i class="fa-solid fa-image" style="margin-left: 5px;"></i>`;
         }
 
         async function saveReview() {
             const comment = document.getElementById('revText').value;
             const admin_reply = document.getElementById('revReply').value;
-            await supabaseClient.from('reviews').update({ comment, admin_reply }).eq('id', currentReviewId);
+            
+            await supabaseClient.from('reviews').update({ 
+                comment: comment, 
+                admin_reply: admin_reply,
+                image_url: currentAdminReviewImage 
+            }).eq('id', currentReviewId);
+            
             showToast('Отзыв обновлен', 'success'); closeModal('reviewModal'); loadReviews();
         }
+        
         async function deleteReview(id) { if(confirm("Удалить отзыв?")) { await supabaseClient.from('reviews').delete().eq('id', id); loadReviews(); } }
 
         // --- 4. ИДЕИ ---
