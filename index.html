@@ -1354,6 +1354,12 @@
             lb.style.display = 'flex';
             setTimeout(() => lb.style.opacity = '1', 10);
         }
+        async function logout() { 
+            // Сбрасываем сессию в БД
+            await supabaseClient.auth.signOut(); 
+            // Полностью обновляем страницу для надежной очистки
+            window.location.reload(); 
+        }
         function closeLightbox(e, force = false) {
             if (force || e.target.id === 'imageLightbox') {
                 const lb = document.getElementById('imageLightbox');
