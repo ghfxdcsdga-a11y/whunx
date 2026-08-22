@@ -161,9 +161,36 @@ const authenticateUser = async (req, res, next) => {
 };
 
 // ==========================================
-// БАЗОВЫЕ РОУТЫ
+// БАЗОВЫЕ РОУТЫ (Обновлен /api/me для загрузки скидки)
 // ==========================================
-app.get('/api/me', authenticateUser, (req, res) => { res.json(req.user); });
+app.get('/api/me', authenticateUser, async (req, res) => {
+  let userData = { ...req.user };
+  
+  // Ищем активную (не потраченную) скидку, привязанную к аккаунту
+  const { data: usedList } = await supabase.from('used_promocodes')
+    .select('promo_code')
+    .eq('user_email', userData.email)
+    .eq('is_spent', false)
+    .limit(1); // Защита от ошибок, если вдруг в базе окажется 2 кода
+
+  if (usedList && usedList.length > 0) {
+    const { data: promo } = await supabase.from('promocodes')
+      .select('*')
+      .eq('code', usedList[0].promo_code)
+      .single();
+      
+    if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
+       // Прикрепляем скидку к юзеру при загрузке профиля!
+       userData.active_discount = { 
+           code: promo.code, 
+           percent: promo.reward_value, 
+           target: promo.target_item_id, 
+           expires_at: promo.expires_at 
+       };
+    }
+  }
+  res.json(userData);
+});
 
 app.post('/api/me/update', authenticateUser, async (req, res) => {
   const { username, avatar_url } = req.body;
@@ -284,21 +311,18 @@ app.post('/api/promocodes/activate', authenticateUser, async (req, res) => {
       return res.status(400).json({ error: 'Срок действия промокода истек' });
   }
 
-  // Проверяем, активировал ли юзер этот код ранее
   const { data: used } = await supabase.from('used_promocodes').select('*').eq('user_email', req.user.email).eq('promo_code', code).single();
   
   if (used) {
       if (promo.reward_type === 'balance') return res.status(400).json({ error: 'Вы уже активировали этот промокод' });
-      // Если скидка, проверяем, купил ли он с ней что-то
       if (used.is_spent) return res.status(400).json({ error: 'Вы уже совершили покупку с этим промокодом' });
       
-      // Если скидка активирована, но еще не потрачена, просто восстанавливаем её на фронте
-      return res.json({ success: true, type: 'discount', value: promo.reward_value, target: promo.target_item_id, code: promo.code, expires_at: promo.expires_at });
+      // Возвращаем флаг restored: true, чтобы на сайте не летели конфетти 2-й раз
+      return res.json({ success: true, type: 'discount', restored: true, value: promo.reward_value, target: promo.target_item_id, code: promo.code, expires_at: promo.expires_at });
   }
 
-  // Новая активация (проверяем лимиты)
   if (promo.max_activations > 0 && promo.used_activations >= promo.max_activations) {
-      return res.status(400).json({ error: 'Лимит активаций этого промокода исчерпан' });
+      return res.status(400).json({ error: 'Лимит активаций исчерпан' });
   }
 
   if (promo.reward_type === 'balance') {
@@ -312,14 +336,18 @@ app.post('/api/promocodes/activate', authenticateUser, async (req, res) => {
       return res.json({ success: true, type: 'balance', value: promo.reward_value, new_balance: newBalance });
   } 
   else if (promo.reward_type === 'discount') {
-      // Засчитываем активацию промокода (чтобы лимит сработал), но помечаем, что он ЕЩЕ НЕ ПОТРАЧЕН на покупку
+      // Проверяем, нет ли уже другой активной скидки
+      const { data: activeDisc } = await supabase.from('used_promocodes').select('id').eq('user_email', req.user.email).eq('is_spent', false).limit(1);
+      if (activeDisc && activeDisc.length > 0) {
+          return res.status(400).json({ error: 'У вас уже есть другая активная скидка! Сначала используйте её.' });
+      }
+
       await supabase.from('used_promocodes').insert([{ user_email: req.user.email, promo_code: code, is_spent: false }]);
       await supabase.from('promocodes').update({ used_activations: promo.used_activations + 1 }).eq('id', promo.id);
       
       return res.json({ success: true, type: 'discount', value: promo.reward_value, target: promo.target_item_id, code: promo.code, expires_at: promo.expires_at });
   }
 });
-
 
 // ==========================================
 // ОТЗЫВЫ И ИДЕИ
