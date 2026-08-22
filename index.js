@@ -79,6 +79,34 @@ bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
   bot.sendMessage(ADMIN_CHAT_ID, response, { parse_mode: 'Markdown' });
 });
 
+// ПРИВЯЗКА ТЕЛЕГРАМА ЧЕРЕЗ DEEP LINKING
+bot.onText(/^\/start\s+BIND_(.+)$/, async (msg, match) => {
+  const secretId = match[1].trim();
+  const tgId = msg.from.id;
+  const tgUsername = msg.from.username || '';
+
+  // 1. Ищем юзера на сайте по его секретному ID
+  const { data: user } = await supabase.from('users').select('*').eq('secret_id', secretId).single();
+  
+  if (!user) {
+    return bot.sendMessage(tgId, '❌ Ошибка: неверный или устаревший код привязки.');
+  }
+
+  // 2. Проверяем, не привязал ли кто-то уже этот ТГ к другому аккаунту на сайте (защита от абуза)
+  const { data: exist } = await supabase.from('users').select('id').eq('tg_id', tgId).single();
+  if (exist && exist.id !== user.id) {
+    return bot.sendMessage(tgId, '⚠️ Этот Telegram уже привязан к другому аккаунту на сайте.');
+  }
+
+  // 3. Записываем данные ТГ в профиль юзера
+  await supabase.from('users').update({ 
+    tg_id: tgId, 
+    telegram_username: tgUsername 
+  }).eq('id', user.id);
+
+  bot.sendMessage(tgId, `✅ Успешно!\nТвой Telegram привязан к аккаунту: **${user.email}**.\n\nТеперь ты можешь участвовать в розыгрышах голды на сайте! 🎁`, { parse_mode: 'Markdown' });
+});
+
 bot.on('message', async (msg) => {
   if (msg.chat.id === ADMIN_CHAT_ID && msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes('Почта:')) {
     const replyText = msg.text;
