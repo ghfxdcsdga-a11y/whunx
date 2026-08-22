@@ -291,17 +291,38 @@ app.post('/api/giveaways/end', async (req, res) => {
   res.json({ success: true });
 });
 
-// РОЗЫГРЫШИ: Участие юзера
+// РОЗЫГРЫШИ: Участие юзера с проверкой подписки
 app.post('/api/giveaways/participate', authenticateUser, async (req, res) => {
   const { gwId } = req.body;
 
   // ПРОВЕРКА ПРИВЯЗКИ ТГ
-  if (!req.user.telegram_username && !req.user.tg_id) { 
+  if (!req.user.tg_id) { 
       return res.status(400).json({ error: 'Для участия необходимо привязать Telegram в настройках!' });
   }
   
   const { data: gw } = await supabase.from('giveaways').select('*').eq('id', gwId).single();
   if (!gw || !gw.is_active) return res.status(400).json({ error: 'Розыгрыш не активен' });
+
+  // ПРОВЕРКА ПОДПИСКИ НА КАНАЛЫ (Если галочка включена)
+  if (gw.require_sub && gw.tg_channels && gw.tg_channels.length > 0) {
+      for (let channel of gw.tg_channels) {
+          try {
+              // Форматируем юзернейм (убеждаемся что есть @)
+              const chatId = channel.startsWith('@') ? channel : '@' + channel;
+              
+              // Запрашиваем у телеги статус юзера в этом канале
+              const member = await bot.getChatMember(chatId, req.user.tg_id);
+              
+              if (member.status === 'left' || member.status === 'kicked' || member.status === 'restricted') {
+                  return res.status(400).json({ error: `Вы не подписаны на канал ${channel}!` });
+              }
+          } catch (err) {
+              console.error(`Ошибка проверки подписки на ${channel}:`, err.message);
+              // Если бот не админ в канале, вылетит эта ошибка
+              return res.status(400).json({ error: `Системная ошибка проверки канала ${channel}. Бот не является администратором канала!` });
+          }
+      }
+  }
   
   let participants = gw.participants || [];
   if (participants.find(p => p.email === req.user.email)) return res.status(400).json({ error: 'Вы уже участвуете!' });
@@ -314,7 +335,7 @@ app.post('/api/giveaways/participate', authenticateUser, async (req, res) => {
       email: req.user.email,
       nickname: req.user.username,
       avatar: req.user.avatar_url,
-      tg: req.user.telegram_username || req.user.tg_id || 'Привязан'
+      tg: req.user.telegram_username || req.user.tg_id
   });
   
   await supabase.from('giveaways').update({ participants }).eq('id', gwId);
