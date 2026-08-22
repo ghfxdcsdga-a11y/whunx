@@ -234,6 +234,32 @@ app.post('/api/finance/topup', authenticateUser, async (req, res) => {
   res.json({ success: true, message: 'Заявка отправлена администратору' });
 });
 
+// 2. Оставить отзыв
+app.post('/api/reviews/add', authenticateUser, async (req, res) => {
+  const { rating, comment, image } = req.body;
+  if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Некорректная оценка' });
+
+  // Проверка: есть ли у юзера успешные выводы?
+  const { data: wList, error: wErr } = await supabase.from('withdrawals').select('id').eq('user_email', req.user.email).eq('status', 'completed');
+  if (wErr || !wList || wList.length === 0) return res.status(403).json({ error: 'Оставить отзыв могут только пользователи с успешными выводами!' });
+
+  // Проверка лимитов (1 успешный вывод = 1 отзыв)
+  const { data: rList } = await supabase.from('reviews').select('id').eq('user_email', req.user.email);
+  if (rList && rList.length >= wList.length) return res.status(403).json({ error: 'Вы исчерпали лимит отзывов. 1 покупка = 1 отзыв.' });
+
+  const { error } = await supabase.from('reviews').insert([{ 
+      user_email: req.user.email, 
+      username: req.user.username,
+      avatar_url: req.user.avatar_url,
+      rating: rating, 
+      comment: comment,
+      image_url: image
+  }]);
+  
+  if (error) return res.status(500).json({ error: 'Ошибка при сохранении отзыва' });
+  res.json({ success: true, message: 'Отзыв успешно добавлен!' });
+});
+
 app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
   const { amount, gameId, gameAvatar, targetSkin, pattern, spentTenge } = req.body;
   const withdrawAmount = Number(amount);
