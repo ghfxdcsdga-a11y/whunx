@@ -281,7 +281,7 @@ app.post('/api/giveaways/end', async (req, res) => {
   if (participants.length > 0) {
       winner = participants[Math.floor(Math.random() * participants.length)];
       // Уведомляем админа о победителе
-      bot.sendMessage(ADMIN_CHAT_ID, `🎉 **Розыгрыш на ${gw.amount} G завершен!**\n\n🏆 **Победитель:** ${winner.nickname}\n📧 **Email:** ${winner.email}\n✈️ **Telegram:** ${winner.tg || 'Не указан'}\n\nЧтобы выдать приз, отправь команду:\n\`/setplash ${winner.email} ${gw.amount}\``, { parse_mode: 'Markdown' });
+      bot.sendMessage(ADMIN_CHAT_ID, `🎉 **Розыгрыш на ${gw.amount} G завершен!**\n\n🏆 **Победитель:** ${winner.nickname}\n📧 **Email:** ${winner.email}\n✈️ **Telegram:** @${winner.tg || 'Не указан'}\n\nЧтобы выдать приз, отправь команду:\n\`/setplash ${winner.email} ${gw.amount}\``, { parse_mode: 'Markdown' });
   } else {
       winner = { nickname: 'Нет участников', avatar: 'whunx_pp.png' };
       bot.sendMessage(ADMIN_CHAT_ID, `📢 **Розыгрыш на ${gw.amount} G завершен!**\nПобедителей нет, никто не участвовал.`);
