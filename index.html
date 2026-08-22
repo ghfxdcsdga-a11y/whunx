@@ -598,6 +598,25 @@
         </div>
     </div>
 
+    <!-- МОДАЛКА: ПРЕДЛОЖЕНИЕ ОСТАВИТЬ ОТЗЫВ -->
+    <div class="modal-overlay" id="reviewPromptModal" style="display: none;">
+        <div class="modal-box" style="max-width: 450px; text-align: center; border-top-color: var(--accent-gold);">
+            <button class="modal-close" onclick="closeModal('reviewPromptModal')"><i class="fa-solid fa-xmark"></i></button>
+            <div style="font-size: 50px; color: var(--accent-gold); margin-bottom: 15px; text-shadow: 0 0 20px var(--accent-gold-glow);">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <div class="modal-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 10px;">Заказ выполнен!</div>
+            <p style="color: var(--text-main); font-size: 15px; font-weight: 600; margin-bottom: 25px; line-height: 1.5;">
+                Золото успешно выведена на ваш аккаунт. Будем очень благодарны, если вы оставите отзыв о нашей работе!
+            </p>
+            
+            <button class="btn-submit" onclick="window.location.href='https://whunx.shop/comment'" style="background: var(--accent-gold); color: #000; box-shadow: 0 10px 25px var(--accent-gold-glow); margin-top: 0; margin-bottom: 12px;">Оставить отзыв</button>
+            <button class="btn-submit" onclick="closeModal('reviewPromptModal')" style="background: rgba(255,255,255,0.05); color: #fff; box-shadow: none; border: 1px solid var(--glass-border); margin-top: 0;">Закрыть</button>
+            
+            <p style="color: var(--text-muted); font-size: 11px; font-weight: 800; margin-top: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Отзыв можно будет оставить позже</p>
+        </div>
+    </div>
+    
     <!-- ЛАЙТБОКС ДЛЯ ПРОСМОТРА СКРИНШОТОВ -->
     <div class="lightbox-overlay" id="imageLightbox" onclick="closeLightbox(event)" style="display: none;">
         <i class="fa-solid fa-xmark lightbox-close" onclick="closeLightbox(event, true)"></i>
@@ -815,11 +834,15 @@
                 if (result.success) {
                     const wIds = [];
                     const tIds = [];
+                    let hasNewCompletedWithdrawal = false; // Флаг для вызова модалки отзыва
                     
                     if (result.notifications.withdrawals) {
                         result.notifications.withdrawals.forEach(n => {
                             wIds.push(n.id);
-                            if (n.status === 'completed') showToast('Заказ выполнен', `Ваш заказ на ${n.amount} G успешно выведен в игру!`, 'success');
+                            if (n.status === 'completed') {
+                                showToast('Заказ выполнен', `Ваш заказ на ${n.amount} G успешно выведен в игру!`, 'success');
+                                hasNewCompletedWithdrawal = true; // Активируем триггер
+                            }
                             else if (n.status === 'cancelled') showToast('Заказ отменен', `Вывод ${n.amount} G отменен. ${n.spent_rubles} ₸ возвращены на баланс.`, 'error');
                         });
                     }
@@ -841,6 +864,11 @@
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
                             body: JSON.stringify({ withdrawalIds: wIds, topupIds: tIds })
                         });
+                    }
+
+                    // Если был успешно выведен заказ — показываем окно с просьбой об отзыве
+                    if (hasNewCompletedWithdrawal) {
+                        openModal('reviewPromptModal');
                     }
                 }
             } catch(e) {}
@@ -1211,14 +1239,32 @@
 
         async function participateGw(gwId) {
             if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт для участия', 'info');
+            
+            const btn = document.getElementById('gwActionBtn');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Обработка...';
+
             try {
                 const response = await fetch(`${BACKEND_URL}/api/giveaways/participate`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ gwId })
                 });
                 const result = await response.json();
-                if (result.success) { showToast('Успех', 'Вы успешно участвуете в розыгрыше!', 'success'); loadActiveGiveaway(); } 
-                else { showToast('Ошибка', result.error, 'error'); }
-            } catch(e) { showToast('Ошибка', 'Сбой связи с сервером', 'error'); }
+                if (result.success) { 
+                    showToast('Успех', 'Вы успешно участвуете в розыгрыше!', 'success'); 
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Успешно';
+                    loadActiveGiveaway(); 
+                } 
+                else { 
+                    showToast('Ошибка', result.error, 'error'); 
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            } catch(e) { 
+                showToast('Ошибка', 'Сбой связи с сервером', 'error'); 
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
         }
 
         function openGiftWithdrawModal(goldAmount) {
