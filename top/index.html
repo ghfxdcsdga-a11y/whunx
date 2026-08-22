@@ -105,7 +105,6 @@
             animation: fadeInUp 0.5s ease forwards;
         }
 
-        /* Цвета бордеров для карточек */
         .card-donators { border-top-color: var(--accent-gold); }
         .card-withdrawals { border-top-color: var(--accent-purple); }
         .card-ideas { border-top-color: var(--accent-green); }
@@ -128,7 +127,6 @@
         .top-value { font-weight: 900; font-size: 14px; }
         .top-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Цвета значений */
         .val-gold { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
         .val-purple { color: var(--accent-purple); text-shadow: 0 0 10px var(--accent-purple-glow); }
         .val-green { color: var(--accent-green); text-shadow: 0 0 10px rgba(16,185,129,0.4); }
@@ -205,7 +203,6 @@
         </div>
 
         <div class="tops-grid">
-            
             <!-- ТОП ДОНАТЕРОВ -->
             <div class="top-card card-donators">
                 <h3 class="top-card-title"><i class="fa-solid fa-gem" style="color: var(--accent-gold);"></i> Топ Донатеров</h3>
@@ -229,7 +226,6 @@
                     <div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...</div>
                 </div>
             </div>
-
         </div>
     </main>
 
@@ -241,6 +237,7 @@
 
         let currentSessionToken = null;
         let isLoggingIn = false;
+        let topsCache = ''; // Кэш для всех топов, чтобы избежать моргания экрана
 
         function toggleSidebar() {
             document.getElementById('sidebarMenu').classList.toggle('active');
@@ -248,7 +245,8 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            loadTops(); // Загружаем топы
+            loadTops(); // Моментальная загрузка при входе
+            setInterval(loadTops, 3000); // Реал-тайм обновление каждые 3 секунды
 
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) handleUserLogin(session);
@@ -304,7 +302,7 @@
         }
 
         // ==========================================
-        // ЛОГИКА ЗАГРУЗКИ ТОПОВ
+        // РЕАЛ-ТАЙМ ЛОГИКА ЗАГРУЗКИ ТОПОВ
         // ==========================================
         function getSafeAvatar(url) {
             if (!url) return 'https://whunx.shop/whunx_pp.png';
@@ -320,12 +318,16 @@
 
         async function loadTops() {
             try {
-                // Параллельный запрос к 3м функциям базы
                 const [donators, withdrawals, ideas] = await Promise.all([
                     supabaseClient.rpc('get_top_donators'),
                     supabaseClient.rpc('get_top_withdrawals'),
                     supabaseClient.rpc('get_top_ideas')
                 ]);
+
+                // Проверяем, изменились ли данные. Если нет - выходим, чтобы не мерцал экран.
+                const newDataString = JSON.stringify({ d: donators.data, w: withdrawals.data, i: ideas.data });
+                if (newDataString === topsCache) return;
+                topsCache = newDataString;
 
                 // 1. Рендер Донатеров
                 const dList = document.getElementById('donatorsList');
@@ -340,7 +342,7 @@
                             </div>
                         </div>
                     `).join('');
-                } else { dList.innerHTML = '<div class="empty-state">Нет данных</div>'; }
+                } else { dList.innerHTML = '<div class="empty-state">Пока нет данных</div>'; }
 
                 // 2. Рендер Выводов
                 const wList = document.getElementById('withdrawalsList');
@@ -355,7 +357,7 @@
                             </div>
                         </div>
                     `).join('');
-                } else { wList.innerHTML = '<div class="empty-state">Нет данных</div>'; }
+                } else { wList.innerHTML = '<div class="empty-state">Пока нет данных</div>'; }
 
                 // 3. Рендер Идей
                 const iList = document.getElementById('ideasList');
@@ -371,11 +373,10 @@
                             </div>
                         </div>
                     `).join('');
-                } else { iList.innerHTML = '<div class="empty-state">Нет данных</div>'; }
+                } else { iList.innerHTML = '<div class="empty-state">Пока нет данных</div>'; }
 
             } catch(e) {
-                console.error(e);
-                document.querySelectorAll('.top-list').forEach(el => el.innerHTML = '<div class="empty-state" style="color: var(--accent-red);">Ошибка загрузки</div>');
+                // В тихом режиме не выводим ошибку, чтобы не портить вид при мимолетном обрыве связи
             }
         }
     </script>
