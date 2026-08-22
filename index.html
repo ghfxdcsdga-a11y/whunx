@@ -214,7 +214,7 @@
         .btn-donate { background: rgba(244, 199, 69, 0.05); color: var(--accent-gold); border: 1px solid rgba(244, 199, 69, 0.3); padding: 14px 30px; border-radius: 12px; font-size: 14px; font-weight: 800; transition: 0.3s; display: inline-flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;} .btn-donate:hover { background: rgba(244, 199, 69, 0.2); box-shadow: 0 10px 20px rgba(244,199,69,0.2); transform: translateY(-2px); }
 
         #chatWidget { position: fixed; bottom: 20px; right: 20px; width: 350px; background: rgba(15, 18, 26, 0.95); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.8); display: none; flex-direction: column; overflow: hidden; z-index: 1000; transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); transform: translateY(20px) scale(0.95); opacity: 0; }
-        #chatWidget.active { display: flex; transform: translateY(0) scale(1); opacity: 1; }
+        #chatWidget.active { display: flex !important; transform: translateY(0) scale(1); opacity: 1; }
         .chat-header { background: rgba(0,0,0,0.3); padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); } .chat-header h4 { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;}
         .chat-messages { height: 300px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 600; line-height: 1.5; word-wrap: break-word; } .msg.user { background: var(--accent-purple); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 5px 15px var(--accent-purple-glow);} .msg.admin { background: rgba(255,255,255,0.08); color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--glass-border);}
@@ -226,7 +226,7 @@
         ========================================= */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: 0.3s; padding: 20px; overflow-y: auto; }
         .modal-box { background: rgba(15, 18, 26, 0.85); backdrop-filter: blur(40px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 40px; width: 100%; max-width: 500px; transform: scale(0.9); transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; margin: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,255,255,0.03); max-height: 90vh; overflow-y: auto; border-top: 4px solid var(--accent-purple);}
-        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-overlay.active { display: flex !important; opacity: 1; }
         .modal-overlay.active .modal-box { transform: scale(1); }
         .modal-close { position: absolute; top: 25px; right: 25px; background: transparent; color: var(--text-muted); font-size: 24px; transition: 0.3s; z-index: 10; } .modal-close:hover { color: var(--accent-red); transform: rotate(90deg); }
         .modal-title { font-size: 22px; font-weight: 900; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; }
@@ -541,7 +541,6 @@
                 </div>
             </div>
             
-            <!-- ПРИВЯЗКА ТЕЛЕГРАМА (ИНЛАЙН СТИЛИ ДЛЯ ЖЕСТКОЙ ФИКСАЦИИ) -->
             <div class="tg-bind-btn" id="tgBindBtn" style="background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 14px; padding: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.3s; margin-bottom: 15px;">
                 <div class="tg-info" style="display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 800;">
                     <i class="fa-brands fa-telegram" style="font-size: 26px; color: #24A1DE; text-shadow: 0 0 15px rgba(36,161,222,0.5);"></i>
@@ -601,7 +600,6 @@
 
     <script>
         const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
-
         const BACKEND_URL = 'https://whunx-backend.onrender.com';
         const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhucGJibXl0dGV4cW10YnR5YmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2OTc4NDcsImV4cCI6MjEwMjI3Mzg0N30.7x3UDegy7zCeT88-2Fps-uF2nMR-PDAnnXcLt5we0zw';
@@ -613,7 +611,7 @@
         let chatInterval = null;
         let socket = null;
         let gwParticipantsInterval = null; 
-        let isLoggingIn = false; // Флаг для защиты от зависаний входа
+        let isLoggingIn = false;
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -685,73 +683,85 @@
         });
 
         async function handleGoogleLogin(response) {
+            document.getElementById('fakeGoogleText').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Вход...';
             const id_token = response.credential;
             const { data, error } = await supabaseClient.auth.signInWithIdToken({ provider: 'google', token: id_token });
-            if (error) showToast('Ошибка', 'Не удалось авторизоваться', 'error');
-            else { showToast('Успех', 'Успешный вход!', 'success'); handleUserLogin(data.session); }
+            if (error) {
+                showToast('Ошибка', 'Не удалось авторизоваться', 'error');
+                document.getElementById('fakeGoogleText').innerHTML = 'Войти';
+            } else { 
+                showToast('Успех', 'Успешный вход!', 'success'); 
+                handleUserLogin(data.session); 
+            }
         }
 
         async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); }
 
+        // Поиск скидки с фильтрацией "только скидочные коды"
+        async function fetchActiveDiscount(email) {
+            try {
+                const { data: usedList } = await supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', email).eq('is_spent', false);
+                if (usedList && usedList.length > 0) {
+                    for (let used of usedList) {
+                        const { data: promoList } = await supabaseClient.from('promocodes').select('*').eq('code', used.promo_code).eq('reward_type', 'discount').limit(1);
+                        if (promoList && promoList.length > 0) {
+                            const promo = promoList[0];
+                            if (promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
+                                return { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
+                            }
+                        }
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+
         async function handleUserLogin(session) {
-            if (isLoggingIn) return; // Защита от двойного запуска
+            if (isLoggingIn) return;
             isLoggingIn = true;
             
             try {
                 currentSessionToken = session.access_token;
                 const userAuth = session.user;
                 
-                // МОМЕНТАЛЬНО показываем крутилку загрузки баланса
                 document.getElementById('googleLoginWrapper').style.display = 'none';
                 document.getElementById('balanceModule').style.display = 'flex';
                 document.getElementById('profileModule').style.display = 'block';
                 document.getElementById('balanceText').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>₸</span>`;
 
-                // ПАРАЛЛЕЛЬНАЯ ЗАГРУЗКА ИЗ БАЗЫ: Грузим юзера и скидку одновременно (в 2 раза быстрее)
-                const [userRes, usedPromoRes] = await Promise.all([
-                    supabaseClient.from('users').select('*').eq('email', userAuth.email).maybeSingle(),
-                    supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', userAuth.email).eq('is_spent', false).limit(1)
-                ]);
+                const { data: userRes } = await supabaseClient.from('users').select('*').eq('email', userAuth.email).limit(1);
 
-                let dbUser = userRes.data;
+                let dbUser = userRes && userRes.length > 0 ? userRes[0] : null;
+                
                 if (!dbUser) {
                     let defaultName = userAuth.user_metadata.full_name || 'whunx-user-' + Math.random().toString(36).substring(2, 8).toLowerCase();
                     const newUser = { email: userAuth.email, username: defaultName, avatar_url: 'whunx_pp.png', balance: 0, secret_id: crypto.randomUUID() };
-                    const { data: insertedUser } = await supabaseClient.from('users').insert([newUser]).select().maybeSingle();
-                    dbUser = insertedUser;
+                    const { data: insertedUser } = await supabaseClient.from('users').insert([newUser]).select().limit(1);
+                    if (insertedUser && insertedUser.length > 0) dbUser = insertedUser[0];
                 }
 
-                if (usedPromoRes.data && usedPromoRes.data.length > 0) {
-                    const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedPromoRes.data[0].promo_code).maybeSingle();
-                    if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
-                        dbUser.active_discount = { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
-                    }
+                if (dbUser) {
+                    dbUser.active_discount = await fetchActiveDiscount(dbUser.email);
+                    currentDbUser = dbUser;
+                    updateUI();
+                    renderDynamicShop(); 
                 }
-                
-                currentDbUser = dbUser;
-                updateUI();
-                renderDynamicShop(); // Сразу перерисовываем карточки со скидками при входе
                 
                 if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
                 if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
             } finally {
-                isLoggingIn = false; // Освобождаем флаг
+                isLoggingIn = false; 
             }
         }
 
         async function syncUserData() {
             if (!currentSessionToken || !currentDbUser) return;
             try {
-                const { data: freshUser } = await supabaseClient.from('users').select('*').eq('email', currentDbUser.email).maybeSingle();
+                const { data: freshUserList } = await supabaseClient.from('users').select('*').eq('email', currentDbUser.email).limit(1);
                 
-                if (freshUser) {
-                    const { data: usedList } = await supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', freshUser.email).eq('is_spent', false).limit(1);
-                    if (usedList && usedList.length > 0) {
-                        const { data: promo } = await supabaseClient.from('promocodes').select('*').eq('code', usedList[0].promo_code).maybeSingle();
-                        if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
-                            freshUser.active_discount = { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
-                        }
-                    }
+                if (freshUserList && freshUserList.length > 0) {
+                    const freshUser = freshUserList[0];
+                    freshUser.active_discount = await fetchActiveDiscount(freshUser.email);
                     
                     let oldDisc = currentDbUser.active_discount?.code;
                     let newDisc = freshUser.active_discount?.code;
@@ -762,8 +772,6 @@
                     if (oldBalance !== freshUser.balance) updateUI(); 
                     if (oldDisc !== newDisc) renderDynamicShop();
                 }
-                
-                // Проверка уведомлений идет в фоне, не блокируя UI
                 checkNotifications(); 
             } catch(e) {}
         }
@@ -894,8 +902,8 @@
         async function saveSettings() {
             const newName = document.getElementById('inputSetNick').value;
             const newAvatar = document.getElementById('settingsAvatar').src;
-            const { data, error } = await supabaseClient.from('users').update({ username: newName, avatar_url: newAvatar }).eq('email', currentDbUser.email).select().maybeSingle();
-            if (!error) { currentDbUser = data; updateUI(); closeModal('settingsModal'); showToast('Успех', 'Настройки сохранены!', 'success'); } 
+            const { data, error } = await supabaseClient.from('users').update({ username: newName, avatar_url: newAvatar }).eq('email', currentDbUser.email).select().limit(1);
+            if (!error && data && data.length > 0) { currentDbUser = data[0]; updateUI(); closeModal('settingsModal'); showToast('Успех', 'Настройки сохранены!', 'success'); } 
             else { showToast('Ошибка', 'Не удалось сохранить', 'error'); }
         }
 
@@ -1074,8 +1082,9 @@
         // ЛОГИКА РОЗЫГРЫША
         // ==========================================
         async function loadActiveGiveaway() {
-            const { data, error } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1).maybeSingle();
-            if (!data) return;
+            const { data: gwList } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1);
+            if (!gwList || gwList.length === 0) return;
+            const data = gwList[0];
 
             const banner = document.getElementById('giveawayBanner');
             const now = new Date().getTime();
@@ -1116,8 +1125,9 @@
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 gwParticipantsInterval = setInterval(async () => {
                     try {
-                        const { data: updateData } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).maybeSingle();
-                        if (updateData) {
+                        const { data: updateDataList } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).limit(1);
+                        if (updateDataList && updateDataList.length > 0) {
+                            const updateData = updateDataList[0];
                             const count = updateData.participants ? updateData.participants.length : 0;
                             document.getElementById('gwParticipants').innerText = `Участников: ${count} / ${maxP}`;
                             if (!updateData.is_active) { clearInterval(gwParticipantsInterval); loadActiveGiveaway(); }
