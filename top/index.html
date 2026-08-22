@@ -24,11 +24,12 @@
             --bg-input: rgba(30, 34, 48, 0.6);
             --accent-gold: #f4c745; 
             --accent-gold-glow: rgba(244, 199, 69, 0.4);
-            --accent-diamond: #00e5ff; /* НОВЫЙ АЛМАЗНЫЙ ЦВЕТ */
+            --accent-diamond: #00e5ff;
             --accent-diamond-glow: rgba(0, 229, 255, 0.4);
             --accent-purple: #8b5cf6; 
             --accent-purple-glow: rgba(139, 92, 246, 0.4);
             --accent-green: #10b981;
+            --accent-blue: #3b82f6;
             --accent-red: #ef4444;
             --text-main: #ffffff;
             --text-muted: #a3a8b5;
@@ -109,7 +110,6 @@
             animation: fadeInUp 0.5s ease forwards;
         }
 
-        /* ИЗМЕНЕННЫЕ ЦВЕТА БОРДЕРОВ */
         .card-donators { border-top-color: var(--accent-diamond); }
         .card-withdrawals { border-top-color: var(--accent-gold); }
         .card-ideas { border-top-color: var(--accent-green); }
@@ -118,21 +118,20 @@
 
         .top-list { display: flex; flex-direction: column; gap: 15px; }
         
-        .top-item { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; transition: 0.3s; }
+        .top-item { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; transition: 0.3s; position: relative; overflow: hidden;}
         .top-item:hover { background: rgba(0,0,0,0.5); transform: translateX(5px); }
 
-        .rank-number { font-size: 20px; font-weight: 900; width: 30px; text-align: center; }
+        .rank-number { font-size: 20px; font-weight: 900; width: 30px; text-align: center; flex-shrink: 0;}
         .rank-1 { color: #f4c745; text-shadow: 0 0 15px rgba(244,199,69,0.5); font-size: 24px;}
         .rank-2 { color: #cbd5e1; text-shadow: 0 0 15px rgba(203,213,225,0.4); font-size: 22px;}
         .rank-3 { color: #d97706; text-shadow: 0 0 15px rgba(217,119,6,0.4); }
 
-        .top-avatar { width: 45px; height: 45px; border-radius: 14px; object-fit: cover; border: 1px solid var(--glass-border); }
+        .top-avatar { width: 45px; height: 45px; border-radius: 14px; object-fit: cover; border: 1px solid var(--glass-border); flex-shrink: 0;}
         .top-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;}
-        .top-name { font-weight: 800; font-size: 15px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .top-name { font-weight: 800; font-size: 15px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;} /* padding to avoid arrow overlap */
         .top-value { font-weight: 900; font-size: 14px; }
-        .top-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .top-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;}
 
-        /* ИЗМЕНЕННЫЕ ЦВЕТА ЗНАЧЕНИЙ */
         .val-diamond { color: var(--accent-diamond); text-shadow: 0 0 10px var(--accent-diamond-glow); }
         .val-gold { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
         .val-green { color: var(--accent-green); text-shadow: 0 0 10px rgba(16,185,129,0.4); }
@@ -140,6 +139,35 @@
         .empty-state { text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600; padding: 20px 0; }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* =========================================
+           MODAL FOR VIEWING IDEAS (STYLED AS IDEA CARD)
+        ========================================= */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: 0.3s; padding: 20px; overflow-y: auto; }
+        .modal-overlay.active { display: flex !important; opacity: 1; }
+        .modal-box { transform: scale(0.9); transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; margin: auto; width: 100%; max-width: 600px; }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        
+        .modal-close { position: absolute; top: -50px; right: 0; background: transparent; color: var(--text-muted); font-size: 30px; transition: 0.3s; z-index: 10; } 
+        .modal-close:hover { color: var(--accent-red); transform: rotate(90deg); }
+
+        /* СТИЛИ ОРИГИНАЛЬНОЙ КАРТОЧКИ ИДЕИ ИЗ IDEA.HTML */
+        .review-card { background: linear-gradient(145deg, rgba(30, 34, 48, 0.9) 0%, rgba(15, 18, 26, 0.95) 100%); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 35px; box-shadow: 0 25px 50px rgba(0,0,0,0.6); width: 100%;}
+        .rev-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
+        .rev-avatar { width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--glass-border); object-fit: cover; background: rgba(0,0,0,0.5);}
+        .rev-name { font-weight: 900; color: #fff; font-size: 16px; letter-spacing: 0.5px;}
+        .rev-date { color: var(--text-muted); font-size: 12px; font-weight: 700; margin-top: 3px;}
+        .idea-status { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;}
+        .status-approved { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3);}
+        .status-completed { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3);}
+        .rev-text { color: #fff; font-weight: 600; font-size: 15px; line-height: 1.6; margin-bottom: 15px; word-wrap: break-word; white-space: pre-wrap;}
+        .ic-reward { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(244, 199, 69, 0.1), transparent); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 8px 15px; border-radius: 10px; font-size: 13px; font-weight: 800; margin-bottom: 15px; box-shadow: 0 5px 15px var(--accent-gold-glow); }
+        .admin-reply { background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%); border: 1px solid rgba(139, 92, 246, 0.2); padding: 20px; border-radius: 16px; margin-top: 20px; position: relative; box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.02); }
+        .admin-reply::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-purple); border-radius: 16px 0 0 16px; box-shadow: 0 0 15px var(--accent-purple-glow); }
+        .admin-reply-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .admin-reply-avatar { width: 32px; height: 32px; border-radius: 10px; background: var(--accent-purple); display: flex; justify-content: center; align-items: center; color: #fff; font-size: 14px; box-shadow: 0 0 10px var(--accent-purple-glow);}
+        .admin-reply-title { font-size: 14px; color: var(--accent-purple); font-weight: 900; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px var(--accent-purple-glow);}
+        .admin-reply-text { color: #e2e8f0; font-size: 14px; font-weight: 600; line-height: 1.6; margin-left: 44px; }
 
         @media (max-width: 768px) {
             header { padding: 0 15px; height: 70px; }
@@ -150,6 +178,9 @@
             main { padding: 30px 15px; }
             .page-header h1 { font-size: 28px; }
             .top-card { padding: 25px 20px; }
+            .review-card { padding: 25px 20px; }
+            .idea-status { margin-left: 0; width: 100%; margin-top: 5px; justify-content: flex-start; }
+            .admin-reply-text { margin-left: 0; margin-top: 10px; }
         }
         @media (max-width: 400px) {
             .logo span { display: none; }
@@ -235,6 +266,16 @@
         </div>
     </main>
 
+    <!-- МОДАЛКА ДЛЯ ПРОСМОТРА ИДЕИ -->
+    <div class="modal-overlay" id="ideaViewModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeIdeaModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="review-card" id="ideaViewCard">
+                <!-- Контент идеи будет загружен через JS -->
+            </div>
+        </div>
+    </div>
+
     <script>
         const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
         const SUPABASE_URL = 'https://xnpbbmyttexqmtbtybjg.supabase.co'; 
@@ -243,7 +284,8 @@
 
         let currentSessionToken = null;
         let isLoggingIn = false;
-        let topsCache = ''; // Кэш для всех топов, чтобы избежать моргания экрана
+        let topsCache = ''; // Кэш для всех топов
+        let currentTopIdeasCache = []; // Сохраняем идеи для модалки
 
         function toggleSidebar() {
             document.getElementById('sidebarMenu').classList.toggle('active');
@@ -251,8 +293,8 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            loadTops(); // Моментальная загрузка при входе
-            setInterval(loadTops, 3000); // Реал-тайм обновление каждые 3 секунды
+            loadTops(); 
+            setInterval(loadTops, 3000); 
 
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) handleUserLogin(session);
@@ -307,9 +349,6 @@
             initGoogleAuth();
         }
 
-        // ==========================================
-        // РЕАЛ-ТАЙМ ЛОГИКА ЗАГРУЗКИ ТОПОВ
-        // ==========================================
         function getSafeAvatar(url) {
             if (!url) return 'https://whunx.shop/whunx_pp.png';
             if (url.startsWith('http') || url.startsWith('data:')) return url;
@@ -330,7 +369,6 @@
                     supabaseClient.rpc('get_top_ideas')
                 ]);
 
-                // Проверяем, изменились ли данные. Если нет - выходим, чтобы не мерцал экран.
                 const newDataString = JSON.stringify({ d: donators.data, w: withdrawals.data, i: ideas.data });
                 if (newDataString === topsCache) return;
                 topsCache = newDataString;
@@ -365,11 +403,12 @@
                     `).join('');
                 } else { wList.innerHTML = '<div class="empty-state">Пока нет данных</div>'; }
 
-                // 3. Рендер Идей
+                // 3. Рендер Идей (С КНОПКОЙ РАЗВЕРНУТЬ)
                 const iList = document.getElementById('ideasList');
                 if (ideas.data && ideas.data.length > 0) {
+                    currentTopIdeasCache = ideas.data; // Сохраняем в кэш для модалки
                     iList.innerHTML = ideas.data.map((item, index) => `
-                        <div class="top-item">
+                        <div class="top-item" style="cursor: pointer;" onclick="openIdeaModal(${index})" title="Нажмите, чтобы прочитать идею">
                             <div class="rank-number rank-${index + 1}">${getRankIcon(index + 1)}</div>
                             <img src="${getSafeAvatar(item.avatar_url)}" class="top-avatar">
                             <div class="top-info">
@@ -377,13 +416,67 @@
                                 <div class="top-value val-green">+${item.reward_amount} ₸ награда</div>
                                 <div class="top-desc">"${item.idea_text}"</div>
                             </div>
+                            <i class="fa-solid fa-chevron-right" style="color: var(--text-muted); opacity: 0.5; font-size: 14px; position: absolute; right: 20px;"></i>
                         </div>
                     `).join('');
                 } else { iList.innerHTML = '<div class="empty-state">Пока нет данных</div>'; }
 
-            } catch(e) {
-                // В тихом режиме не выводим ошибку, чтобы не портить вид при мимолетном обрыве связи
+            } catch(e) { }
+        }
+
+        // ==========================================
+        // ЛОГИКА ОТКРЫТИЯ ИДЕИ
+        // ==========================================
+        function openIdeaModal(index) {
+            const idea = currentTopIdeasCache[index];
+            if (!idea) return;
+
+            let statusClass = ''; let statusText = ''; let statusIcon = '';
+            if (idea.status === 'approved') { statusClass = 'status-approved'; statusText = 'Одобрено'; statusIcon = 'fa-check'; }
+            else if (idea.status === 'completed') { statusClass = 'status-completed'; statusText = 'Выполнено'; statusIcon = 'fa-check-double'; }
+
+            const rewardHtml = `<div class="ic-reward"><i class="fa-solid fa-gift"></i> Награда автору: ${idea.reward_amount} ₸</div>`;
+            
+            let replyHtml = idea.admin_reply ? `
+                <div class="admin-reply">
+                    <div class="admin-reply-header">
+                        <div class="admin-reply-avatar"><i class="fa-solid fa-crown"></i></div>
+                        <div class="admin-reply-title">Ответ Администрации</div>
+                    </div>
+                    <div class="admin-reply-text">${idea.admin_reply}</div>
+                </div>
+            ` : '';
+
+            // Безопасный парсинг даты
+            let dateStr = '';
+            if (idea.created_at) {
+                const dateObj = new Date(idea.created_at);
+                dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
             }
+
+            document.getElementById('ideaViewCard').innerHTML = `
+                <div class="rev-header">
+                    <img src="${getSafeAvatar(idea.avatar_url)}" class="rev-avatar">
+                    <div>
+                        <div class="rev-name">${idea.username}</div>
+                        <div class="rev-date">${dateStr}</div>
+                    </div>
+                    <div class="idea-status ${statusClass}"><i class="fa-solid ${statusIcon}"></i> ${statusText}</div>
+                </div>
+                <div class="rev-text">${idea.idea_text}</div>
+                ${rewardHtml}
+                ${replyHtml}
+            `;
+
+            const modal = document.getElementById('ideaViewModal');
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('active'); }, 10);
+        }
+
+        function closeIdeaModal() {
+            const modal = document.getElementById('ideaViewModal');
+            modal.classList.remove('active');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
     </script>
 </body>
