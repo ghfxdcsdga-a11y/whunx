@@ -122,39 +122,50 @@
         .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; color: var(--text-muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;} .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* =========================================
+           GLASSMORPHISM MODALS (Для формы отзыва)
+        ========================================= */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: 0.3s; padding: 20px; overflow-y: auto; }
+        .modal-box { background: rgba(15, 18, 26, 0.85); backdrop-filter: blur(40px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 40px; width: 100%; max-width: 500px; transform: scale(0.9); transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; margin: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,255,255,0.03); max-height: 90vh; overflow-y: auto; border-top: 4px solid var(--accent-gold);}
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-close { position: absolute; top: 25px; right: 25px; background: transparent; color: var(--text-muted); font-size: 24px; transition: 0.3s; z-index: 10; } .modal-close:hover { color: var(--accent-red); transform: rotate(90deg); }
+        .modal-title { font-size: 22px; font-weight: 900; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; }
+
+        /* =========================================
            REVIEWS SECTION
         ========================================= */
         main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 60px 20px; z-index: 10; position: relative; }
         .shop-header { text-align: center; margin-bottom: 40px; } 
         .shop-header h1 { font-size: 38px; font-weight: 900; margin-bottom: 15px; background: linear-gradient(to right, #ffffff, #a3a8b5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 2px;} 
-        .shop-header p { color: var(--text-muted); font-size: 16px; font-weight: 600;}
+        .shop-header p { color: var(--text-muted); font-size: 16px; font-weight: 600; margin-bottom: 30px;}
 
-        /* ФОРМА ДОБАВЛЕНИЯ ОТЗЫВА */
-        .add-review-box { background: rgba(15, 18, 26, 0.6); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; margin-bottom: 50px; box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 0 20px rgba(255,255,255,0.02); }
-        .form-title { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;}
-        
-        .rating-area { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; margin-bottom: 20px;}
+        /* Кнопка открытия модалки отзыва */
+        .btn-open-review { background: rgba(244, 199, 69, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 16px 35px; border-radius: 14px; font-size: 15px; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; transition: 0.3s; box-shadow: 0 0 15px rgba(244, 199, 69, 0.2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;}
+        .btn-open-review:hover { background: rgba(244, 199, 69, 0.2); transform: translateY(-3px); box-shadow: 0 10px 25px rgba(244, 199, 69, 0.4); }
+
+        /* Форма в модалке */
+        .rating-area { display: flex; flex-direction: row-reverse; justify-content: center; gap: 8px; margin-bottom: 20px;}
         .rating-area input { display: none; }
-        .rating-area label { cursor: pointer; color: rgba(255,255,255,0.1); font-size: 30px; transition: 0.2s; }
+        .rating-area label { cursor: pointer; color: rgba(255,255,255,0.1); font-size: 35px; transition: 0.2s; }
         .rating-area label:hover, .rating-area label:hover ~ label, .rating-area input:checked ~ label { color: var(--accent-gold); text-shadow: 0 0 15px var(--accent-gold-glow); }
 
         .form-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; color: #fff; font-size: 15px; font-weight: 600; outline: none; transition: 0.3s; box-shadow: inset 0 5px 10px rgba(0,0,0,0.3); resize: none;}
-        .form-input:focus { border-color: var(--accent-purple); box-shadow: inset 0 5px 10px rgba(0,0,0,0.3), 0 0 15px var(--accent-purple-glow); }
+        .form-input:focus { border-color: var(--accent-gold); box-shadow: inset 0 5px 10px rgba(0,0,0,0.3), 0 0 15px var(--accent-gold-glow); }
         
         .upload-area { background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 14px; padding: 18px; text-align: center; cursor: pointer; transition: 0.3s; font-weight: 700; font-size: 14px; margin-bottom: 20px; } 
-        .upload-area:hover { border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.08); }
+        .upload-area:hover { border-color: var(--accent-gold); background: rgba(244, 199, 69, 0.08); }
 
-        .btn-submit { width: 100%; background: var(--accent-purple); color: #fff; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 800; transition: 0.3s; box-shadow: 0 10px 25px var(--accent-purple-glow); text-transform: uppercase; letter-spacing: 1px;} 
-        .btn-submit:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 15px 35px var(--accent-purple-glow); } 
+        .btn-submit { width: 100%; background: var(--accent-gold); color: #000; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 800; transition: 0.3s; box-shadow: 0 10px 25px var(--accent-gold-glow); text-transform: uppercase; letter-spacing: 1px;} 
+        .btn-submit:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-2px); } 
         .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
         /* КАРТОЧКА ОТЗЫВА */
-        .reviews-list { display: flex; flex-direction: column; gap: 20px; }
-        .review-card { background: linear-gradient(145deg, rgba(30, 34, 48, 0.3) 0%, rgba(15, 18, 26, 0.6) 100%); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; animation: fadeInUp 0.5s ease forwards; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+        .reviews-list { display: flex; flex-direction: column; gap: 20px; margin-top: 30px;}
+        .review-card { background: linear-gradient(145deg, rgba(30, 34, 48, 0.3) 0%, rgba(15, 18, 26, 0.6) 100%); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 30px; animation: fadeInUp 0.5s ease forwards; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
         .rev-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-        .rev-avatar { width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--glass-border); object-fit: cover; background: var(--bg-input);}
+        .rev-avatar { width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--glass-border); object-fit: cover; background: rgba(0,0,0,0.5);}
         .rev-name { font-weight: 900; color: #fff; font-size: 16px; letter-spacing: 0.5px;}
         .rev-date { color: var(--text-muted); font-size: 12px; font-weight: 700; margin-top: 3px;}
         .rev-stars { color: var(--accent-gold); font-size: 14px; text-shadow: 0 0 10px var(--accent-gold-glow); display: flex; gap: 3px;}
@@ -163,8 +174,8 @@
         .rev-img { max-width: 100%; max-height: 250px; border-radius: 14px; margin-bottom: 15px; border: 1px solid var(--glass-border); object-fit: cover; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);}
         .rev-img:hover { filter: brightness(1.1); }
         
-        .admin-reply { background: rgba(139, 92, 246, 0.08); border-left: 4px solid var(--accent-purple); padding: 18px; border-radius: 0 14px 14px 0; margin-top: 20px; }
-        .admin-reply-title { font-size: 13px; color: var(--accent-purple); font-weight: 900; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; letter-spacing: 1px;}
+        .admin-reply { background: rgba(244, 199, 69, 0.08); border-left: 4px solid var(--accent-gold); padding: 18px; border-radius: 0 14px 14px 0; margin-top: 20px; }
+        .admin-reply-title { font-size: 13px; color: var(--accent-gold); font-weight: 900; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; letter-spacing: 1px;}
         .admin-reply-text { color: var(--text-muted); font-size: 14px; font-weight: 600; line-height: 1.5; }
 
         /* =========================================
@@ -185,10 +196,7 @@
             main { padding: 30px 15px; }
             .shop-header h1 { font-size: 26px; }
             
-            .add-review-box { padding: 20px; }
-            .form-title { font-size: 16px; flex-direction: column; align-items: flex-start; gap: 15px;}
-            .rating-area { justify-content: flex-start; }
-            
+            .modal-box { padding: 30px 20px; margin: 15px; width: calc(100% - 30px); border-radius: 20px;}
             .review-card { padding: 20px; }
             .rev-header { flex-wrap: wrap; }
             .rev-stars { margin-left: 0; width: 100%; margin-top: 5px; }
@@ -254,38 +262,8 @@
     <main>
         <div class="shop-header">
             <h1>Отзывы клиентов</h1>
-            <p>Честные мнения о нашей работе. Оставить отзыв можно только после успешной покупки.</p>
-        </div>
-
-        <!-- ФОРМА ОТЗЫВА -->
-        <div class="add-review-box" id="addReviewBox">
-            <div class="form-title">
-                Оцените наш сервис
-                <div class="rating-area" id="ratingArea">
-                    <input type="radio" id="star-5" name="rating" value="5">
-                    <label for="star-5" title="Оценка «5»"><i class="fa-solid fa-star"></i></label>
-                    <input type="radio" id="star-4" name="rating" value="4">
-                    <label for="star-4" title="Оценка «4»"><i class="fa-solid fa-star"></i></label>
-                    <input type="radio" id="star-3" name="rating" value="3">
-                    <label for="star-3" title="Оценка «3»"><i class="fa-solid fa-star"></i></label>
-                    <input type="radio" id="star-2" name="rating" value="2">
-                    <label for="star-2" title="Оценка «2»"><i class="fa-solid fa-star"></i></label>
-                    <input type="radio" id="star-1" name="rating" value="1" checked>
-                    <label for="star-1" title="Оценка «1»"><i class="fa-solid fa-star"></i></label>
-                </div>
-            </div>
-            
-            <textarea id="reviewText" class="form-input" rows="4" placeholder="Напишите ваш отзыв здесь..." style="margin-bottom: 20px;"></textarea>
-            
-            <div class="upload-area" style="background:transparent; border-color:transparent; padding:0; text-align:left; display:flex; align-items:center; gap:15px; margin-bottom:20px; cursor:default; box-shadow:none;">
-                <img id="reviewPhotoPreview" src="" style="display:none; width:70px; height:70px; border-radius:14px; border:1px solid var(--glass-border); object-fit:cover; background: rgba(0,0,0,0.5);">
-                <span id="removeRevPhotoBtn" style="color:var(--accent-red); font-size:13px; font-weight:800; cursor:pointer; display:none; transition:0.3s;" onclick="removeReviewPhoto()">Удалить фото <i class="fa-solid fa-xmark"></i></span>
-            </div>
-            <input type="file" id="reviewPhotoInput" style="display:none;" accept="image/*" onchange="previewReviewPhoto(event)">
-            <div class="upload-area" id="reviewPhotoBtn" onclick="document.getElementById('reviewPhotoInput').click()">Прикрепить скриншот (необязательно) <i class="fa-solid fa-image" style="margin-left: 5px;"></i></div>
-
-            <button class="btn-submit" onclick="submitReview()" id="submitReviewBtn">Опубликовать отзыв</button>
-            <p style="font-size:12px; color:var(--text-muted); margin-top:15px; text-align:center; font-weight: 700;">Система автоматически проверяет наличие успешных выводов на вашем аккаунте.</p>
+            <p>Честные мнения о нашей работе от реальных покупателей.</p>
+            <button class="btn-open-review" onclick="openModal('addReviewModal')"><i class="fa-solid fa-pen-nib"></i> Оставить отзыв</button>
         </div>
 
         <!-- КОНТЕЙНЕР ДЛЯ КАРТОЧЕК -->
@@ -293,6 +271,41 @@
             <div style="text-align:center; padding: 40px; color: var(--text-muted); font-weight: 700;">Загрузка отзывов...</div>
         </div>
     </main>
+
+    <!-- МОДАЛКА НАПИСАНИЯ ОТЗЫВА -->
+    <div class="modal-overlay" id="addReviewModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('addReviewModal')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title">Новый отзыв</div>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div class="rating-area" id="ratingArea">
+                    <input type="radio" id="star-5" name="rating" value="5" checked>
+                    <label for="star-5" title="Оценка «5»"><i class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star-4" name="rating" value="4">
+                    <label for="star-4" title="Оценка «4»"><i class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star-3" name="rating" value="3">
+                    <label for="star-3" title="Оценка «3»"><i class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star-2" name="rating" value="2">
+                    <label for="star-2" title="Оценка «2»"><i class="fa-solid fa-star"></i></label>
+                    <input type="radio" id="star-1" name="rating" value="1">
+                    <label for="star-1" title="Оценка «1»"><i class="fa-solid fa-star"></i></label>
+                </div>
+            </div>
+            
+            <textarea id="reviewText" class="form-input" rows="4" placeholder="Напишите, что вам понравилось..." style="margin-bottom: 20px;"></textarea>
+            
+            <div class="upload-area" style="background:transparent; border-color:transparent; padding:0; text-align:left; display:flex; align-items:center; gap:15px; margin-bottom:20px; cursor:default; box-shadow:none;">
+                <img id="reviewPhotoPreview" src="" style="display:none; width:70px; height:70px; border-radius:14px; border:1px solid var(--glass-border); object-fit:cover; background: rgba(0,0,0,0.5);">
+                <span id="removeRevPhotoBtn" style="color:var(--accent-red); font-size:13px; font-weight:800; cursor:pointer; display:none; transition:0.3s;" onclick="removeReviewPhoto()">Удалить фото <i class="fa-solid fa-xmark"></i></span>
+            </div>
+            <input type="file" id="reviewPhotoInput" style="display:none;" accept="image/*" onchange="previewReviewPhoto(event)">
+            <div class="upload-area" id="reviewPhotoBtn" onclick="document.getElementById('reviewPhotoInput').click()">Прикрепить скриншот <i class="fa-solid fa-image" style="margin-left: 5px;"></i></div>
+
+            <button class="btn-submit" onclick="submitReview()" id="submitReviewBtn">Опубликовать отзыв</button>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:15px; text-align:center; font-weight: 700;">Система проверяет наличие успешных выводов на вашем аккаунте.</p>
+        </div>
+    </div>
 
     <script>
         const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
@@ -321,6 +334,18 @@
 
         function toggleDropdown() { document.getElementById('profileModule').classList.toggle('active'); }
         document.addEventListener('click', (e) => { const module = document.getElementById('profileModule'); if (module && module.classList.contains('active') && !module.contains(e.target)) module.classList.remove('active'); });
+
+        function openModal(id) { 
+            const modal = document.getElementById(id); 
+            modal.style.display = 'flex'; 
+            setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
+        }
+        function closeModal(id) { 
+            const modal = document.getElementById(id); 
+            modal.style.opacity = '0'; 
+            modal.querySelector('.modal-box').style.transform = 'scale(0.9)'; 
+            setTimeout(() => { modal.style.display = 'none'; }, 300); 
+        }
 
         window.addEventListener('DOMContentLoaded', async () => {
             loadReviews(); // Загружаем отзывы сразу
@@ -424,7 +449,7 @@
             preview.style.display = 'none';
             document.getElementById('removeRevPhotoBtn').style.display = 'none';
             document.getElementById('reviewPhotoInput').value = '';
-            document.getElementById('reviewPhotoBtn').innerHTML = `Прикрепить скриншот (необязательно) <i class="fa-solid fa-image" style="margin-left: 5px;"></i>`;
+            document.getElementById('reviewPhotoBtn').innerHTML = `Прикрепить скриншот <i class="fa-solid fa-image" style="margin-left: 5px;"></i>`;
         }
 
         async function submitReview() {
@@ -454,6 +479,7 @@
                     showToast('Успех', 'Отзыв успешно опубликован!', 'success');
                     document.getElementById('reviewText').value = '';
                     removeReviewPhoto();
+                    closeModal('addReviewModal');
                     loadReviews(); 
                 } else {
                     showToast('Ошибка', result.error, 'error');
@@ -489,7 +515,6 @@
                             </div>
                         ` : '';
 
-                        // Имя и аватар
                         const userName = r.username || r.user_email.split('@')[0];
                         let safeAvatar = 'https://whunx.shop/whunx_pp.png';
                         if (r.avatar_url) {
