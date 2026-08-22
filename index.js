@@ -433,9 +433,8 @@ app.get('/api/reviews/list', async (req, res) => {
   res.json({ success: true, reviews: data });
 });
 
-// ЗДЕСЬ ОБНОВЛЕНО ДОБАВЛЕНИЕ НИКНЕЙМА И АВАТАРА В ИДЕИ
 app.post('/api/ideas/add', authenticateUser, async (req, res) => {
-  const { idea_text } = req.body;
+  const { idea_text, images } = req.body; // <-- Принимаем images
   if (!idea_text) return res.status(400).json({ error: 'Текст идеи не может быть пустым' });
 
   const oneDayAgo = new Date(); oneDayAgo.setDate(oneDayAgo.getDate() - 1);
@@ -446,7 +445,8 @@ app.post('/api/ideas/add', authenticateUser, async (req, res) => {
       user_email: req.user.email, 
       username: req.user.username,
       avatar_url: req.user.avatar_url,
-      idea_text: idea_text 
+      idea_text: idea_text,
+      images: images || [] // <-- Записываем массив фото в БД
   }]);
   
   if (error) return res.status(500).json({ error: 'Ошибка при сохранении' });
