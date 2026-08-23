@@ -116,7 +116,6 @@
         .sidebar-link:hover { background: rgba(255,255,255,0.03); color: #fff; border-color: var(--glass-border); transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2);}
         .sidebar-link:hover i { text-shadow: 0 0 15px var(--accent-purple-glow); }
         
-        /* Свечение активной вкладки (фиолетовое) */
         .sidebar-link.active { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #fff; box-shadow: 0 5px 15px var(--accent-purple-glow);}
 
         .logo { font-size: 26px; font-weight: 900; letter-spacing: 1px; cursor: pointer; color: #fff; text-transform: uppercase;} 
@@ -272,6 +271,16 @@
         
         .hc-bot { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; flex-wrap: wrap; gap: 10px;}
         .hc-date { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+        /* =========================================
+           DONATE MODAL SPECIFIC STYLES
+        ========================================= */
+        .donate-toggle { display: flex; background: rgba(0,0,0,0.5); border-radius: 14px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--glass-border); }
+        .donate-toggle-btn { flex: 1; padding: 12px; text-align: center; font-weight: 800; color: var(--text-muted); border-radius: 10px; transition: 0.3s; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
+        .donate-toggle-btn.active-kzt { background: var(--accent-green); color: #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .donate-toggle-btn.active-gold { background: var(--accent-gold); color: #000; box-shadow: 0 0 15px var(--accent-gold-glow); }
+        
+        .donate-timer { font-size: 32px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 0 15px var(--accent-gold-glow); text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; }
         
         /* АНИМАЦИИ И СТИЛИ ДЛЯ ПРОМОКОДОВ */
         .promo-input-premium {
@@ -362,7 +371,6 @@
 
     <div id="toastContainer"></div>
 
-    <!-- БОКОВОЕ МЕНЮ (ИСПРАВЛЕН FOUC: жесткий стиль left: -100vw) -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display: none;"></div>
     <div class="sidebar-menu" id="sidebarMenu" style="position: fixed; left: -100vw; top: 0; z-index: 1000;">
         <div class="sidebar-header">
@@ -405,7 +413,6 @@
                     <div class="dropdown-item" onclick="openHistoryModal()"><i class="fa-solid fa-clock-rotate-left"></i> История покупок</div>
                     <div class="dropdown-item" onclick="openModal('settingsModal')"><i class="fa-solid fa-gear"></i> Настройки</div>
                     <div class="dropdown-item" onclick="openModal('topupModal')"><i class="fa-solid fa-wallet"></i> Пополнить баланс</div>
-                    <!-- НОВЫЙ ПУНКТ ПРОМОКОДА -->
                     <div class="dropdown-item" onclick="openModal('promoActivationModal')" style="color: var(--accent-gold); border-top: 1px solid rgba(255,255,255,0.05); border-radius: 0; padding-top: 15px; margin-top: 5px;"><i class="fa-solid fa-ticket"></i> Ввести промокод</div>
                     <div class="dropdown-item logout" onclick="logout()" style="color: var(--accent-red);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Выйти</div>
                 </div>
@@ -456,7 +463,7 @@
     </main>
 
     <footer>
-        <button class="btn-donate" onclick="showToast('Донат', 'Спасибо за поддержку! Реквизиты скоро будут добавлены.', 'info')">
+        <button class="btn-donate" onclick="initDonateModal()">
             <i class="fa-solid fa-heart"></i> Пожертвовать проекту
         </button>
         <button class="btn-donate" style="color: var(--accent-purple); border-color: var(--accent-purple);" onclick="toggleChat()">
@@ -473,6 +480,98 @@
         <div class="chat-input-area">
             <input type="text" id="chatInput" class="chat-input" placeholder="Введите сообщение..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
             <button class="chat-send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ПОЖЕРТВОВАНИЯ -->
+    <div class="modal-overlay" id="donateModal" style="display: none;">
+        <div class="modal-box" style="border-top-color: var(--accent-gold);">
+            <button class="modal-close" onclick="closeModal('donateModal')"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title">Пожертвование</div>
+
+            <!-- ШАГ 1: ВЫБОР -->
+            <div id="donateStep1">
+                <div class="donate-toggle">
+                    <div class="donate-toggle-btn active-gold" id="btnDonateGold" onclick="switchDonateType('gold')">Голдой (G)</div>
+                    <div class="donate-toggle-btn" id="btnDonateKzt" onclick="switchDonateType('kzt')">Тенге (₸)</div>
+                </div>
+
+                <div class="f-input-group">
+                    <label class="f-input-label" id="donateAmountLabel">Сумма пожертвования (Голда)</label>
+                    <div class="f-input-wrapper">
+                        <input type="number" id="donateAmountInput" class="f-input" placeholder="100">
+                        <span class="f-input-suffix" id="donateSuffix">G</span>
+                    </div>
+                </div>
+
+                <div class="f-warning-text" id="donateWarningGold" style="color:var(--text-muted); margin-bottom: 20px;">
+                    <i class="fa-solid fa-circle-info"></i> Комиссия рынка полностью на нас! Вы пожертвуете ровно ту сумму, которую укажете.
+                </div>
+
+                <button class="btn-submit" style="background: var(--accent-gold); color: #000; box-shadow: 0 10px 25px var(--accent-gold-glow);" onclick="proceedDonateStep2()">Продолжить</button>
+            </div>
+
+            <!-- ШАГ 2: KZT ОПЛАТА -->
+            <div id="donateStepKzt" style="display: none;">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <span style="color:#f14635; font-weight:900; font-size:26px; display:block; margin-bottom:10px;">Kaspi<span style="color:#fff;">.kz</span></span>
+                    <p style="font-size:15px; color:var(--text-muted); font-weight:600;">Переведите ровно <strong id="donateKztAmountDisplay" style="color:var(--accent-gold); font-size:18px;">0 ₸</strong> по номеру карты:</p>
+                </div>
+                <div class="market-price-tag" style="justify-content:space-between; margin-bottom: 15px; padding: 15px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 14px; display: flex; align-items: center;">
+                    <span style="font-family:monospace; font-size:20px; letter-spacing:2px; font-weight: 800;">4400 4302 8123 4671</span> 
+                    <i class="fa-regular fa-copy" onclick="copyCard()" style="cursor:pointer; color:var(--text-muted); font-size: 20px; transition: 0.3s;"></i>
+                </div>
+                <div class="f-warning-text" style="color:var(--text-muted); justify-content:center; margin-bottom:20px;">
+                    <i class="fa-solid fa-circle-info"></i> Получатель: Сергей
+                </div>
+                <button class="btn-submit" style="background:var(--accent-green); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);" onclick="confirmDonateKzt()">Я перевел</button>
+                <button class="btn-submit" style="background:transparent; color:var(--text-muted); box-shadow:none; margin-top:5px;" onclick="resetDonateModal()">Назад</button>
+            </div>
+
+            <!-- ШАГ 3: ОЖИДАНИЕ / ТАЙМЕР -->
+            <div id="donateStepWait" style="display: none; text-align: center;">
+                <i class="fa-solid fa-clock" style="font-size: 50px; color: var(--accent-gold); margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--accent-gold-glow));"></i>
+                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 10px;">Ожидание администратора</h3>
+                <p style="color: var(--text-muted); font-size: 14px; font-weight: 600;">У вас есть 15 минут, чтобы завершить пожертвование. Мы уже получили ваш запрос!</p>
+                
+                <div class="donate-timer" id="donateTimerDisplay">15:00</div>
+                <button class="btn-submit" style="background:transparent; color:var(--text-muted); box-shadow:none; margin-top:10px; border: 1px solid var(--glass-border);" onclick="closeModal('donateModal')">Свернуть (Таймер продолжит идти)</button>
+            </div>
+
+            <!-- ШАГ 4: ИНФА О СКИНЕ (ГОЛДА) -->
+            <div id="donateStepSkinReady" style="display: none;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h3 style="font-size: 20px; font-weight: 900; margin-bottom: 10px;">Скин выставлен!</h3>
+                    <p style="color: var(--text-muted); font-size: 14px; font-weight: 600;">Купите этот скин на рынке в игре, чтобы завершить пожертвование.</p>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px;">
+                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Стоимость</span>
+                        <span id="donateSkinPrice" style="font-size: 22px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow);">0 G</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <img src="whunx_game.png" alt="Avatar" style="width: 50px; height: 50px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                        <div style="flex: 1;">
+                            <div style="font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Игровой ID</div>
+                            <div id="donateGameId" style="font-size: 16px; font-weight: 800; color: #fff;">-</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px;">
+                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Pattern</span>
+                        <div style="display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 16px;">
+                            <i class="fa-solid fa-cube" style="color: var(--accent-purple);"></i> <span id="donatePattern">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="donate-timer" id="donateSkinTimerDisplay" style="font-size: 24px; margin-bottom: 15px;">15:00</div>
+
+                <button class="btn-submit" style="background:var(--accent-green); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);" onclick="confirmDonateSkinBought()">Я купил скин</button>
+            </div>
+
         </div>
     </div>
 
@@ -518,8 +617,8 @@
                     <span style="color:#f14635; font-weight:900; font-size:26px; display:block; margin-bottom:10px;">Kaspi<span style="color:#fff;">.kz</span></span>
                     <p style="font-size:15px; color:var(--text-muted); font-weight:600;">Переведите ровно <strong id="topupAmountDisplay" style="color:var(--accent-gold); font-size:18px;">0 ₸</strong> по номеру карты:</p>
                 </div>
-                <div class="market-price-tag" style="justify-content:space-between;">
-                    <span style="font-family:monospace; font-size:20px; letter-spacing:2px;">4400 4302 8123 4671</span> 
+                <div class="market-price-tag" style="justify-content:space-between; margin-bottom: 15px; padding: 15px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 14px; display: flex; align-items: center;">
+                    <span style="font-family:monospace; font-size:20px; letter-spacing:2px; font-weight: 800;">4400 4302 8123 4671</span> 
                     <i class="fa-regular fa-copy" onclick="copyCard()" style="cursor:pointer; color:var(--text-muted); font-size: 20px; transition: 0.3s;"></i>
                 </div>
                 <div class="f-warning-text" style="color:var(--text-muted); justify-content:center; margin-bottom:20px;">
@@ -550,7 +649,6 @@
                 </div>
             </div>
             
-            <!-- ПРИВЯЗКА ТЕЛЕГРАМА (ИСПРАВЛЕН СТИЛЬ ПРОТИВ СЖАТИЯ) -->
             <div class="tg-bind-btn" id="tgBindBtn" style="background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 14px; padding: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.3s; margin-bottom: 15px; gap: 10px;">
                 <div class="tg-info" style="display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 800; overflow: hidden; white-space: nowrap;">
                     <i class="fa-brands fa-telegram" style="font-size: 26px; color: #24A1DE; text-shadow: 0 0 15px rgba(36,161,222,0.5); flex-shrink: 0;"></i>
@@ -586,14 +684,23 @@
             <div class="upload-area" id="gameAvatarBtn" onclick="document.getElementById('gameAvatarInput').click()">Загрузить файл <i class="fa-solid fa-check"></i></div>
             <div class="f-warning-text" style="color:var(--text-muted);"><i class="fa-solid fa-circle-exclamation"></i> Загрузи аватарку из личных файлов без текста и символов. Убедись, что фото совпадает с твоим профилем</div>
             <label class="f-input-label" style="margin-bottom:10px;">Выставьте указанный скин за:</label>
-            <div class="market-price-tag"><span id="pwListingPrice">1250.00 G</span> <i class="fa-regular fa-copy" onclick="showToast('Копирование', 'Цена скопирована!', 'info')" style="cursor:pointer; color:var(--text-muted); margin-left:auto; font-size: 20px; transition:0.3s;"></i></div>
-            <div class="market-item-target"><img src="USP_G.png" alt="USP Ghosts"><div class="market-item-info"><h5>USP "Ghosts"</h5><span>НЕ СТАТТРЕК</span></div></div>
-            <div class="f-warning-text" style="color:var(--text-muted);"><i class="fa-solid fa-circle-info" style="color:var(--text-muted);"></i> Выстави скин на рынок Standoff2 ровно за эту цену, в точности до копеек</div>
+            <div class="market-price-tag" style="padding: 15px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span id="pwListingPrice" style="font-weight: 900; color: var(--accent-gold); font-size: 18px;">1250.00 G</span> 
+                <i class="fa-regular fa-copy" onclick="showToast('Копирование', 'Цена скопирована!', 'info')" style="cursor:pointer; color:var(--text-muted); font-size: 20px; transition:0.3s;"></i>
+            </div>
+            <div class="market-item-target" style="display: flex; gap: 15px; align-items: center; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 14px; border: 1px solid var(--glass-border); margin-bottom: 10px;">
+                <img src="USP_G.png" alt="USP Ghosts" style="width: 60px;">
+                <div class="market-item-info">
+                    <h5 style="margin-bottom: 4px; font-weight: 800;">USP "Ghosts"</h5>
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 800;">НЕ СТАТТРЕК</span>
+                </div>
+            </div>
+            <div class="f-warning-text" style="color:var(--text-muted); margin-bottom: 25px;"><i class="fa-solid fa-circle-info" style="color:var(--text-muted);"></i> Выстави скин на рынок Standoff2 ровно за эту цену, в точности до копеек</div>
             <div class="f-input-group" style="margin-top:25px;">
                 <label class="f-input-label">Укажи Pattern скина:</label>
                 <div class="f-input-wrapper">
                     <input type="text" id="pwPatternInput" class="f-input" placeholder="000" maxlength="3" style="padding-left:50px;" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onblur="formatPattern(this)">
-                    <i class="fa-solid fa-cube" style="position:absolute; left:18px; top:50%; transform:translateY(-50%); color:var(--rare-purple); z-index:2; font-size: 18px;"></i>
+                    <i class="fa-solid fa-cube" style="position:absolute; left:18px; top:50%; transform:translateY(-50%); color:var(--accent-purple); z-index:2; font-size: 18px;"></i>
                     <i class="fa-solid fa-xmark clear-icon" onclick="document.getElementById('pwPatternInput').value=''"></i>
                 </div>
             </div>
@@ -641,6 +748,11 @@
         let socket = null;
         let gwParticipantsInterval = null; 
         let isLoggingIn = false;
+
+        // Переменные для доната
+        let donateType = 'gold'; // 'gold' или 'kzt'
+        let donateCountdownTimer = null;
+        let donateTimeLeft = 900; // 15 минут в секундах
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -722,6 +834,30 @@
                 socket.on('open_plashka', (data) => {
                     openGiftWithdrawModal(data.amount);
                 });
+                
+                // СОКЕТЫ ДЛЯ ДОНАТА
+                socket.on('donation_skin_ready', (data) => {
+                    // Когда админ вводит команду /setdar, открывается этот шаг
+                    document.getElementById('donateStepWait').style.display = 'none';
+                    document.getElementById('donateStepSkinReady').style.display = 'block';
+                    document.getElementById('donateGameId').innerText = data.gameId;
+                    document.getElementById('donatePattern').innerText = data.pattern;
+                    document.getElementById('donateSkinPrice').innerText = data.skinPrice + ' G';
+                });
+                
+                socket.on('donation_approved', () => {
+                    clearInterval(donateCountdownTimer);
+                    showToast('Успех', 'Ваше пожертвование подтверждено! Вы добавлены в топ.', 'success');
+                    closeModal('donateModal');
+                    resetDonateModal();
+                });
+                
+                socket.on('donation_rejected', () => {
+                    clearInterval(donateCountdownTimer);
+                    showToast('Отмена', 'Пожертвование не подтверждено или время вышло.', 'error');
+                    closeModal('donateModal');
+                    resetDonateModal();
+                });
             } catch(e) {}
         });
 
@@ -738,7 +874,6 @@
             }
         }
 
-        // БЕЗОПАСНАЯ ФУНКЦИЯ ПОИСКА СКИДКИ БЕЗ ОШИБОК 406
         async function fetchActiveDiscount(email) {
             try {
                 const { data: usedList } = await supabaseClient.from('used_promocodes')
@@ -763,7 +898,7 @@
                         }
                     }
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) {}
             return null;
         }
 
@@ -780,7 +915,6 @@
                 document.getElementById('profileModule').style.display = 'block';
                 document.getElementById('balanceText').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>₸</span>`;
 
-                // ИЩЕМ ЮЗЕРА ЧЕРЕЗ БЕЗОПАСНЫЙ LIMIT(1)
                 let { data: usersData } = await supabaseClient.from('users').select('*').eq('email', userAuth.email).limit(1);
                 let dbUser = usersData && usersData.length > 0 ? usersData[0] : null;
 
@@ -801,7 +935,6 @@
                 if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
                 if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
             } catch (err) {
-                console.error(err);
             } finally {
                 isLoggingIn = false; 
             }
@@ -838,14 +971,14 @@
                 if (result.success) {
                     const wIds = [];
                     const tIds = [];
-                    let hasNewCompletedWithdrawal = false; // Флаг для вызова модалки отзыва
+                    let hasNewCompletedWithdrawal = false;
                     
                     if (result.notifications.withdrawals) {
                         result.notifications.withdrawals.forEach(n => {
                             wIds.push(n.id);
                             if (n.status === 'completed') {
                                 showToast('Заказ выполнен', `Ваш заказ на ${n.amount} G успешно выведен в игру!`, 'success');
-                                hasNewCompletedWithdrawal = true; // Активируем триггер
+                                hasNewCompletedWithdrawal = true;
                             }
                             else if (n.status === 'cancelled') showToast('Заказ отменен', `Вывод ${n.amount} G отменен. ${n.spent_rubles} ₸ возвращены на баланс.`, 'error');
                         });
@@ -870,7 +1003,6 @@
                         });
                     }
 
-                    // Если был успешно выведен заказ — показываем окно с просьбой об отзыве
                     if (hasNewCompletedWithdrawal) {
                         openModal('reviewPromptModal');
                     }
@@ -969,6 +1101,141 @@
             if (!error && data && data.length > 0) { currentDbUser = data[0]; updateUI(); closeModal('settingsModal'); showToast('Успех', 'Настройки сохранены!', 'success'); } 
             else { showToast('Ошибка', 'Не удалось сохранить', 'error'); }
         }
+
+        // ==========================================
+        // ПОЖЕРТВОВАНИЯ (ТЕНГЕ И ГОЛДА)
+        // ==========================================
+        function initDonateModal() {
+            if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт, чтобы сделать пожертвование.', 'info');
+            resetDonateModal();
+            openModal('donateModal');
+        }
+
+        function resetDonateModal() {
+            donateType = 'gold';
+            switchDonateType('gold');
+            document.getElementById('donateAmountInput').value = '';
+            
+            document.getElementById('donateStep1').style.display = 'block';
+            document.getElementById('donateStepKzt').style.display = 'none';
+            document.getElementById('donateStepWait').style.display = 'none';
+            document.getElementById('donateStepSkinReady').style.display = 'none';
+            
+            clearInterval(donateCountdownTimer);
+            document.getElementById('donateTimerDisplay').innerText = '15:00';
+            document.getElementById('donateSkinTimerDisplay').innerText = '15:00';
+        }
+
+        function switchDonateType(type) {
+            donateType = type;
+            const btnGold = document.getElementById('btnDonateGold');
+            const btnKzt = document.getElementById('btnDonateKzt');
+            
+            if (type === 'gold') {
+                btnGold.classList.add('active-gold');
+                btnKzt.classList.remove('active-kzt');
+                document.getElementById('donateAmountLabel').innerText = 'Сумма пожертвования (Голда)';
+                document.getElementById('donateSuffix').innerText = 'G';
+                document.getElementById('donateWarningGold').style.display = 'block';
+            } else {
+                btnKzt.classList.add('active-kzt');
+                btnGold.classList.remove('active-gold');
+                document.getElementById('donateAmountLabel').innerText = 'Сумма пожертвования (Тенге)';
+                document.getElementById('donateSuffix').innerText = '₸';
+                document.getElementById('donateWarningGold').style.display = 'none';
+            }
+        }
+
+        async function proceedDonateStep2() {
+            const amount = parseFloat(document.getElementById('donateAmountInput').value);
+            if (!amount || amount <= 0) return showToast('Ошибка', 'Введите корректную сумму', 'error');
+
+            if (donateType === 'kzt') {
+                if (amount < 100) return showToast('Ошибка', 'Минимальная сумма пожертвования 100 ₸', 'error');
+                document.getElementById('donateKztAmountDisplay').innerText = amount + ' ₸';
+                document.getElementById('donateStep1').style.display = 'none';
+                document.getElementById('donateStepKzt').style.display = 'block';
+            } else {
+                if (amount < 10) return showToast('Ошибка', 'Минимальное пожертвование голдой — 10 G', 'error');
+                // Отправляем на бэк для голды
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/donate/create`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                        body: JSON.stringify({ type: 'gold', amount })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        document.getElementById('donateStep1').style.display = 'none';
+                        document.getElementById('donateStepWait').style.display = 'block';
+                        startDonateTimer();
+                        showToast('Ожидаем администратора', 'Информация о скине скоро появится', 'info');
+                    } else {
+                        showToast('Ошибка', result.error, 'error');
+                    }
+                } catch(e) {
+                    showToast('Ошибка', 'Сбой связи. Попробуйте еще раз.', 'error');
+                }
+            }
+        }
+
+        async function confirmDonateKzt() {
+            const amount = parseFloat(document.getElementById('donateAmountInput').value);
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/donate/create`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                    body: JSON.stringify({ type: 'kzt', amount })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('donateStepKzt').style.display = 'none';
+                    document.getElementById('donateStepWait').style.display = 'block';
+                    startDonateTimer();
+                    showToast('Успех', 'Заявка отправлена. Ожидайте подтверждения', 'success');
+                } else {
+                    showToast('Ошибка', result.error, 'error');
+                }
+            } catch(e) { showToast('Ошибка', 'Сбой связи', 'error'); }
+        }
+
+        async function confirmDonateSkinBought() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/donate/confirm-skin`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('donateStepSkinReady').style.display = 'none';
+                    document.getElementById('donateStepWait').style.display = 'block';
+                    showToast('Ожидаем', 'Запрос отправлен. Ждём подтверждения админа.', 'info');
+                } else {
+                    showToast('Ошибка', result.error, 'error');
+                }
+            } catch(e) { showToast('Ошибка', 'Сбой связи', 'error'); }
+        }
+
+        function startDonateTimer() {
+            donateTimeLeft = 900; // 15 минут
+            updateDonateTimerDisplay();
+            clearInterval(donateCountdownTimer);
+            donateCountdownTimer = setInterval(() => {
+                donateTimeLeft--;
+                updateDonateTimerDisplay();
+                if (donateTimeLeft <= 0) {
+                    clearInterval(donateCountdownTimer);
+                    showToast('Время вышло', 'Вы не успели завершить пожертвование.', 'error');
+                    closeModal('donateModal');
+                    resetDonateModal();
+                }
+            }, 1000);
+        }
+
+        function updateDonateTimerDisplay() {
+            const m = Math.floor(donateTimeLeft / 60).toString().padStart(2, '0');
+            const s = (donateTimeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('donateTimerDisplay').innerText = `${m}:${s}`;
+            document.getElementById('donateSkinTimerDisplay').innerText = `${m}:${s}`;
+        }
+
 
         // ==========================================
         // АКТИВАЦИЯ ПРОМОКОДА
