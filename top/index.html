@@ -31,10 +31,16 @@
             --accent-green: #10b981;
             --accent-blue: #3b82f6;
             --accent-red: #ef4444;
+            --accent-red-glow: rgba(239, 68, 68, 0.4);
             --text-main: #ffffff;
             --text-muted: #a3a8b5;
             --glass-border: rgba(255, 255, 255, 0.08);
             --transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+            /* Ранговые цвета */
+            --rank1-color: #FFD700;
+            --rank2-color: #C0C0C0;
+            --rank3-color: #CD7F32;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
@@ -110,24 +116,43 @@
             animation: fadeInUp 0.5s ease forwards;
         }
 
-        .card-donators { border-top-color: var(--accent-diamond); }
-        .card-withdrawals { border-top-color: var(--accent-gold); }
-        .card-ideas { border-top-color: var(--accent-green); }
+        .card-donators { border-top-color: var(--accent-diamond); box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 10px 30px rgba(0,229,255,0.03); }
+        .card-withdrawals { border-top-color: var(--accent-gold); box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 10px 30px rgba(244,199,69,0.03); }
+        .card-ideas { border-top-color: var(--accent-green); box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 10px 30px rgba(16,185,129,0.03); }
+        .card-charity-kzt { border-top-color: var(--accent-purple); box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 10px 30px rgba(139,92,246,0.03); }
+        .card-charity-gold { border-top-color: var(--accent-red); box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 10px 30px rgba(239,68,68,0.03); }
 
-        .top-card-title { font-size: 20px; font-weight: 900; text-transform: uppercase; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
+        .top-card-title { font-size: 20px; font-weight: 900; text-transform: uppercase; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; line-height: 1.3;}
 
         .top-list { display: flex; flex-direction: column; gap: 15px; }
         
-        .top-item { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; transition: 0.3s; position: relative; overflow: hidden;}
-        .top-item:hover { background: rgba(0,0,0,0.5); transform: translateX(5px); }
+        .top-item { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; transition: 0.3s; position: relative; overflow: hidden;}
+        .top-item:hover { background: rgba(0,0,0,0.6); transform: scale(1.02) translateX(5px); }
 
-        .rank-number { font-size: 20px; font-weight: 900; width: 30px; text-align: center; flex-shrink: 0;}
-        .rank-1 { color: #f4c745; text-shadow: 0 0 15px rgba(244,199,69,0.5); font-size: 24px;}
-        .rank-2 { color: #cbd5e1; text-shadow: 0 0 15px rgba(203,213,225,0.4); font-size: 22px;}
-        .rank-3 { color: #d97706; text-shadow: 0 0 15px rgba(217,119,6,0.4); }
+        /* НЕОНОВЫЕ СВЕЧЕНИЯ ДЛЯ ЛИДЕРОВ */
+        .top-item.rank-item-1 { background: linear-gradient(90deg, rgba(255, 215, 0, 0.05), rgba(0,0,0,0.4)); border-color: rgba(255, 215, 0, 0.2); }
+        .top-item.rank-item-1::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--rank1-color); box-shadow: 0 0 15px var(--rank1-color); }
+        
+        .top-item.rank-item-2 { background: linear-gradient(90deg, rgba(192, 192, 192, 0.05), rgba(0,0,0,0.4)); border-color: rgba(192, 192, 192, 0.2); }
+        .top-item.rank-item-2::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--rank2-color); box-shadow: 0 0 15px var(--rank2-color); }
+        
+        .top-item.rank-item-3 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.05), rgba(0,0,0,0.4)); border-color: rgba(205, 127, 50, 0.2); }
+        .top-item.rank-item-3::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--rank3-color); box-shadow: 0 0 15px var(--rank3-color); }
 
-        .top-avatar { width: 45px; height: 45px; border-radius: 14px; object-fit: cover; border: 1px solid var(--glass-border); flex-shrink: 0;}
-        .top-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;}
+        /* НЕОНОВЫЕ БЕЙДЖИ МЕСТ */
+        .rank-badge { width: 42px; height: 42px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: 900; flex-shrink: 0; position: relative; z-index: 2; transition: 0.3s;}
+        
+        .rank-1 { background: rgba(255, 215, 0, 0.1); border: 2px solid var(--rank1-color); color: var(--rank1-color); box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.2); text-shadow: 0 0 10px var(--rank1-color); }
+        .rank-2 { background: rgba(192, 192, 192, 0.1); border: 2px solid var(--rank2-color); color: var(--rank2-color); box-shadow: 0 0 20px rgba(192, 192, 192, 0.4), inset 0 0 15px rgba(192, 192, 192, 0.2); text-shadow: 0 0 10px var(--rank2-color); }
+        .rank-3 { background: rgba(205, 127, 50, 0.1); border: 2px solid var(--rank3-color); color: var(--rank3-color); box-shadow: 0 0 20px rgba(205, 127, 50, 0.4), inset 0 0 15px rgba(205, 127, 50, 0.2); text-shadow: 0 0 10px var(--rank3-color); }
+        .rank-other { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-size: 16px;}
+
+        .top-item:hover .rank-1 { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3); transform: scale(1.1); }
+        .top-item:hover .rank-2 { box-shadow: 0 0 30px rgba(192, 192, 192, 0.6), inset 0 0 20px rgba(192, 192, 192, 0.3); transform: scale(1.1); }
+        .top-item:hover .rank-3 { box-shadow: 0 0 30px rgba(205, 127, 50, 0.6), inset 0 0 20px rgba(205, 127, 50, 0.3); transform: scale(1.1); }
+
+        .top-avatar { width: 45px; height: 45px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); flex-shrink: 0;}
+        .top-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; padding-left: 5px;}
         .top-name { font-weight: 800; font-size: 15px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;}
         .top-value { font-weight: 900; font-size: 14px; }
         .top-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;}
@@ -135,6 +160,8 @@
         .val-diamond { color: var(--accent-diamond); text-shadow: 0 0 10px var(--accent-diamond-glow); }
         .val-gold { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
         .val-green { color: var(--accent-green); text-shadow: 0 0 10px rgba(16,185,129,0.4); }
+        .val-purple { color: var(--accent-purple); text-shadow: 0 0 10px var(--accent-purple-glow); }
+        .val-red { color: var(--accent-red); text-shadow: 0 0 10px var(--accent-red-glow); }
 
         .empty-state { text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600; padding: 20px 0; }
 
@@ -148,11 +175,9 @@
         .modal-box { transform: scale(0.9); transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; margin: auto; width: 100%; max-width: 600px; }
         .modal-overlay.active .modal-box { transform: scale(1); }
         
-        /* Исправленный крестик (внутри карточки) */
         .modal-close { position: absolute; top: 20px; right: 25px; background: transparent; color: var(--text-muted); font-size: 24px; transition: 0.3s; z-index: 20; border: none; outline: none; cursor: pointer; } 
         .modal-close:hover { color: var(--accent-red); transform: rotate(90deg); }
 
-        /* СТИЛИ ОРИГИНАЛЬНОЙ КАРТОЧКИ ИДЕИ ИЗ IDEA.HTML */
         .review-card { background: linear-gradient(145deg, rgba(30, 34, 48, 0.95) 0%, rgba(15, 18, 26, 0.98) 100%); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 35px; box-shadow: 0 25px 50px rgba(0,0,0,0.8); width: 100%; position: relative;}
         .rev-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; padding-right: 30px;}
         .rev-avatar { width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--glass-border); object-fit: cover; background: rgba(0,0,0,0.5);}
@@ -183,6 +208,7 @@
             .modal-box { width: 100%; margin: 0; }
             .idea-status { margin-left: 0; width: 100%; margin-top: 5px; justify-content: flex-start; }
             .admin-reply-text { margin-left: 0; margin-top: 10px; }
+            .rank-badge { width: 35px; height: 35px; font-size: 16px; }
         }
         @media (max-width: 400px) {
             .logo span { display: none; }
@@ -242,15 +268,16 @@
         </div>
 
         <div class="tops-grid">
-            <!-- ТОП ДОНАТЕРОВ -->
+            
+            <!-- 1. ТОП ПОПОЛНЕНИЙ БАЛАНСА -->
             <div class="top-card card-donators">
-                <h3 class="top-card-title"><i class="fa-solid fa-gem" style="color: var(--accent-diamond);"></i> Топ Донатеров</h3>
+                <h3 class="top-card-title"><i class="fa-solid fa-wallet" style="color: var(--accent-diamond);"></i> Топ Пополнений</h3>
                 <div class="top-list" id="donatorsList">
                     <div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...</div>
                 </div>
             </div>
 
-            <!-- ТОП ВЫВОДОВ -->
+            <!-- 2. ТОП ВЫВОДОВ -->
             <div class="top-card card-withdrawals">
                 <h3 class="top-card-title"><i class="fa-solid fa-crown" style="color: var(--accent-gold);"></i> Крупнейшие Выводы</h3>
                 <div class="top-list" id="withdrawalsList">
@@ -258,18 +285,34 @@
                 </div>
             </div>
 
-            <!-- ТОП ИДЕЙ -->
+            <!-- 3. ТОП ИДЕЙ -->
             <div class="top-card card-ideas">
                 <h3 class="top-card-title"><i class="fa-solid fa-lightbulb" style="color: var(--accent-green);"></i> Лучшие Идеи</h3>
                 <div class="top-list" id="ideasList">
                     <div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...</div>
                 </div>
             </div>
+
+            <!-- 4. ТОП БЛАГОТВОРИТЕЛЕЙ (ТЕНГЕ) -->
+            <div class="top-card card-charity-kzt">
+                <h3 class="top-card-title"><i class="fa-solid fa-hand-holding-dollar" style="color: var(--accent-purple);"></i> Пожертвования (₸)</h3>
+                <div class="top-list" id="charityKztList">
+                    <div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...</div>
+                </div>
+            </div>
+
+            <!-- 5. ТОП БЛАГОТВОРИТЕЛЕЙ (ГОЛДА) -->
+            <div class="top-card card-charity-gold">
+                <h3 class="top-card-title"><i class="fa-solid fa-hand-holding-heart" style="color: var(--accent-red);"></i> Пожертвования (G)</h3>
+                <div class="top-list" id="charityGoldList">
+                    <div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка...</div>
+                </div>
+            </div>
+
         </div>
     </main>
 
     <!-- МОДАЛКА ДЛЯ ПРОСМОТРА ИДЕИ -->
-    <!-- ДОБАВЛЕН ЗАКРЫТИЕ ПО КЛИКУ НА ФОН -->
     <div class="modal-overlay" id="ideaViewModal" onclick="if(event.target === this) closeIdeaModal()">
         <div class="modal-box">
             <div class="review-card" id="ideaViewCard">
@@ -286,8 +329,8 @@
 
         let currentSessionToken = null;
         let isLoggingIn = false;
-        let topsCache = ''; // Кэш для всех топов
-        let currentTopIdeasCache = []; // Сохраняем идеи для модалки
+        let topsCache = ''; 
+        let currentTopIdeasCache = []; 
 
         function toggleSidebar() {
             document.getElementById('sidebarMenu').classList.toggle('active');
@@ -359,69 +402,62 @@
         }
 
         function getRankIcon(rank) {
-            if (rank === 1) return '<i class="fa-solid fa-trophy"></i>';
+            if (rank === 1) return '<i class="fa-solid fa-crown"></i>';
+            if (rank === 2) return '<i class="fa-solid fa-medal"></i>';
+            if (rank === 3) return '<i class="fa-solid fa-award"></i>';
             return rank;
         }
 
         async function loadTops() {
             try {
-                const [donators, withdrawals, ideas] = await Promise.all([
+                const [donators, withdrawals, ideas, charityKzt, charityGold] = await Promise.all([
                     supabaseClient.rpc('get_top_donators'),
                     supabaseClient.rpc('get_top_withdrawals'),
-                    supabaseClient.rpc('get_top_ideas')
+                    supabaseClient.rpc('get_top_ideas'),
+                    supabaseClient.rpc('get_top_charity_kzt'),
+                    supabaseClient.rpc('get_top_charity_gold')
                 ]);
 
-                const newDataString = JSON.stringify({ d: donators.data, w: withdrawals.data, i: ideas.data });
+                const newDataString = JSON.stringify({ d: donators.data, w: withdrawals.data, i: ideas.data, ck: charityKzt.data, cg: charityGold.data });
                 if (newDataString === topsCache) return;
                 topsCache = newDataString;
 
-                // 1. Рендер Донатеров
-                const dList = document.getElementById('donatorsList');
-                if (donators.data && donators.data.length > 0) {
-                    dList.innerHTML = donators.data.map((item, index) => `
-                        <div class="top-item">
-                            <div class="rank-number rank-${index + 1}">${getRankIcon(index + 1)}</div>
-                            <img src="${getSafeAvatar(item.avatar_url)}" class="top-avatar">
-                            <div class="top-info">
-                                <div class="top-name">${item.username}</div>
-                                <div class="top-value val-diamond">${item.total_donated} ₸</div>
-                            </div>
-                        </div>
-                    `).join('');
-                } else { dList.innerHTML = '<div class="empty-state">Пока нет данных</div>'; }
+                // Вспомогательная функция для рендера
+                const renderList = (data, containerId, valueKey, valueSuffix, valueClass) => {
+                    const container = document.getElementById(containerId);
+                    if (data && data.length > 0) {
+                        container.innerHTML = data.map((item, index) => {
+                            const rankClass = index === 0 ? 'rank-1' : (index === 1 ? 'rank-2' : (index === 2 ? 'rank-3' : 'rank-other'));
+                            const itemClass = index === 0 ? 'rank-item-1' : (index === 1 ? 'rank-item-2' : (index === 2 ? 'rank-item-3' : ''));
+                            
+                            let onClickAttr = ''; let chevronHtml = ''; let descHtml = '';
+                            if (containerId === 'ideasList') {
+                                onClickAttr = `style="cursor: pointer;" onclick="openIdeaModal(${index})" title="Нажмите, чтобы прочитать идею"`;
+                                chevronHtml = `<i class="fa-solid fa-chevron-right" style="color: var(--text-muted); opacity: 0.5; font-size: 14px; position: absolute; right: 20px;"></i>`;
+                                descHtml = `<div class="top-desc">"${item.idea_text}"</div>`;
+                            }
 
-                // 2. Рендер Выводов
-                const wList = document.getElementById('withdrawalsList');
-                if (withdrawals.data && withdrawals.data.length > 0) {
-                    wList.innerHTML = withdrawals.data.map((item, index) => `
-                        <div class="top-item">
-                            <div class="rank-number rank-${index + 1}">${getRankIcon(index + 1)}</div>
-                            <img src="${getSafeAvatar(item.avatar_url)}" class="top-avatar">
-                            <div class="top-info">
-                                <div class="top-name">${item.username}</div>
-                                <div class="top-value val-gold">${item.gold_amount} G</div>
-                            </div>
-                        </div>
-                    `).join('');
-                } else { wList.innerHTML = '<div class="empty-state">Пока нет данных</div>'; }
+                            return `
+                                <div class="top-item ${itemClass}" ${onClickAttr}>
+                                    <div class="rank-badge ${rankClass}">${getRankIcon(index + 1)}</div>
+                                    <img src="${getSafeAvatar(item.avatar_url)}" class="top-avatar">
+                                    <div class="top-info">
+                                        <div class="top-name">${item.username}</div>
+                                        <div class="top-value ${valueClass}">${item[valueKey]} ${valueSuffix}</div>
+                                        ${descHtml}
+                                    </div>
+                                    ${chevronHtml}
+                                </div>
+                            `;
+                        }).join('');
+                    } else { container.innerHTML = '<div class="empty-state">Пока нет данных</div>'; }
+                };
 
-                // 3. Рендер Идей (С КНОПКОЙ РАЗВЕРНУТЬ)
-                const iList = document.getElementById('ideasList');
-                if (ideas.data && ideas.data.length > 0) {
-                    currentTopIdeasCache = ideas.data; // Сохраняем в кэш для модалки
-                    iList.innerHTML = ideas.data.map((item, index) => `
-                        <div class="top-item" style="cursor: pointer;" onclick="openIdeaModal(${index})" title="Нажмите, чтобы прочитать идею">
-                            <div class="rank-number rank-${index + 1}">${getRankIcon(index + 1)}</div>
-                            <img src="${getSafeAvatar(item.avatar_url)}" class="top-avatar">
-                            <div class="top-info">
-                                <div class="top-name">${item.username}</div>
-                                <div class="top-value val-green">+${item.reward_amount} ₸ награда</div>
-                                <div class="top-desc">"${item.idea_text}"</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right" style="color: var(--text-muted); opacity: 0.5; font-size: 14px; position: absolute; right: 20px;"></i>
-                        </div>
-                    `).join('');
-                } else { iList.innerHTML = '<div class="empty-state">Пока нет данных</div>'; }
+                renderList(donators.data, 'donatorsList', 'total_donated', '₸', 'val-diamond');
+                renderList(withdrawals.data, 'withdrawalsList', 'gold_amount', 'G', 'val-gold');
+                renderList(ideas.data, 'ideasList', 'reward_amount', '₸ награда', 'val-green');
+                renderList(charityKzt.data, 'charityKztList', 'total_donated', '₸', 'val-purple');
+                renderList(charityGold.data, 'charityGoldList', 'total_donated', 'G', 'val-red');
 
             } catch(e) { }
         }
@@ -449,14 +485,12 @@
                 </div>
             ` : '';
 
-            // Безопасный парсинг даты
             let dateStr = '';
             if (idea.created_at) {
                 const dateObj = new Date(idea.created_at);
                 dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
             }
 
-            // КРЕСТИК ВШИТ ПРЯМО СЮДА
             document.getElementById('ideaViewCard').innerHTML = `
                 <button class="modal-close" onclick="closeIdeaModal()"><i class="fa-solid fa-xmark"></i></button>
                 <div class="rev-header">
