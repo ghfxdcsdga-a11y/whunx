@@ -15,7 +15,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const PORT = process.env.PORT || 10000;
 
 // ==========================================
-// SOCKET.IO (Для выдачи призов)
+// SOCKET.IO (Для выдачи призов и донатов)
 // ==========================================
 const server = require('http').createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
@@ -57,6 +57,41 @@ bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
   }
 });
 
+// НОВОЕ: КОМАНДА ДЛЯ НАСТРОЙКИ ДОНАТА ГОЛДОЙ
+bot.onText(/^\/setdar\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([\d.]+)$/, async (msg, match) => {
+  if (msg.chat.id !== ADMIN_CHAT_ID) return;
+  const userEmail = match[1].trim();
+  const gameId = match[2].trim();
+  const pattern = match[3].trim();
+  const skinPrice = parseFloat(match[4].trim());
+
+  const { data: donate, error } = await supabase.from('donations')
+    .select('*')
+    .eq('user_email', userEmail)
+    .eq('donate_type', 'gold')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !donate) return bot.sendMessage(ADMIN_CHAT_ID, `❌ Заявка на донат голдой от ${userEmail} не найдена или уже обработана.`);
+
+  await supabase.from('donations').update({
+    game_id: gameId,
+    skin_pattern: pattern,
+    skin_price: skinPrice,
+    status: 'waiting_skin'
+  }).eq('id', donate.id);
+
+  const socketId = connectedUsers[userEmail];
+  if (socketId) {
+    io.to(socketId).emit('donation_skin_ready', { gameId, pattern, skinPrice });
+    bot.sendMessage(ADMIN_CHAT_ID, `✅ Данные скина отправлены юзеру ${userEmail}. Ждем покупки.`);
+  } else {
+    bot.sendMessage(ADMIN_CHAT_ID, `⚠️ Юзер ${userEmail} оффлайн. Данные сохранены в базу.`);
+  }
+});
+
 // ==========================================
 // ПРИВЯЗКА ТЕЛЕГРАМА
 // ==========================================
@@ -65,37 +100,23 @@ bot.onText(/^\/start BIND_(.+)$/, async (msg, match) => {
   const tgId = msg.from.id;
   const tgUsername = msg.from.username || null;
 
-  // 1. Ищем юзера по секретному ID (на которого сейчас пытаются привязать)
   const { data: targetUser } = await supabase.from('users').select('*').eq('secret_id', secretId).single();
-  
   if (!targetUser) {
     return bot.sendMessage(msg.chat.id, '❌ Ошибка привязки: Аккаунт не найден. Попробуйте снова нажать кнопку "Привязать" на сайте.');
   }
 
-  // 2. Проверяем, не привязан ли этот Telegram УЖЕ к кому-то в базе
   const { data: existingUser } = await supabase.from('users').select('*').eq('tg_id', tgId).maybeSingle();
-  
   if (existingUser) {
-      // Если этот ТГ привязан РОВНО К ЭТОМУ ЖЕ аккаунту — просто говорим, что всё ок
       if (existingUser.secret_id === secretId) {
           return bot.sendMessage(msg.chat.id, `✅ Этот Telegram уже успешно привязан к вашему аккаунту (${targetUser.username})!\n\nМожете возвращаться на сайт.`);
       }
-      
-      // Если этот ТГ привязан к СОВСЕМ ДРУГОМУ аккаунту
       return bot.sendMessage(msg.chat.id, `❌ Ошибка: Этот Telegram уже привязан к другому аккаунту на сайте: *${existingUser.username}*.\n\nОдин Telegram можно использовать только на одном профиле.`, { parse_mode: 'Markdown' });
   }
 
-  // 3. Если всё чисто — привязываем
-  const { error } = await supabase.from('users').update({ 
-    tg_id: tgId, 
-    telegram_username: tgUsername 
-  }).eq('secret_id', secretId);
-
+  const { error } = await supabase.from('users').update({ tg_id: tgId, telegram_username: tgUsername }).eq('secret_id', secretId);
   if (error) {
-    console.error("🔥 ОШИБКА ПРИВЯЗКИ ТГ В БД:", error);
     return bot.sendMessage(msg.chat.id, '❌ Произошла системная ошибка при сохранении в базу данных.');
   }
-
   bot.sendMessage(msg.chat.id, `✅ Аккаунт успешно привязан!\n👤 Никнейм: ${targetUser.username}\n\nТеперь вы можете полноценно участвовать в розыгрышах.`);
 });
 
@@ -133,12 +154,33 @@ bot.on('message', async (msg) => {
   }
 });
 
+// ОБРАБОТКА CALLBACK КНОПОК
 bot.on('callback_query', async (query) => {
   if (query.from.id !== ADMIN_CHAT_ID) return bot.answerCallbackQuery(query.id, { text: 'Доступ запрещен!', show_alert: true });
 
   const action = query.data.split('_')[0]; 
   const orderId = query.data.split('_')[1];
 
+  // НОВОЕ: Обработка пожертвований
+  if (action === 'approvedonate' || action === 'rejectdonate') {
+    const { data: donate } = await supabase.from('donations').select('*').eq('id', orderId).single();
+    if (!donate) return bot.answerCallbackQuery(query.id, { text: 'Донат не найден', show_alert: true });
+    
+    const newStatus = action === 'approvedonate' ? 'approved' : 'rejected';
+    await supabase.from('donations').update({ status: newStatus }).eq('id', orderId);
+
+    const socketId = connectedUsers[donate.user_email];
+    if (socketId) {
+        if (newStatus === 'approved') io.to(socketId).emit('donation_approved');
+        else io.to(socketId).emit('donation_rejected');
+    }
+
+    const statusText = newStatus === 'approved' ? '✅ ДОНАТ ПОДТВЕРЖДЕН' : '❌ ДОНАТ ОТКЛОНЕН / ОТМЕНЕН';
+    bot.editMessageText(`${query.message.text}\n\nСтатус: ${statusText}`, { chat_id: query.message.chat.id, message_id: query.message.message_id });
+    return bot.answerCallbackQuery(query.id, { text: 'Решение по донату принято!' });
+  }
+
+  // СТАРЫЕ ОБРАБОТЧИКИ
   if (action === 'approvetopup' || action === 'rejecttopup') {
     const { data: request } = await supabase.from('topup_requests').select('*').eq('id', orderId).single();
     if (!request) return bot.answerCallbackQuery(query.id, { text: 'Заявка не найдена', show_alert: true });
@@ -218,32 +260,16 @@ const authenticateUser = async (req, res, next) => {
 };
 
 // ==========================================
-// БАЗОВЫЕ РОУТЫ (Обновлен /api/me для загрузки скидки)
+// БАЗОВЫЕ РОУТЫ
 // ==========================================
 app.get('/api/me', authenticateUser, async (req, res) => {
   let userData = { ...req.user };
-  
-  // Ищем активную (не потраченную) скидку, привязанную к аккаунту
-  const { data: usedList } = await supabase.from('used_promocodes')
-    .select('promo_code')
-    .eq('user_email', userData.email)
-    .eq('is_spent', false)
-    .limit(1); // Защита от ошибок, если вдруг в базе окажется 2 кода
+  const { data: usedList } = await supabase.from('used_promocodes').select('promo_code').eq('user_email', userData.email).eq('is_spent', false).limit(1);
 
   if (usedList && usedList.length > 0) {
-    const { data: promo } = await supabase.from('promocodes')
-      .select('*')
-      .eq('code', usedList[0].promo_code)
-      .single();
-      
+    const { data: promo } = await supabase.from('promocodes').select('*').eq('code', usedList[0].promo_code).single();
     if (promo && promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
-       // Прикрепляем скидку к юзеру при загрузке профиля!
-       userData.active_discount = { 
-           code: promo.code, 
-           percent: promo.reward_value, 
-           target: promo.target_item_id, 
-           expires_at: promo.expires_at 
-       };
+       userData.active_discount = { code: promo.code, percent: promo.reward_value, target: promo.target_item_id, expires_at: promo.expires_at };
     }
   }
   res.json(userData);
@@ -301,28 +327,19 @@ app.post('/api/finance/topup', authenticateUser, async (req, res) => {
   res.json({ success: true, message: 'Заявка отправлена администратору' });
 });
 
-// ==========================================
-// ПОКУПКА С УЧЕТОМ СЖИГАНИЯ СКИДКИ
-// ==========================================
 app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
   const { amount, gameId, gameAvatar, targetSkin, pattern, spentTenge, appliedPromoCode } = req.body;
   const withdrawAmount = Number(amount);
 
   if (req.user.balance < spentTenge) return res.status(400).json({ error: 'Недостаточно средств на балансе' });
 
-  // Сжигаем промокод при успешной покупке
   if (appliedPromoCode) {
       const { data: promo } = await supabase.from('promocodes').select('*').eq('code', appliedPromoCode).single();
       if (!promo || !promo.is_active || (promo.expires_at && new Date() > new Date(promo.expires_at))) {
           return res.status(400).json({ error: 'Промокод больше недействителен или истек' });
       }
-      
       const { data: used } = await supabase.from('used_promocodes').select('*').eq('user_email', req.user.email).eq('promo_code', appliedPromoCode).single();
-      if (!used || used.is_spent) {
-          return res.status(400).json({ error: 'Промокод уже использован для покупки' });
-      }
-      
-      // Помечаем, что скидка потрачена!
+      if (!used || used.is_spent) return res.status(400).json({ error: 'Промокод уже использован для покупки' });
       await supabase.from('used_promocodes').update({ is_spent: true }).eq('id', used.id);
   }
 
@@ -356,52 +373,84 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
 });
 
 // ==========================================
+// НОВЫЕ РОУТЫ ДЛЯ ДОНАТА (ПОЖЕРТВОВАНИЯ)
+// ==========================================
+app.post('/api/donate/create', authenticateUser, async (req, res) => {
+  const { type, amount } = req.body;
+  if (!amount || amount <= 0) return res.status(400).json({ error: 'Неверная сумма' });
+
+  const { data: donate, error } = await supabase.from('donations').insert([{
+    user_email: req.user.email,
+    donate_type: type,
+    amount: Number(amount),
+    status: 'pending'
+  }]).select().single();
+
+  if (error) return res.status(500).json({ error: 'Сбой базы данных' });
+
+  if (type === 'kzt') {
+    const tgMsg = `💎 **НОВЫЙ ДОНАТ (ТЕНГЕ)!**\n👤 Ник: ${req.user.username}\n📧 Email: ${req.user.email}\n💰 Сумма: ${amount} ₸`;
+    bot.sendMessage(ADMIN_CHAT_ID, tgMsg, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[ { text: '✅ Подтвердить донат', callback_data: `approvedonate_${donate.id}` }, { text: '❌ Отклонить', callback_data: `rejectdonate_${donate.id}` } ]] } });
+  } else if (type === 'gold') {
+    const tgMsg = `💎 **НОВЫЙ ДОНАТ (ГОЛДА)!**\n👤 Ник: ${req.user.username}\n📧 Email: ${req.user.email}\n💰 Сумма: ${amount} G\n\n⚠️ Чтобы выдать скин для покупки, отправьте команду:\n\`/setdar ${req.user.email} GAME_ID ПАТТЕРН ЦЕНА_СКИНА\``;
+    bot.sendMessage(ADMIN_CHAT_ID, tgMsg, { parse_mode: 'Markdown' });
+  }
+
+  res.json({ success: true, donateId: donate.id });
+});
+
+app.post('/api/donate/confirm-skin', authenticateUser, async (req, res) => {
+  const { data: donate, error } = await supabase.from('donations')
+    .select('*')
+    .eq('user_email', req.user.email)
+    .eq('donate_type', 'gold')
+    .eq('status', 'waiting_skin')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !donate) return res.status(404).json({ error: 'Активный донат не найден' });
+
+  await supabase.from('donations').update({ status: 'pending_verification' }).eq('id', donate.id);
+
+  const tgMsg = `🛒 **ДОНАТЕР КУПИЛ СКИН!**\n👤 Ник: ${req.user.username}\n📧 Email: ${req.user.email}\n💰 Донат: ${donate.amount} G\n🎮 ID: ${donate.game_id} | Паттерн: ${donate.skin_pattern} | За: ${donate.skin_price} G\n\nПодтвердите получение:`;
+  bot.sendMessage(ADMIN_CHAT_ID, tgMsg, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[ { text: '✅ Подтвердить донат', callback_data: `approvedonate_${donate.id}` }, { text: '❌ Отклонить', callback_data: `rejectdonate_${donate.id}` } ]] } });
+
+  res.json({ success: true });
+});
+
+// ==========================================
 // ПРОМОКОДЫ
 // ==========================================
 app.post('/api/promocodes/activate', authenticateUser, async (req, res) => {
   const { code } = req.body;
-  
   const { data: promo } = await supabase.from('promocodes').select('*').eq('code', code).single();
   if (!promo || !promo.is_active) return res.status(404).json({ error: 'Промокод не найден или недействителен' });
-  
-  if (promo.expires_at && new Date() > new Date(promo.expires_at)) {
-      return res.status(400).json({ error: 'Срок действия промокода истек' });
-  }
+  if (promo.expires_at && new Date() > new Date(promo.expires_at)) return res.status(400).json({ error: 'Срок действия промокода истек' });
 
   const { data: used } = await supabase.from('used_promocodes').select('*').eq('user_email', req.user.email).eq('promo_code', code).single();
-  
   if (used) {
       if (promo.reward_type === 'balance') return res.status(400).json({ error: 'Вы уже активировали этот промокод' });
       if (used.is_spent) return res.status(400).json({ error: 'Вы уже совершили покупку с этим промокодом' });
-      
-      // Возвращаем флаг restored: true, чтобы на сайте не летели конфетти 2-й раз
       return res.json({ success: true, type: 'discount', restored: true, value: promo.reward_value, target: promo.target_item_id, code: promo.code, expires_at: promo.expires_at });
   }
 
-  if (promo.max_activations > 0 && promo.used_activations >= promo.max_activations) {
-      return res.status(400).json({ error: 'Лимит активаций исчерпан' });
-  }
+  if (promo.max_activations > 0 && promo.used_activations >= promo.max_activations) return res.status(400).json({ error: 'Лимит активаций исчерпан' });
 
   if (promo.reward_type === 'balance') {
       const newBalance = Number(req.user.balance) + Number(promo.reward_value);
       await supabase.from('users').update({ balance: newBalance }).eq('id', req.user.id);
-      
       await supabase.from('transactions').insert([{ user_email: req.user.email, type: 'deposit', amount: promo.reward_value, description: `Промокод: ${code}` }]);
       await supabase.from('used_promocodes').insert([{ user_email: req.user.email, promo_code: code, is_spent: true }]);
       await supabase.from('promocodes').update({ used_activations: promo.used_activations + 1 }).eq('id', promo.id);
-
       return res.json({ success: true, type: 'balance', value: promo.reward_value, new_balance: newBalance });
   } 
   else if (promo.reward_type === 'discount') {
-      // Проверяем, нет ли уже другой активной скидки
       const { data: activeDisc } = await supabase.from('used_promocodes').select('id').eq('user_email', req.user.email).eq('is_spent', false).limit(1);
-      if (activeDisc && activeDisc.length > 0) {
-          return res.status(400).json({ error: 'У вас уже есть другая активная скидка! Сначала используйте её.' });
-      }
+      if (activeDisc && activeDisc.length > 0) return res.status(400).json({ error: 'У вас уже есть другая активная скидка! Сначала используйте её.' });
 
       await supabase.from('used_promocodes').insert([{ user_email: req.user.email, promo_code: code, is_spent: false }]);
       await supabase.from('promocodes').update({ used_activations: promo.used_activations + 1 }).eq('id', promo.id);
-      
       return res.json({ success: true, type: 'discount', value: promo.reward_value, target: promo.target_item_id, code: promo.code, expires_at: promo.expires_at });
   }
 });
@@ -419,10 +468,7 @@ app.post('/api/reviews/add', authenticateUser, async (req, res) => {
   const { data: rList } = await supabase.from('reviews').select('id').eq('user_email', req.user.email);
   if (rList && rList.length >= wList.length) return res.status(403).json({ error: 'Вы исчерпали лимит отзывов. 1 покупка = 1 отзыв.' });
 
-  const { error } = await supabase.from('reviews').insert([{ 
-      user_email: req.user.email, username: req.user.username, avatar_url: req.user.avatar_url, rating: rating, comment: comment, image_url: image
-  }]);
-  
+  const { error } = await supabase.from('reviews').insert([{ user_email: req.user.email, username: req.user.username, avatar_url: req.user.avatar_url, rating: rating, comment: comment, image_url: image }]);
   if (error) return res.status(500).json({ error: 'Ошибка при сохранении отзыва' });
   res.json({ success: true, message: 'Отзыв успешно добавлен!' });
 });
@@ -434,21 +480,14 @@ app.get('/api/reviews/list', async (req, res) => {
 });
 
 app.post('/api/ideas/add', authenticateUser, async (req, res) => {
-  const { idea_text, images } = req.body; // <-- Принимаем images
+  const { idea_text, images } = req.body; 
   if (!idea_text) return res.status(400).json({ error: 'Текст идеи не может быть пустым' });
 
   const oneDayAgo = new Date(); oneDayAgo.setDate(oneDayAgo.getDate() - 1);
   const { data: recent } = await supabase.from('ideas').select('id').eq('user_email', req.user.email).gte('created_at', oneDayAgo.toISOString());
   if (recent && recent.length > 0) return res.status(403).json({ error: 'Предлагать идеи можно 1 раз в сутки!' });
 
-  const { error } = await supabase.from('ideas').insert([{ 
-      user_email: req.user.email, 
-      username: req.user.username,
-      avatar_url: req.user.avatar_url,
-      idea_text: idea_text,
-      images: images || [] // <-- Записываем массив фото в БД
-  }]);
-  
+  const { error } = await supabase.from('ideas').insert([{ user_email: req.user.email, username: req.user.username, avatar_url: req.user.avatar_url, idea_text: idea_text, images: images || [] }]);
   if (error) return res.status(500).json({ error: 'Ошибка при сохранении' });
   res.json({ success: true, message: 'Идея отправлена на модерацию!' });
 });
@@ -490,35 +529,21 @@ app.post('/api/giveaways/end', async (req, res) => {
 
 app.post('/api/giveaways/participate', async (req, res) => {
   const { gwId, userEmail } = req.body;
-
-  if (!userEmail) {
-    return res.status(400).json({ error: 'Не указана почта пользователя' });
-  }
-
-  // Достаем юзера из базы по почте
+  if (!userEmail) return res.status(400).json({ error: 'Не указана почта пользователя' });
   const { data: user, error: userErr } = await supabase.from('users').select('*').eq('email', userEmail).single();
-  if (userErr || !user) {
-    return res.status(404).json({ error: 'Пользователь не найден в базе данных' });
-  }
-
-  if (!user.tg_id) { 
-      return res.status(400).json({ error: 'Для участия необходимо привязать Telegram в настройках!' });
-  }
+  if (userErr || !user) return res.status(404).json({ error: 'Пользователь не найден в базе данных' });
+  if (!user.tg_id) return res.status(400).json({ error: 'Для участия необходимо привязать Telegram в настройках!' });
   
   const { data: gw } = await supabase.from('giveaways').select('*').eq('id', gwId).single();
   if (!gw || !gw.is_active) return res.status(400).json({ error: 'Розыгрыш не активен' });
 
-  // ПРОВЕРКА ПОДПИСОК ЧЕРЕЗ ТЕЛЕГРАМ БОТА
   if (gw.require_sub && gw.tg_channels && gw.tg_channels.length > 0) {
       for (let channel of gw.tg_channels) {
           try {
               const chatId = channel.startsWith('@') ? channel : '@' + channel;
               const member = await bot.getChatMember(chatId, user.tg_id);
-              if (member.status === 'left' || member.status === 'kicked' || member.status === 'restricted') {
-                  return res.status(400).json({ error: `Вы не подписаны на канал ${channel}!` });
-              }
+              if (member.status === 'left' || member.status === 'kicked' || member.status === 'restricted') return res.status(400).json({ error: `Вы не подписаны на канал ${channel}!` });
           } catch (err) {
-              console.error(`Ошибка проверки подписки на ${channel}:`, err.message);
               return res.status(400).json({ error: `Сначала подпишитесь на канал ${channel}, чтобы бот смог проверить подписку!` });
           }
       }
@@ -526,15 +551,9 @@ app.post('/api/giveaways/participate', async (req, res) => {
   
   let participants = gw.participants || [];
   if (participants.find(p => p.email === user.email)) return res.status(400).json({ error: 'Вы уже участвуете!' });
+  if (gw.max_participants && gw.max_participants !== '∞' && participants.length >= gw.max_participants) return res.status(400).json({ error: 'Мест больше нет!' });
   
-  if (gw.max_participants && gw.max_participants !== '∞' && participants.length >= gw.max_participants) {
-      return res.status(400).json({ error: 'Мест больше нет!' });
-  }
-  
-  participants.push({
-      email: user.email, nickname: user.username, avatar: user.avatar_url, tg: user.telegram_username || user.tg_id
-  });
-  
+  participants.push({ email: user.email, nickname: user.username, avatar: user.avatar_url, tg: user.telegram_username || user.tg_id });
   await supabase.from('giveaways').update({ participants }).eq('id', gwId);
   res.json({ success: true });
 });
