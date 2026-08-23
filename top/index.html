@@ -422,6 +422,8 @@
                 if (newDataString === topsCache) return;
                 topsCache = newDataString;
 
+                currentTopIdeasCache = ideas.data || [];
+                
                 // Вспомогательная функция для рендера
                 const renderList = (data, containerId, valueKey, valueSuffix, valueClass) => {
                     const container = document.getElementById(containerId);
