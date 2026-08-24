@@ -57,7 +57,6 @@ bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
   }
 });
 
-// НОВОЕ: КОМАНДА ДЛЯ НАСТРОЙКИ ДОНАТА ГОЛДОЙ
 bot.onText(/^\/setdar\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([\d.]+)$/, async (msg, match) => {
   if (msg.chat.id !== ADMIN_CHAT_ID) return;
   const userEmail = match[1].trim();
@@ -93,7 +92,7 @@ bot.onText(/^\/setdar\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([\d.]+)$/, async (msg,
 });
 
 // ==========================================
-// ПРИВЯЗКА ТЕЛЕГРАМА
+// ПРИВЯЗКА ТЕЛЕГРАМА (И СИНХРОНИЗАЦИЯ)
 // ==========================================
 bot.onText(/^\/start BIND_(.+)$/, async (msg, match) => {
   const secretId = match[1].trim();
@@ -108,7 +107,11 @@ bot.onText(/^\/start BIND_(.+)$/, async (msg, match) => {
   const { data: existingUser } = await supabase.from('users').select('*').eq('tg_id', tgId).maybeSingle();
   if (existingUser) {
       if (existingUser.secret_id === secretId) {
-          return bot.sendMessage(msg.chat.id, `✅ Этот Telegram уже успешно привязан к вашему аккаунту (${targetUser.username})!\n\nМожете возвращаться на сайт.`);
+          // ИСПРАВЛЕНИЕ 2: Если юзер сменил ник в ТГ - обновляем базу
+          if (existingUser.telegram_username !== tgUsername) {
+              await supabase.from('users').update({ telegram_username: tgUsername }).eq('secret_id', secretId);
+          }
+          return bot.sendMessage(msg.chat.id, `✅ Ваш Telegram синхронизирован с аккаунтом (${targetUser.username})!\n\nАктуальный юз: @${tgUsername || 'Скрыт'}\nМожете возвращаться на сайт.`);
       }
       return bot.sendMessage(msg.chat.id, `❌ Ошибка: Этот Telegram уже привязан к другому аккаунту на сайте: *${existingUser.username}*.\n\nОдин Telegram можно использовать только на одном профиле.`, { parse_mode: 'Markdown' });
   }
@@ -161,7 +164,6 @@ bot.on('callback_query', async (query) => {
   const action = query.data.split('_')[0]; 
   const orderId = query.data.split('_')[1];
 
-  // НОВОЕ: Обработка пожертвований
   if (action === 'approvedonate' || action === 'rejectdonate') {
     const { data: donate } = await supabase.from('donations').select('*').eq('id', orderId).single();
     if (!donate) return bot.answerCallbackQuery(query.id, { text: 'Донат не найден', show_alert: true });
@@ -180,7 +182,6 @@ bot.on('callback_query', async (query) => {
     return bot.answerCallbackQuery(query.id, { text: 'Решение по донату принято!' });
   }
 
-  // СТАРЫЕ ОБРАБОТЧИКИ
   if (action === 'approvetopup' || action === 'rejecttopup') {
     const { data: request } = await supabase.from('topup_requests').select('*').eq('id', orderId).single();
     if (!request) return bot.answerCallbackQuery(query.id, { text: 'Заявка не найдена', show_alert: true });
@@ -214,6 +215,15 @@ bot.on('callback_query', async (query) => {
       const newBalance = Number(user.balance) + Number(order.spent_rubles);
       await supabase.from('users').update({ balance: newBalance }).eq('email', order.user_email);
       await supabase.from('transactions').insert([{ user_email: order.user_email, type: 'refund', amount: order.spent_rubles, description: `Возврат за отмену заказа #${order.id}` }]);
+    }
+    
+    // ИСПРАВЛЕНИЕ 1: ВОЗВРАТ СКИДКИ ПОЛЬЗОВАТЕЛЮ ПРИ ОТМЕНЕ ЗАКАЗА
+    if (order.applied_promo) {
+      await supabase.from('used_promocodes').update({ is_spent: false }).eq('user_email', order.user_email).eq('promo_code', order.applied_promo);
+      const { data: pData } = await supabase.from('promocodes').select('used_activations').eq('code', order.applied_promo).single();
+      if (pData && pData.used_activations > 0) {
+          await supabase.from('promocodes').update({ used_activations: pData.used_activations - 1 }).eq('code', order.applied_promo);
+      }
     }
   }
 
@@ -343,8 +353,9 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
       await supabase.from('used_promocodes').update({ is_spent: true }).eq('id', used.id);
   }
 
+  // ЗАПИСЫВАЕМ ПРОМОКОД В БАЗУ ПРИ СОЗДАНИИ ЗАКАЗА
   const { data: order, error } = await supabase.from('withdrawals').insert([{
-    user_email: req.user.email, amount: withdrawAmount, game_id: gameId, game_avatar: gameAvatar, target_skin: targetSkin, pattern: pattern, spent_rubles: spentTenge, status: 'pending'
+    user_email: req.user.email, amount: withdrawAmount, game_id: gameId, game_avatar: gameAvatar, target_skin: targetSkin, pattern: pattern, spent_rubles: spentTenge, status: 'pending', applied_promo: appliedPromoCode || null
   }]).select().single();
 
   if (error) return res.status(500).json({ error: 'Сбой базы данных. Заказ не создан.' });
