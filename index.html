@@ -121,6 +121,7 @@
         .sidebar-link:hover { background: rgba(255,255,255,0.03); color: #fff; border-color: var(--glass-border); transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2);}
         .sidebar-link:hover i { text-shadow: 0 0 15px var(--accent-purple-glow); }
         
+        /* Свечение активной вкладки (фиолетовое) */
         .sidebar-link.active { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #fff; box-shadow: 0 5px 15px var(--accent-purple-glow);}
 
         .logo { font-size: 26px; font-weight: 900; letter-spacing: 1px; cursor: pointer; color: #fff; text-transform: uppercase;} 
@@ -142,7 +143,7 @@
         .profile-trigger:hover { background: rgba(255,255,255,0.03); border-color: var(--glass-border); } 
         .profile-trigger img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); background: var(--bg-input); }
         .dropdown-menu { position: absolute; top: calc(100% + 20px); right: 0; width: 260px; background: rgba(15, 18, 26, 0.85); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; opacity: 0; visibility: hidden; transform: translateY(15px); transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 200; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02); } .profile-module.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
-        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: center; }
+        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
         .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; color: var(--text-muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;} .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* =========================================
@@ -225,9 +226,7 @@
         #chatWidget.active { display: flex !important; transform: translateY(0) scale(1); opacity: 1; }
         .chat-header { background: rgba(0,0,0,0.3); padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); } .chat-header h4 { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;}
         .chat-messages { height: 300px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 600; line-height: 1.5; word-wrap: break-word; } 
-        .msg.user { background: var(--accent-purple); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 5px 15px var(--accent-purple-glow);} 
-        .msg.admin { background: rgba(255,255,255,0.08); color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--glass-border);}
+        .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 600; line-height: 1.5; word-wrap: break-word; } .msg.user { background: var(--accent-purple); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 5px 15px var(--accent-purple-glow);} .msg.admin { background: rgba(255,255,255,0.08); color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--glass-border);}
         .chat-input-area { padding: 15px; background: rgba(0,0,0,0.3); display: flex; gap: 10px; border-top: 1px solid var(--glass-border); } .chat-input { flex: 1; background: var(--bg-input); border: 1px solid var(--glass-border); padding: 12px 15px; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 600; outline: none; transition: 0.3s;} .chat-input:focus { border-color: var(--accent-purple); }
         .chat-send-btn { background: var(--accent-purple); color: #fff; width: 45px; height: 45px; border-radius: 12px; display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: 0 5px 15px var(--accent-purple-glow);} .chat-send-btn:hover { background: var(--accent-purple-hover); transform: scale(1.05);}
 
@@ -378,6 +377,7 @@
 
     <div id="toastContainer"></div>
 
+    <!-- БОКОВОЕ МЕНЮ (ИСПРАВЛЕН FOUC: жесткий стиль left: -100vw) -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display: none;"></div>
     <div class="sidebar-menu" id="sidebarMenu" style="position: fixed; left: -100vw; top: 0; z-index: 1000;">
         <div class="sidebar-header">
@@ -420,6 +420,7 @@
                     <div class="dropdown-item" onclick="openHistoryModal()"><i class="fa-solid fa-clock-rotate-left"></i> История покупок</div>
                     <div class="dropdown-item" onclick="openModal('settingsModal')"><i class="fa-solid fa-gear"></i> Настройки</div>
                     <div class="dropdown-item" onclick="openModal('topupModal')"><i class="fa-solid fa-wallet"></i> Пополнить баланс</div>
+                    <!-- НОВЫЙ ПУНКТ ПРОМОКОДА -->
                     <div class="dropdown-item" onclick="openModal('promoActivationModal')" style="color: var(--accent-gold); border-top: 1px solid rgba(255,255,255,0.05); border-radius: 0; padding-top: 15px; margin-top: 5px;"><i class="fa-solid fa-ticket"></i> Ввести промокод</div>
                     <div class="dropdown-item logout" onclick="logout()" style="color: var(--accent-red);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Выйти</div>
                 </div>
@@ -646,7 +647,7 @@
             <div style="display:flex; align-items:center; gap:25px; margin-bottom:35px;">
                 <img id="settingsAvatar" src="https://whunx.shop/whunx_pp.png" alt="" style="width:80px; height:80px; border-radius:18px; border:1px solid var(--glass-border); object-fit:cover; background: rgba(0,0,0,0.5);">
                 <div>
-                    <!-- СЮДА БУДУТ ВСТАВЛЯТЬСЯ БЕЙДЖИ -->
+                    <!-- СЮДА ВСТАВЛЯЮТСЯ БЕЙДЖИ В НАСТРОЙКАХ -->
                     <div id="settingsUserBadges" style="margin-bottom: 10px;"></div>
                     <input type="file" id="siteAvatarInput" style="display:none;" accept="image/*" onchange="previewSiteAvatar(event)">
                     <button style="background:rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color:#fff; padding:10px 18px; border-radius:10px; font-weight:800; font-size:13px; transition:0.3s; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;" onclick="document.getElementById('siteAvatarInput').click()">Изменить аватарку</button>
@@ -852,7 +853,9 @@
                     openGiftWithdrawModal(data.amount);
                 });
                 
+                // СОКЕТЫ ДЛЯ ДОНАТА
                 socket.on('donation_skin_ready', (data) => {
+                    // Когда админ вводит команду /setdar, открывается этот шаг
                     document.getElementById('donateStepWait').style.display = 'none';
                     document.getElementById('donateStepSkinReady').style.display = 'block';
                     document.getElementById('donateGameId').innerText = data.gameId;
@@ -889,6 +892,22 @@
             }
         }
 
+        // ==========================================
+        // ГЕНЕРАЦИЯ БЕЙДЖЕЙ
+        // ==========================================
+        function getUserBadges(userRole, isVerified) {
+            let html = '';
+            if (isVerified) {
+                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
+            }
+            if (userRole === 'creator') {
+                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
+            } else if (userRole === 'admin') {
+                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
+            }
+            return html;
+        }
+
         async function fetchActiveDiscount(email) {
             try {
                 const { data: usedList } = await supabaseClient.from('used_promocodes')
@@ -915,22 +934,6 @@
                 }
             } catch(e) {}
             return null;
-        }
-
-        // ==========================================
-        // ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ БЕЙДЖЕЙ И ГАЛОЧЕК
-        // ==========================================
-        function getUserBadges(user) {
-            let html = '';
-            if (user.is_verified) {
-                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
-            }
-            if (user.role === 'creator') {
-                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
-            } else if (user.role === 'admin') {
-                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
-            }
-            return html;
         }
 
         async function handleUserLogin(session) {
@@ -983,7 +986,7 @@
                     let oldDisc = currentDbUser.active_discount?.code;
                     let newDisc = freshUser.active_discount?.code;
                     let oldBalance = currentDbUser.balance;
-                    let oldTg = currentDbUser.telegram_username;
+                    let oldTg = currentDbUser.telegram_username; 
                     
                     currentDbUser = freshUser;
                     
@@ -1006,14 +1009,14 @@
                 if (result.success) {
                     const wIds = [];
                     const tIds = [];
-                    let hasNewCompletedWithdrawal = false;
+                    let hasNewCompletedWithdrawal = false; 
                     
                     if (result.notifications.withdrawals) {
                         result.notifications.withdrawals.forEach(n => {
                             wIds.push(n.id);
                             if (n.status === 'completed') {
                                 showToast('Заказ выполнен', `Ваш заказ на ${n.amount} G успешно выведен в игру!`, 'success');
-                                hasNewCompletedWithdrawal = true;
+                                hasNewCompletedWithdrawal = true; 
                             }
                             else if (n.status === 'cancelled') showToast('Заказ отменен', `Вывод ${n.amount} G отменен. ${n.spent_rubles} ₸ возвращены на баланс.`, 'error');
                         });
@@ -1706,7 +1709,6 @@
                         const div = document.createElement('div'); 
                         div.className = msg.sender === 'user' ? 'msg user' : 'msg admin'; 
                         
-                        // Добавляем красивую подпись админа к его сообщениям в чате
                         if (msg.sender === 'admin') {
                             div.innerHTML = `<div style="font-size: 10px; color: var(--accent-gold); margin-bottom: 4px; font-weight: 900; letter-spacing: 0.5px;"><i class="fa-solid fa-crown"></i> CREATOR</div>${msg.text}`;
                         } else {
@@ -1730,52 +1732,6 @@
             } catch (err) { showToast('Ошибка', 'Не удалось отправить сообщение.', 'error'); }
         }
 
-        function toggleDropdown() { document.getElementById('profileModule').classList.toggle('active'); }
-        document.addEventListener('click', (e) => { const module = document.getElementById('profileModule'); if (module && module.classList.contains('active') && !module.contains(e.target)) module.classList.remove('active'); });
-        
-        function openModal(id) { 
-            document.getElementById('profileDropdown').classList.remove('active'); 
-            if (id === 'topupModal') resetTopupModal(); 
-            const modal = document.getElementById(id); 
-            modal.style.display = 'flex'; 
-            setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
-        }
-        
-        function closeModal(id) { 
-            const modal = document.getElementById(id); 
-            modal.style.opacity = '0'; 
-            modal.querySelector('.modal-box').style.transform = 'scale(0.9)'; 
-            setTimeout(() => { modal.style.display = 'none'; }, 300); 
-        }
-
-        setInterval(() => {
-            if (currentDbUser && currentDbUser.active_discount && currentDbUser.active_discount.expires_at) {
-                const expires = new Date(currentDbUser.active_discount.expires_at).getTime();
-                if (Date.now() > expires) {
-                    currentDbUser.active_discount = null; 
-                    showToast('Время вышло', 'Срок действия промокода истек!', 'error');
-                    renderDynamicShop(); 
-                }
-            }
-        }, 1000);
-
-        function openLightbox(src) {
-            document.getElementById('lightboxImg').src = src;
-            const lb = document.getElementById('imageLightbox');
-            lb.style.display = 'flex';
-            setTimeout(() => lb.style.opacity = '1', 10);
-        }
-        async function logout() { 
-            await supabaseClient.auth.signOut(); 
-            window.location.reload(); 
-        }
-        function closeLightbox(e, force = false) {
-            if (force || e.target.id === 'imageLightbox') {
-                const lb = document.getElementById('imageLightbox');
-                lb.style.opacity = '0';
-                setTimeout(() => lb.style.display = 'none', 300);
-            }
-        }
     </script>
 </body>
 </html>
