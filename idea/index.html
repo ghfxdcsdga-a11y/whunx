@@ -240,8 +240,8 @@
 
     <div id="toastContainer"></div>
 
-    <!-- БОКОВОЕ МЕНЮ -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <!-- БОКОВОЕ МЕНЮ (ИСПРАВЛЕН FOUC: жесткий стиль left: -100vw) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display: none;"></div>
     <div class="sidebar-menu" id="sidebarMenu" style="position: fixed; left: -100vw; top: 0; z-index: 1000;">
         <div class="sidebar-header">
             <h2>Навигация</h2>
@@ -565,13 +565,10 @@
         async function loadIdeasFeed() {
             const container = document.getElementById('ideasContainer');
             try {
-                // Подтягиваем идеи вместе с данными юзера
+                // ЧИСТЫЙ И БЕЗОПАСНЫЙ ЗАПРОС (БЕЗ FOREIGN KEY JOINS)
                 const { data: ideas, error } = await supabaseClient
                     .from('ideas')
-                    .select(`
-                        *,
-                        users:user_email (is_verified)
-                    `)
+                    .select('*')
                     .order('created_at', { ascending: false });
                 
                 if (error) throw new Error('DB Error');
@@ -583,6 +580,20 @@
                 container.innerHTML = '';
                 
                 if(ideas && ideas.length > 0) {
+                    // Вытаскиваем уникальные email авторов
+                    const emails = [...new Set(ideas.map(i => i.user_email))];
+                    
+                    // Скачиваем актуальные данные о ролях и галочках авторов
+                    const { data: usersData } = await supabaseClient
+                        .from('users')
+                        .select('email, is_verified, role')
+                        .in('email', emails);
+                    
+                    const usersMap = {};
+                    if (usersData) {
+                        usersData.forEach(u => usersMap[u.email] = u);
+                    }
+
                     ideas.forEach(idea => {
                         let statusClass = ''; let statusText = ''; let statusIcon = '';
                         if (idea.status === 'pending') { statusClass = 'status-pending'; statusText = 'На модерации'; statusIcon = 'fa-clock'; }
@@ -623,8 +634,9 @@
                         const dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
 
                         // Подтягиваем актуальный бейдж и галочку
-                        const isVerified = idea.users ? idea.users.is_verified : false;
-                        const role = idea.user_role || 'user';
+                        const authorInfo = usersMap[idea.user_email] || {};
+                        const isVerified = authorInfo.is_verified || false;
+                        const role = authorInfo.role || idea.user_role || 'user';
                         const userBadges = getUserBadges(role, isVerified);
 
                         const card = document.createElement('div');
