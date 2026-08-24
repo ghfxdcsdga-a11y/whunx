@@ -16,7 +16,7 @@
             --accent-gold-glow: rgba(244, 199, 69, 0.4);
             --accent-purple: #8b5cf6;
             --accent-purple-glow: rgba(139, 92, 246, 0.4);
-            --accent-blue: #3b82f6; /* Добавлен синий цвет для статуса Выполнено */
+            --accent-blue: #3b82f6; 
             
             --glass-bg: rgba(15, 15, 20, 0.65);
             --glass-border: rgba(255, 255, 255, 0.08);
@@ -32,6 +32,11 @@
 
         body { font-family: 'Montserrat', sans-serif; width: 100%; min-height: 100vh; background-color: var(--bg-body); color: var(--text-main); display: flex; }
         input, button, textarea, select { font-family: 'Montserrat', sans-serif; }
+
+        /* РОЛИ И БЕЙДЖИ */
+        .badge-creator { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #f59e0b, #f4c745); color: #000; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; box-shadow: 0 0 10px rgba(244,199,69,0.5); vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px;}
+        .badge-admin { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; box-shadow: 0 0 10px rgba(139,92,246,0.5); vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px;}
+        .badge-verified { color: #3b82f6; font-size: 16px; margin-left: 5px; vertical-align: middle; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));}
 
         /* ── ФОН ── */
         .bg-blobs { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; overflow: hidden; background: var(--bg-body); pointer-events: none;}
@@ -124,6 +129,7 @@
         .form-label { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
         .form-input { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: #fff; outline: none; transition: 0.3s; font-weight: 600; font-family: 'Montserrat', sans-serif;}
         .form-input:focus { border-color: var(--accent-gold); box-shadow: inset 0 0 10px var(--accent-gold-glow); }
+        .form-input:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .upload-area { background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 14px; padding: 18px; text-align: center; cursor: pointer; transition: 0.3s; font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #fff;} 
         .upload-area:hover { border-color: var(--accent-gold); background: rgba(244, 199, 69, 0.08); }
@@ -351,9 +357,21 @@
     <div class="modal-overlay" id="userEditModal">
         <div class="modal-box">
             <h3>Редактировать профиль</h3>
+            
+            <div class="form-group">
+                <label class="form-label">Роль пользователя</label>
+                <select id="editUserRole" class="form-input">
+                    <option value="user">Пользователь</option>
+                    <option value="admin">Администратор</option>
+                    <option value="creator" disabled>Создатель (CREATOR)</option>
+                </select>
+            </div>
+            <label class="checkbox-label"><input type="checkbox" id="editUserVerified"> Верифицированный аккаунт (Галочка)</label>
+
             <div class="form-group"><label class="form-label">Никнейм</label><input type="text" id="editUserName" class="form-input"></div>
             <div class="form-group"><label class="form-label">Аватарка (URL)</label><input type="text" id="editUserAvatar" class="form-input"></div>
             <div class="form-group"><label class="form-label">Баланс (₸)</label><input type="number" id="editUserBalance" class="form-input"></div>
+            
             <div class="modal-btns">
                 <button class="m-btn m-btn-cancel" onclick="closeModal('userEditModal')">Отмена</button>
                 <button class="m-btn m-btn-confirm" onclick="saveUserEdit()">Сохранить</button>
@@ -378,8 +396,8 @@
     <!-- Модал: Управление отзывом -->
     <div class="modal-overlay" id="reviewModal">
         <div class="modal-box" style="max-width: 550px;">
-            <button class="modal-close" onclick="closeModal('reviewModal')"><i class="fa-solid fa-xmark"></i></button>
-            <div class="modal-title" style="margin-bottom: 20px;">Управление отзывом</div>
+            <button class="modal-close" style="background:transparent; border:none; color:var(--text-muted); font-size:24px; position:absolute; top:20px; right:20px; cursor:pointer;" onclick="closeModal('reviewModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-bottom: 20px;">Управление отзывом</h3>
             
             <div class="form-group"><label class="form-label">Текст отзыва</label><textarea id="revText" class="form-input" rows="3"></textarea></div>
             
@@ -494,13 +512,8 @@
             
             const titles = { 'shop': 'Товары магазина', 'promocodes': 'Управление промокодами', 'users': 'База пользователей', 'reviews': 'Отзывы клиентов', 'ideas': 'Идеи и предложения', 'giveaways': 'Управление розыгрышами' };
             document.getElementById('pageTitle').innerText = titles[secId] || '';
-
-            if (secId === 'shop') loadShop();
-            if (secId === 'promocodes') loadPromocodes();
-            if (secId === 'users') loadUsers();
-            if (secId === 'reviews') loadReviews();
-            if (secId === 'ideas') loadIdeas();
-            if (secId === 'giveaways') loadGiveaways();
+            
+            // Мы больше не загружаем данные по клику, они загружаются в фоне при входе!
         }
 
         function openModal(id) { document.getElementById(id).classList.add('active'); }
@@ -519,6 +532,22 @@
                 lb.style.opacity = '0';
                 setTimeout(() => lb.style.display = 'none', 300);
             }
+        }
+
+        // ==========================================
+        // ГЕНЕРАЦИЯ БЕЙДЖЕЙ
+        // ==========================================
+        function getUserBadges(userRole, isVerified) {
+            let html = '';
+            if (isVerified) {
+                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
+            }
+            if (userRole === 'creator') {
+                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
+            } else if (userRole === 'admin') {
+                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
+            }
+            return html;
         }
 
         // ==========================================
@@ -565,13 +594,28 @@
                 document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
                 document.getElementById('authDesc').innerText = 'Сверка полномочий...';
 
-                const { data: dbUser } = await supabaseClient.from('users').select('is_admin').eq('email', user.email).single();
+                // Загружаем пользователя из базы
+                const { data: dbUser } = await supabaseClient.from('users').select('*').eq('email', user.email).single();
                 
-                if (dbUser && dbUser.is_admin === true) {
+                // Проверяем роль
+                if (dbUser && (dbUser.role === 'admin' || dbUser.role === 'creator' || dbUser.is_admin === true)) {
                     document.getElementById('authOverlay').style.display = 'none';
                     document.getElementById('mainSidebar').style.display = 'flex';
                     document.getElementById('mainContent').style.display = 'flex';
+                    
+                    // ==================================
+                    // ФОНОВЫЙ ПРЕДЗАГРУЗЧИК (PRELOADER)
+                    // ==================================
                     loadShop();
+                    loadPromocodes();
+                    loadGiveaways();
+                    
+                    // Загружаем юзеров первыми, чтобы использовать их данные (роли, аватары) в Отзывах и Идеях
+                    loadUsers().then(() => {
+                        loadReviews();
+                        loadIdeas();
+                    });
+
                 } else {
                     setAuthError('У вас нет прав администратора!');
                 }
@@ -765,8 +809,16 @@
         let allUsersCache = [];
         
         async function loadUsers() {
-            const { data } = await supabaseClient.from('users').select('*').order('created_at', {ascending: false});
-            if (data) { allUsersCache = data; renderUsers(data); }
+            // Для ускорения ограничиваем выборку до 200 пользователей и берем только нужные поля
+            const { data } = await supabaseClient.from('users')
+                .select('email, username, avatar_url, balance, role, is_verified')
+                .order('created_at', {ascending: false})
+                .limit(200);
+            
+            if (data) { 
+                allUsersCache = data; 
+                renderUsers(data); 
+            }
         }
         
         function getSafeAvatar(url) {
@@ -777,17 +829,28 @@
         }
 
         function renderUsers(list) {
-            document.getElementById('usersTable').innerHTML = list.map(u => `
+            document.getElementById('usersTable').innerHTML = list.map(u => {
+                const badgesHtml = getUserBadges(u.role, u.is_verified);
+                return `
                 <tr>
-                    <td><div class="td-user"><img src="${getSafeAvatar(u.avatar_url)}" onerror="this.src='https://whunx.shop/whunx_pp.png'"><b>${u.username}</b></div></td>
+                    <td>
+                        <div class="td-user">
+                            <img src="${getSafeAvatar(u.avatar_url)}" onerror="this.src='https://whunx.shop/whunx_pp.png'">
+                            <div>
+                                <b>${u.username}</b> ${badgesHtml}<br>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">${u.email}</span>
+                            </div>
+                        </div>
+                    </td>
                     <td style="color:var(--text-muted); font-size:0.85rem;">${u.email}</td>
                     <td style="font-weight:900; color:var(--accent-gold);">${u.balance} ₸</td>
                     <td><div class="td-actions">
-                        <button class="btn-sm edit" onclick="openUserEdit('${u.email}', '${u.username}', '${u.avatar_url || ''}', ${u.balance})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-sm edit" onclick="openUserEdit('${u.email}', '${u.username}', '${u.avatar_url || ''}', ${u.balance}, '${u.role || 'user'}', ${u.is_verified || false})"><i class="fa-solid fa-pen"></i></button>
                         <button class="btn-sm" onclick="openUserHistory('${u.email}')"><i class="fa-solid fa-clock-rotate-left"></i></button>
                     </div></td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
 
         document.getElementById('userSearch').addEventListener('input', (e) => {
@@ -795,11 +858,27 @@
             renderUsers(allUsersCache.filter(u => u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)));
         });
 
-        function openUserEdit(email, name, ava, bal) {
+        function openUserEdit(email, name, ava, bal, role, is_verified) {
             currentEditEmail = email;
             document.getElementById('editUserName').value = name;
             document.getElementById('editUserAvatar').value = ava;
             document.getElementById('editUserBalance').value = bal;
+            
+            const roleSelect = document.getElementById('editUserRole');
+            roleSelect.value = role;
+            
+            // Если мы пытаемся редактировать CREATOR, то отключаем выбор роли (чтобы случайно не снять),
+            // иначе убираем CREATOR из выбора.
+            if (role === 'creator') {
+                roleSelect.disabled = true;
+                roleSelect.querySelector('option[value="creator"]').disabled = false;
+                roleSelect.value = 'creator';
+            } else {
+                roleSelect.disabled = false;
+                roleSelect.querySelector('option[value="creator"]').disabled = true;
+            }
+
+            document.getElementById('editUserVerified').checked = is_verified;
             openModal('userEditModal');
         }
 
@@ -807,8 +886,17 @@
             const username = document.getElementById('editUserName').value;
             const avatar_url = document.getElementById('editUserAvatar').value;
             const balance = parseInt(document.getElementById('editUserBalance').value) || 0;
-            const { error } = await supabaseClient.from('users').update({ username, avatar_url, balance }).eq('email', currentEditEmail);
-            if (!error) { showToast('Юзер сохранен', 'success'); closeModal('userEditModal'); loadUsers(); }
+            const role = document.getElementById('editUserRole').value;
+            const is_verified = document.getElementById('editUserVerified').checked;
+
+            const { error } = await supabaseClient.from('users').update({ username, avatar_url, balance, role, is_verified }).eq('email', currentEditEmail);
+            if (!error) { 
+                showToast('Профиль сохранен', 'success'); 
+                closeModal('userEditModal'); 
+                loadUsers().then(() => { loadReviews(); loadIdeas(); }); // Перезагружаем зависимые таблицы
+            } else {
+                showToast('Ошибка сохранения', 'error');
+            }
         }
 
         async function openUserHistory(email) {
@@ -840,13 +928,28 @@
         let adminReviewsCache = []; 
 
         async function loadReviews() {
-            const { data } = await supabaseClient.from('reviews').select('*').order('created_at', {ascending: false});
+            // Ограничиваем 100 отзывами для скорости
+            const { data } = await supabaseClient.from('reviews').select('*').order('created_at', {ascending: false}).limit(100);
             const tbody = document.getElementById('reviewsTable');
             if(data && data.length) {
                 adminReviewsCache = data;
-                tbody.innerHTML = data.map(r => `
+                
+                // Создаем Map пользователей для быстрого получения ролей без join
+                const usersMap = {};
+                allUsersCache.forEach(u => usersMap[u.email] = u);
+
+                tbody.innerHTML = data.map(r => {
+                    const authorInfo = usersMap[r.user_email] || {};
+                    const isVerified = authorInfo.is_verified || false;
+                    const role = authorInfo.role || r.user_role || 'user';
+                    const userBadges = getUserBadges(role, isVerified);
+
+                    return `
                     <tr>
-                        <td style="font-size:0.85rem;">${r.user_email}</td>
+                        <td style="font-size:0.85rem;">
+                            <b>${r.username || r.user_email.split('@')[0]}</b> ${userBadges}<br>
+                            <span style="color:var(--text-muted);">${r.user_email}</span>
+                        </td>
                         <td style="color:var(--accent-gold); font-weight:900;"><i class="fa-solid fa-star"></i> ${r.rating}</td>
                         <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.comment}</td>
                         <td>${r.admin_reply ? '<span class="badge active">Дан</span>' : '<span class="badge inactive">Нет</span>'}</td>
@@ -855,7 +958,8 @@
                             <button class="btn-sm ban" onclick="deleteReview(${r.id})"><i class="fa-solid fa-trash"></i></button>
                         </div></td>
                     </tr>
-                `).join('');
+                    `
+                }).join('');
             } else { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Пусто</td></tr>'; }
         }
 
@@ -926,9 +1030,14 @@
         // --- 4. ИДЕИ ---
         let currentIdeaId = null, currentIdeaEmail = null;
         async function loadIdeas() {
-            const { data } = await supabaseClient.from('ideas').select('*').order('created_at', {ascending: false});
+            // Ограничиваем 100 идеями для скорости
+            const { data } = await supabaseClient.from('ideas').select('*').order('created_at', {ascending: false}).limit(100);
             const tbody = document.getElementById('ideasTable');
             if(data && data.length) {
+                
+                const usersMap = {};
+                allUsersCache.forEach(u => usersMap[u.email] = u);
+
                 tbody.innerHTML = data.map(i => {
                     let statClass = '';
                     let statText = '';
@@ -943,12 +1052,17 @@
                     const safeReply = (i.admin_reply || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
                     const imagesJson = i.images ? JSON.stringify(i.images).replace(/'/g, "\\'").replace(/"/g, '&quot;') : '[]';
 
+                    const authorInfo = usersMap[i.user_email] || {};
+                    const isVerified = authorInfo.is_verified || false;
+                    const role = authorInfo.role || i.user_role || 'user';
+                    const userBadges = getUserBadges(role, isVerified);
+
                     return `<tr>
                         <td>
                             <div class="td-user">
                                 <img src="${getSafeAvatar(i.avatar_url)}" onerror="this.src='https://whunx.shop/whunx_pp.png'">
                                 <div>
-                                    <b>${i.username || i.user_email.split('@')[0]}</b><br>
+                                    <b>${i.username || i.user_email.split('@')[0]}</b> ${userBadges}<br>
                                     <span style="font-size:0.75rem; color:var(--text-muted);">${i.user_email}</span>
                                 </div>
                             </div>
@@ -996,10 +1110,8 @@
             const reward_amount = parseInt(document.getElementById('ideaReward').value) || 0;
             const admin_reply = document.getElementById('ideaReply').value;
 
-            // Проверяем текущий статус, чтобы не выдать награду дважды
             const { data: currentIdea } = await supabaseClient.from('ideas').select('status').eq('id', currentIdeaId).single();
 
-            // Если награда больше 0 и мы меняем статус на "Одобрено" или "Выполнено" В ПЕРВЫЙ РАЗ:
             if ((status === 'approved' || status === 'completed') && reward_amount > 0) {
                 if (currentIdea && currentIdea.status !== 'approved' && currentIdea.status !== 'completed') {
                     const { data: u } = await supabaseClient.from('users').select('balance').eq('email', currentIdeaEmail).single();
