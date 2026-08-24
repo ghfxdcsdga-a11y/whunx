@@ -553,13 +553,10 @@
         async function loadReviews() {
             const container = document.getElementById('reviewsContainer');
             try {
-                // Подтягиваем отзывы вместе с данными юзера (чтобы получить галочку верификации)
+                // ЧИСТЫЙ И БЕЗОПАСНЫЙ ЗАПРОС (БЕЗ FOREIGN KEY JOINS)
                 const { data: reviews, error } = await supabaseClient
                     .from('reviews')
-                    .select(`
-                        *,
-                        users:user_email (is_verified)
-                    `)
+                    .select('*')
                     .order('created_at', { ascending: false });
                 
                 if (error) throw new Error('DB Error');
@@ -571,6 +568,20 @@
                 container.innerHTML = '';
                 
                 if(reviews && reviews.length > 0) {
+                    // Вытаскиваем уникальные email авторов
+                    const emails = [...new Set(reviews.map(r => r.user_email))];
+                    
+                    // Скачиваем актуальные данные о ролях и галочках авторов
+                    const { data: usersData } = await supabaseClient
+                        .from('users')
+                        .select('email, is_verified, role')
+                        .in('email', emails);
+                    
+                    const usersMap = {};
+                    if (usersData) {
+                        usersData.forEach(u => usersMap[u.email] = u);
+                    }
+
                     reviews.forEach(r => {
                         let starsHtml = '';
                         for(let i = 1; i <= 5; i++) {
@@ -598,9 +609,11 @@
                         const dateObj = new Date(r.created_at);
                         const dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
 
-                        // Определяем статус верификации из связи с таблицей users
-                        const isVerified = r.users ? r.users.is_verified : false;
-                        const userBadges = getUserBadges(r.user_role, isVerified);
+                        // Подтягиваем актуальный бейдж и галочку
+                        const authorInfo = usersMap[r.user_email] || {};
+                        const isVerified = authorInfo.is_verified || false;
+                        const role = authorInfo.role || r.user_role || 'user';
+                        const userBadges = getUserBadges(role, isVerified);
 
                         const card = document.createElement('div');
                         card.className = 'review-card';
