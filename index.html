@@ -820,12 +820,21 @@
 
         function openModal(id) { 
             document.getElementById('profileDropdown').classList.remove('active'); 
-            if (id === 'topupModal') resetTopupModal(); 
+            if (id === 'topupModal' && typeof resetTopupModal === 'function') {
+                resetTopupModal(); 
+            }
             const modal = document.getElementById(id); 
             modal.style.display = 'flex'; 
             setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
         }
 
+        function resetTopupModal() { 
+            const s1 = document.getElementById('topupStep1');
+            const s2 = document.getElementById('topupStep2');
+            if(s1) s1.style.display = 'block'; 
+            if(s2) s2.style.display = 'none'; 
+        }
+        
         function closeModal(id) { 
             const modal = document.getElementById(id); 
             modal.style.opacity = '0'; 
