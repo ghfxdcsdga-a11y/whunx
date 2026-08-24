@@ -647,7 +647,6 @@
             <div style="display:flex; align-items:center; gap:25px; margin-bottom:35px;">
                 <img id="settingsAvatar" src="https://whunx.shop/whunx_pp.png" alt="" style="width:80px; height:80px; border-radius:18px; border:1px solid var(--glass-border); object-fit:cover; background: rgba(0,0,0,0.5);">
                 <div>
-                    <!-- СЮДА ВСТАВЛЯЮТСЯ БЕЙДЖИ В НАСТРОЙКАХ -->
                     <div id="settingsUserBadges" style="margin-bottom: 10px;"></div>
                     <input type="file" id="siteAvatarInput" style="display:none;" accept="image/*" onchange="previewSiteAvatar(event)">
                     <button style="background:rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color:#fff; padding:10px 18px; border-radius:10px; font-weight:800; font-size:13px; transition:0.3s; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;" onclick="document.getElementById('siteAvatarInput').click()">Изменить аватарку</button>
@@ -660,11 +659,9 @@
                     <input type="text" id="inputSetNick" class="f-input" value="Player">
                 </div>
                 
-                <!-- НОВАЯ ПЛАШКА ПРЕДУПРЕЖДЕНИЯ О ГАЛОЧКЕ -->
                 <div id="verifiedWarningText" style="display: none; color: var(--accent-blue); font-size: 11px; font-weight: 800; margin-top: 12px; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.3); line-height: 1.4;">
                     <i class="fa-solid fa-circle-info" style="font-size: 14px;"></i> Ваш аккаунт верифицирован. Если вы измените никнейм, статус верификации будет навсегда снят.
                 </div>
-                
             </div>
             
             <div class="tg-bind-btn" id="tgBindBtn" style="background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 14px; padding: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.3s; margin-bottom: 15px; gap: 10px;">
@@ -798,22 +795,42 @@
             else setTimeout(() => { overlay.style.display = 'none'; }, 400);
         }
 
-        function initGoogleAuth() {
-            const btn = document.getElementById("googleLoginBtn");
-            const fakeText = document.getElementById('fakeGoogleText');
-            if (currentSessionToken) return;
+        function toggleDropdown() { document.getElementById('profileModule').classList.toggle('active'); }
+        document.addEventListener('click', (e) => { const module = document.getElementById('profileModule'); if (module && module.classList.contains('active') && !module.contains(e.target)) module.classList.remove('active'); });
 
-            if (window.google && window.google.accounts && btn && fakeText) {
-                try {
-                    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin });
-                    google.accounts.id.renderButton(btn, { theme: "outline", size: "large", type: "standard", width: 250 });
-                    fakeText.innerText = 'Войти';
-                } catch (e) {
-                    fakeText.innerText = 'Ошибка';
-                }
-            } else {
-                setTimeout(initGoogleAuth, 100);
+        function openModal(id) { 
+            document.getElementById('profileDropdown').classList.remove('active'); 
+            if (id === 'topupModal') resetTopupModal(); 
+            const modal = document.getElementById(id); 
+            modal.style.display = 'flex'; 
+            setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
+        }
+
+        function closeModal(id) { 
+            const modal = document.getElementById(id); 
+            modal.style.opacity = '0'; 
+            modal.querySelector('.modal-box').style.transform = 'scale(0.9)'; 
+            setTimeout(() => { modal.style.display = 'none'; }, 300); 
+        }
+
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            const lb = document.getElementById('imageLightbox');
+            lb.style.display = 'flex';
+            setTimeout(() => lb.style.opacity = '1', 10);
+        }
+
+        function closeLightbox(e, force = false) {
+            if (force || e.target.id === 'imageLightbox') {
+                const lb = document.getElementById('imageLightbox');
+                lb.style.opacity = '0';
+                setTimeout(() => lb.style.display = 'none', 300);
             }
+        }
+
+        async function logout() { 
+            await supabaseClient.auth.signOut(); 
+            window.location.reload(); 
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -855,7 +872,6 @@
                 
                 // СОКЕТЫ ДЛЯ ДОНАТА
                 socket.on('donation_skin_ready', (data) => {
-                    // Когда админ вводит команду /setdar, открывается этот шаг
                     document.getElementById('donateStepWait').style.display = 'none';
                     document.getElementById('donateStepSkinReady').style.display = 'block';
                     document.getElementById('donateGameId').innerText = data.gameId;
@@ -878,6 +894,24 @@
                 });
             } catch(e) {}
         });
+
+        function initGoogleAuth() {
+            const btn = document.getElementById("googleLoginBtn");
+            const fakeText = document.getElementById('fakeGoogleText');
+            if (currentSessionToken) return;
+
+            if (window.google && window.google.accounts && btn && fakeText) {
+                try {
+                    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin });
+                    google.accounts.id.renderButton(btn, { theme: "outline", size: "large", type: "standard", width: 250 });
+                    fakeText.innerText = 'Войти';
+                } catch (e) {
+                    fakeText.innerText = 'Ошибка';
+                }
+            } else {
+                setTimeout(initGoogleAuth, 100);
+            }
+        }
 
         async function handleGoogleLogin(response) {
             document.getElementById('fakeGoogleText').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Вход...';
@@ -990,7 +1024,6 @@
                     
                     currentDbUser = freshUser;
                     
-                    // Если изменился баланс ИЛИ телеграм юзернейм — перерисовываем интерфейс
                     if (oldBalance !== freshUser.balance || oldTg !== freshUser.telegram_username) {
                         updateUI(); 
                     }
@@ -1079,10 +1112,8 @@
             document.getElementById('settingsAvatar').src = safeAvatar;
             document.getElementById('inputSetNick').value = currentDbUser.username;
 
-            // ---> НОВЫЙ КОД: ПОКАЗЫВАЕМ ИЛИ СКРЫВАЕМ ПРЕДУПРЕЖДЕНИЕ О ГАЛОЧКЕ <---
             const verifiedWarning = document.getElementById('verifiedWarningText');
             if (verifiedWarning) {
-                // Если юзер верифицирован - показываем как flex, иначе скрываем
                 verifiedWarning.style.display = currentDbUser.is_verified ? 'flex' : 'none';
             }
 
@@ -1157,7 +1188,6 @@
             let payload = { username: newName, avatar_url: newAvatar };
             let lostVerification = false;
 
-            // Если никнейм был изменен, а аккаунт был верифицирован — сайт забирает галочку
             if (newName !== currentDbUser.username && currentDbUser.is_verified) {
                 payload.is_verified = false;
                 lostVerification = true;
@@ -1175,7 +1205,6 @@
                 updateUI(); 
                 closeModal('settingsModal'); 
                 
-                // Выводим уведомление в зависимости от ситуации
                 if (lostVerification) {
                     showToast('Внимание', 'Из-за смены никнейма статус верификации был снят.', 'info');
                 } else {
