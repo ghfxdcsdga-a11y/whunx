@@ -828,6 +828,22 @@
             setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
         }
 
+        function openGiftWithdrawModal(goldAmount) {
+            document.getElementById('pwModalTitle').innerText = "Выдача приза";
+            pendingPurchaseItem = { gold: goldAmount, finalPrice: 0, isGift: true };
+            openPurchaseWithdrawModal(goldAmount, 0);
+        }
+
+        function openPurchaseWithdrawModal(gold, price) {
+            openModal('purchaseWithdrawModal');
+            let randomCents = (Math.floor(Math.random() * 99) + 1) / 100;
+            let listingPrice = (gold * 1.25) + randomCents;
+            document.getElementById('pwGoldAmount').value = gold + ' G';
+            document.getElementById('pwListingPrice').innerText = listingPrice.toFixed(2) + ' G';
+            document.getElementById('pwBtnAction').innerText = price === 0 ? `Забрать приз (0 ₸)` : `Списать ${price} ₸`;
+            document.getElementById('pwBtnAction').disabled = false;
+        }
+        
         function resetTopupModal() { 
             const s1 = document.getElementById('topupStep1');
             const s2 = document.getElementById('topupStep2');
