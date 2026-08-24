@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WHUNX SHOP | ADMIN</title>
     <link rel="icon" type="image/png" href="https://whunx.shop/whunx_icon.png">
     
@@ -64,11 +64,6 @@
         .loader-fill { height: 100%; width: 50%; background: var(--accent-gold); border-radius: 10px; animation: loadIndeterminate 1.5s infinite ease-in-out; box-shadow: 0 0 15px var(--accent-gold-glow); }
         @keyframes loadIndeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
 
-        .custom-google-wrapper { position: relative; display: block; width: 100%; max-width: 320px; margin-top: 10px; cursor: pointer; border-radius: 14px; z-index: 10; }
-        .login-btn { width: 100%; background: rgba(244, 199, 69, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); height: 56px; padding: 0 25px; border-radius: 14px; font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s; box-shadow: 0 0 15px rgba(244, 199, 69, 0.2); pointer-events: none; text-transform: uppercase; letter-spacing: 1px; font-family: 'Montserrat', sans-serif;} 
-        .custom-google-wrapper:hover .login-btn { background: rgba(244, 199, 69, 0.2); box-shadow: 0 0 25px rgba(244, 199, 69, 0.4); transform: translateY(-2px); }
-        .invisible-google-btn { position: absolute; top: -10px; left: -20px; right: -20px; bottom: -10px; opacity: 0.01; z-index: 50; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-        
         .btn-back { display: none; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 14px 30px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: 0.3s; margin-top: 15px; align-items: center; gap: 10px;}
         .btn-back:hover { background: rgba(239, 68, 68, 0.15); border-color: var(--error); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); color: var(--error); }
 
@@ -164,7 +159,7 @@
         .lightbox-img { max-width: 90%; max-height: 85vh; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); object-fit: contain; }
 
         /* =========================================
-           АДАПТАЦИЯ ДЛЯ МОБИЛОК (УЛУЧШЕННАЯ)
+           АДАПТАЦИЯ ДЛЯ МОБИЛОК
         ========================================= */
         @media (max-width: 768px) {
             body { flex-direction: column; }
@@ -175,7 +170,6 @@
             .header-title p { font-size: 0.8rem; }
             .admin-burger { display: flex; flex-shrink: 0;}
             
-            /* Скрываем боковое меню за экран */
             .admin-sidebar { position: fixed !important; left: -100vw; top: 0; width: 300px; height: 100vh; z-index: 100; transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex !important; }
             .admin-sidebar.active { left: 0 !important; }
             .sidebar-close-btn { display: block; }
@@ -198,6 +192,9 @@
             .auth-title { font-size: 1.3rem; }
         }
     </style>
+    
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -215,11 +212,9 @@
             
             <div class="loader-bar" id="authLoader" style="display: none;"><div class="loader-fill"></div></div>
 
-            <div id="googleLoginWrapper" class="custom-google-wrapper">
-                <button class="login-btn">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 24px;"> ВОЙТИ В СИСТЕМУ
-                </button>
-                <div id="googleLoginBtn" class="invisible-google-btn"></div>
+            <!-- ИСПРАВЛЕННЫЙ ВРАППЕР ДЛЯ GOOGLE (Рендерится нативно, без костылей с opacity) -->
+            <div id="googleLoginWrapper" style="display: none; justify-content: center; width: 100%; margin-top: 15px;">
+                <div id="googleLoginBtn"></div>
             </div>
 
             <a href="https://whunx.shop/" class="btn-back" id="btnBack">
@@ -533,7 +528,7 @@
         </div>
     </div>
 
-    <!-- ЛАЙТБОКС ДЛЯ ПРОСМОТРА СКРИНШОТОВ -->
+    <!-- ЛАЙТБОКС ДЛЯ КАРТИНОК -->
     <div class="lightbox-overlay" id="imageLightbox" onclick="closeLightbox(event)">
         <i class="fa-solid fa-xmark lightbox-close" onclick="closeLightbox(event, true)"></i>
         <img id="lightboxImg" class="lightbox-img" src="">
@@ -582,7 +577,6 @@
             const titles = { 'shop': 'Товары магазина', 'promocodes': 'Управление промокодами', 'users': 'База пользователей', 'reviews': 'Отзывы клиентов', 'ideas': 'Идеи и предложения', 'giveaways': 'Управление розыгрышами' };
             document.getElementById('pageTitle').innerText = titles[secId] || '';
             
-            // Закрываем меню на мобилках после клика по разделу
             if (window.innerWidth <= 768) {
                 document.getElementById('mainSidebar').classList.remove('active');
                 document.getElementById('adminOverlay').classList.remove('active');
@@ -649,7 +643,7 @@
                     });
                     google.accounts.id.renderButton(
                         btn,
-                        { theme: "outline", size: "large", type: "standard", width: 300 }
+                        { theme: "outline", size: "large", type: "standard", width: 280 }
                     );
                 } catch (e) {}
             } else {
@@ -658,62 +652,68 @@
         }
 
         async function checkSession() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            
-            if (session) {
-                const user = session.user;
-                document.getElementById('googleLoginWrapper').style.display = 'none';
-                document.getElementById('btnBack').style.display = 'none';
-                document.getElementById('authLoader').style.display = 'block';
-                document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
-                document.getElementById('authDesc').innerText = 'Сверка полномочий...';
-
-                // Загружаем пользователя из базы
-                const { data: dbUser } = await supabaseClient.from('users').select('*').eq('email', user.email).single();
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
                 
-                // Проверяем роль
-                if (dbUser && (dbUser.role === 'admin' || dbUser.role === 'creator' || dbUser.is_admin === true)) {
-                    document.getElementById('authOverlay').style.display = 'none';
-                    document.getElementById('mainSidebar').style.display = 'flex';
-                    document.getElementById('mainContent').style.display = 'flex';
-                    
-                    // ==================================
-                    // ФОНОВЫЙ ПРЕДЗАГРУЗЧИК (PRELOADER)
-                    // ==================================
-                    loadShop();
-                    loadPromocodes();
-                    loadGiveaways();
-                    
-                    // Загружаем юзеров первыми, чтобы использовать их данные (роли, аватары) в Отзывах и Идеях
-                    loadUsers().then(() => {
-                        loadReviews();
-                        loadIdeas();
-                    });
+                if (session) {
+                    const user = session.user;
+                    document.getElementById('googleLoginWrapper').style.display = 'none';
+                    document.getElementById('btnBack').style.display = 'none';
+                    document.getElementById('authLoader').style.display = 'block';
+                    document.getElementById('authTitle').innerText = 'ПРОВЕРКА ПРАВ';
+                    document.getElementById('authDesc').innerText = 'Сверка полномочий...';
 
-                } else {
-                    setAuthError('У вас нет прав администратора!');
-                }
-            } else {
-                document.getElementById('authIcon').className = 'fa-solid fa-lock auth-icon';
-                document.getElementById('authIcon').style.color = 'var(--accent-gold)';
-                document.getElementById('authTitle').innerText = 'АВТОРИЗАЦИЯ';
-                document.getElementById('authDesc').innerText = 'Доступ только для администраторов';
-                
-                document.getElementById('authLoader').style.display = 'none'; 
-                document.getElementById('googleLoginWrapper').style.display = 'block'; 
-                document.getElementById('btnBack').style.display = 'inline-flex';
-                initGoogleAuth();
-            }
+                    // Загружаем пользователя из базы
+                    const { data: dbUser } = await supabaseClient.from('users').select('*').eq('email', user.email).single();
+                    
+                    // ХАРДКОД-ЗАЩИТА: Главный админ всегда имеет доступ, даже если в БД роль не успели обновить
+                    const isSuperAdmin = user.email === 'ghfxdcsdga@gmail.com';
+                    const hasAdminRole = dbUser && (dbUser.role === 'admin' || dbUser.role === 'creator' || dbUser.is_admin === true);
 
-            if (!authListenerSet) {
-                authListenerSet = true;
-                supabaseClient.auth.onAuthStateChange((event, session) => {
-                    if (event === 'SIGNED_IN' && session) {
-                        checkSession();
-                    } else if (event === 'SIGNED_OUT') {
-                        location.reload();
+                    // Проверяем роль
+                    if (isSuperAdmin || hasAdminRole) {
+                        document.getElementById('authOverlay').style.display = 'none';
+                        document.getElementById('mainSidebar').style.display = 'flex';
+                        document.getElementById('mainContent').style.display = 'flex';
+                        
+                        // ФОНОВЫЙ ПРЕДЗАГРУЗЧИК
+                        loadShop();
+                        loadPromocodes();
+                        loadGiveaways();
+                        
+                        loadUsers().then(() => {
+                            loadReviews();
+                            loadIdeas();
+                        });
+
+                    } else {
+                        setAuthError('У вас нет прав администратора!');
                     }
-                });
+                } else {
+                    document.getElementById('authIcon').className = 'fa-solid fa-lock auth-icon';
+                    document.getElementById('authIcon').style.color = 'var(--accent-gold)';
+                    document.getElementById('authTitle').innerText = 'АВТОРИЗАЦИЯ';
+                    document.getElementById('authDesc').innerText = 'Доступ только для администраторов';
+                    
+                    document.getElementById('authLoader').style.display = 'none'; 
+                    document.getElementById('googleLoginWrapper').style.display = 'flex'; 
+                    document.getElementById('btnBack').style.display = 'inline-flex';
+                    initGoogleAuth();
+                }
+
+                if (!authListenerSet) {
+                    authListenerSet = true;
+                    supabaseClient.auth.onAuthStateChange((event, session) => {
+                        if (event === 'SIGNED_IN' && session) {
+                            checkSession();
+                        } else if (event === 'SIGNED_OUT') {
+                            location.reload();
+                        }
+                    });
+                }
+            } catch(e) {
+                console.error(e);
+                setAuthError('Сбой связи с сервером базы данных.');
             }
         }
 
@@ -883,7 +883,6 @@
         let allUsersCache = [];
         
         async function loadUsers() {
-            // Для ускорения ограничиваем выборку до 200 пользователей и берем только нужные поля
             const { data } = await supabaseClient.from('users')
                 .select('email, username, avatar_url, balance, role, is_verified')
                 .order('created_at', {ascending: false})
