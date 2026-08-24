@@ -1133,11 +1133,41 @@
         }
 
         async function saveSettings() {
-            const newName = document.getElementById('inputSetNick').value;
+            const newName = document.getElementById('inputSetNick').value.trim();
             const newAvatar = document.getElementById('settingsAvatar').src;
-            const { data, error } = await supabaseClient.from('users').update({ username: newName, avatar_url: newAvatar }).eq('email', currentDbUser.email).select().limit(1);
-            if (!error && data && data.length > 0) { currentDbUser = data[0]; updateUI(); closeModal('settingsModal'); showToast('Успех', 'Настройки сохранены!', 'success'); } 
-            else { showToast('Ошибка', 'Не удалось сохранить', 'error'); }
+            
+            if (!newName) return showToast('Ошибка', 'Никнейм не может быть пустым', 'error');
+
+            let payload = { username: newName, avatar_url: newAvatar };
+            let lostVerification = false;
+
+            // Если никнейм был изменен, а аккаунт был верифицирован — сайт забирает галочку
+            if (newName !== currentDbUser.username && currentDbUser.is_verified) {
+                payload.is_verified = false;
+                lostVerification = true;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('users')
+                .update(payload)
+                .eq('email', currentDbUser.email)
+                .select()
+                .limit(1);
+                
+            if (!error && data && data.length > 0) { 
+                currentDbUser = data[0]; 
+                updateUI(); 
+                closeModal('settingsModal'); 
+                
+                // Выводим уведомление в зависимости от ситуации
+                if (lostVerification) {
+                    showToast('Внимание', 'Из-за смены никнейма статус верификации был снят.', 'info');
+                } else {
+                    showToast('Успех', 'Настройки сохранены!', 'success'); 
+                }
+            } else { 
+                showToast('Ошибка', 'Не удалось сохранить', 'error'); 
+            }
         }
 
         // ==========================================
