@@ -952,10 +952,14 @@
                     let oldDisc = currentDbUser.active_discount?.code;
                     let newDisc = freshUser.active_discount?.code;
                     let oldBalance = currentDbUser.balance;
+                    let oldTg = currentDbUser.telegram_username; // Запоминаем старый юз
                     
                     currentDbUser = freshUser;
                     
-                    if (oldBalance !== freshUser.balance) updateUI(); 
+                    // Если изменился баланс ИЛИ телеграм юзернейм — перерисовываем интерфейс
+                    if (oldBalance !== freshUser.balance || oldTg !== freshUser.telegram_username) {
+                        updateUI(); 
+                    }
                     if (oldDisc !== newDisc) renderDynamicShop();
                 }
                 checkNotifications(); 
