@@ -15,7 +15,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const PORT = process.env.PORT || 10000;
 
 // ==========================================
-// SOCKET.IO (Для выдачи призов и донатов)
+// SOCKET.IO
 // ==========================================
 const server = require('http').createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
@@ -43,6 +43,7 @@ io.on('connection', (socket) => {
 const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 const ADMIN_CHAT_ID = 1210777759;
 
+// ... (Остальной код бота оставляем без изменений: /setplash, /setdar, BIND, /checkbal, обработка ответов и callback_query) ...
 bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
   if (msg.chat.id !== ADMIN_CHAT_ID) return;
   const userEmail = match[1].trim();
@@ -91,9 +92,6 @@ bot.onText(/^\/setdar\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([\d.]+)$/, async (msg,
   }
 });
 
-// ==========================================
-// ПРИВЯЗКА ТЕЛЕГРАМА (И СИНХРОНИЗАЦИЯ)
-// ==========================================
 bot.onText(/^\/start BIND_(.+)$/, async (msg, match) => {
   const secretId = match[1].trim();
   const tgId = msg.from.id;
@@ -107,7 +105,6 @@ bot.onText(/^\/start BIND_(.+)$/, async (msg, match) => {
   const { data: existingUser } = await supabase.from('users').select('*').eq('tg_id', tgId).maybeSingle();
   if (existingUser) {
       if (existingUser.secret_id === secretId) {
-          // ИСПРАВЛЕНИЕ 2: Если юзер сменил ник в ТГ - обновляем базу
           if (existingUser.telegram_username !== tgUsername) {
               await supabase.from('users').update({ telegram_username: tgUsername }).eq('secret_id', secretId);
           }
@@ -157,7 +154,6 @@ bot.on('message', async (msg) => {
   }
 });
 
-// ОБРАБОТКА CALLBACK КНОПОК
 bot.on('callback_query', async (query) => {
   if (query.from.id !== ADMIN_CHAT_ID) return bot.answerCallbackQuery(query.id, { text: 'Доступ запрещен!', show_alert: true });
 
@@ -217,7 +213,6 @@ bot.on('callback_query', async (query) => {
       await supabase.from('transactions').insert([{ user_email: order.user_email, type: 'refund', amount: order.spent_rubles, description: `Возврат за отмену заказа #${order.id}` }]);
     }
     
-    // ИСПРАВЛЕНИЕ 1: ВОЗВРАТ СКИДКИ ПОЛЬЗОВАТЕЛЮ ПРИ ОТМЕНЕ ЗАКАЗА
     if (order.applied_promo) {
       await supabase.from('used_promocodes').update({ is_spent: false }).eq('user_email', order.user_email).eq('promo_code', order.applied_promo);
       const { data: pData } = await supabase.from('promocodes').select('used_activations').eq('code', order.applied_promo).single();
@@ -239,6 +234,7 @@ bot.on('callback_query', async (query) => {
 
   bot.answerCallbackQuery(query.id, { text: 'Статус обновлен!' });
 });
+
 
 // ==========================================
 // МИДЛВАРЫ
@@ -262,11 +258,25 @@ const authenticateUser = async (req, res, next) => {
       return res.status(404).json({ error: 'Пользователь не найден в БД' });
     }
     
+    // ДОБАВЛЯЕМ ЖЕСТКУЮ ПРОВЕРКУ: Если это главный админ, всегда ставим role = 'creator'
+    if (dbUser.email === 'ghfxdcsdga@gmail.com' && dbUser.role !== 'creator') {
+        await supabase.from('users').update({ role: 'creator' }).eq('id', dbUser.id);
+        dbUser.role = 'creator';
+    }
+
     req.user = dbUser;
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Ошибка авторизации токена' });
   }
+};
+
+const isAdmin = (req, res, next) => {
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'creator')) {
+        next();
+    } else {
+        res.status(403).json({ error: 'Отказано в доступе' });
+    }
 };
 
 // ==========================================
@@ -320,6 +330,7 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
 // ==========================================
 // ФИНАНСЫ И МАГАЗИН
 // ==========================================
+// ... (Оставляем /api/shop/items, /api/finance/topup, /api/finance/withdraw, /api/donate/create, /api/donate/confirm-skin без изменений) ...
 app.get('/api/shop/items', async (req, res) => {
   const { data, error } = await supabase.from('shop_items').select('*').order('id', { ascending: true });
   if (error) return res.status(500).json({ error: 'Ошибка БД' });
@@ -353,7 +364,6 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
       await supabase.from('used_promocodes').update({ is_spent: true }).eq('id', used.id);
   }
 
-  // ЗАПИСЫВАЕМ ПРОМОКОД В БАЗУ ПРИ СОЗДАНИИ ЗАКАЗА
   const { data: order, error } = await supabase.from('withdrawals').insert([{
     user_email: req.user.email, amount: withdrawAmount, game_id: gameId, game_avatar: gameAvatar, target_skin: targetSkin, pattern: pattern, spent_rubles: spentTenge, status: 'pending', applied_promo: appliedPromoCode || null
   }]).select().single();
@@ -383,9 +393,6 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
 });
 
-// ==========================================
-// НОВЫЕ РОУТЫ ДЛЯ ДОНАТА (ПОЖЕРТВОВАНИЯ)
-// ==========================================
 app.post('/api/donate/create', authenticateUser, async (req, res) => {
   const { type, amount } = req.body;
   if (!amount || amount <= 0) return res.status(400).json({ error: 'Неверная сумма' });
@@ -433,6 +440,7 @@ app.post('/api/donate/confirm-skin', authenticateUser, async (req, res) => {
 // ==========================================
 // ПРОМОКОДЫ
 // ==========================================
+// ... (Оставляем /api/promocodes/activate без изменений) ...
 app.post('/api/promocodes/activate', authenticateUser, async (req, res) => {
   const { code } = req.body;
   const { data: promo } = await supabase.from('promocodes').select('*').eq('code', code).single();
@@ -467,24 +475,41 @@ app.post('/api/promocodes/activate', authenticateUser, async (req, res) => {
 });
 
 // ==========================================
-// ОТЗЫВЫ И ИДЕИ
+// ОТЗЫВЫ И ИДЕИ (Теперь возвращают роль юзера)
 // ==========================================
 app.post('/api/reviews/add', authenticateUser, async (req, res) => {
   const { rating, comment, image } = req.body;
   if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Некорректная оценка' });
 
-  const { data: wList, error: wErr } = await supabase.from('withdrawals').select('id').eq('user_email', req.user.email).eq('status', 'completed');
-  if (wErr || !wList || wList.length === 0) return res.status(403).json({ error: 'Оставить отзыв могут только пользователи с успешными выводами!' });
+  // Если это не админ/создатель, проверяем наличие успешных выводов
+  if (req.user.role !== 'admin' && req.user.role !== 'creator') {
+    const { data: wList, error: wErr } = await supabase.from('withdrawals').select('id').eq('user_email', req.user.email).eq('status', 'completed');
+    if (wErr || !wList || wList.length === 0) return res.status(403).json({ error: 'Оставить отзыв могут только пользователи с успешными выводами!' });
 
-  const { data: rList } = await supabase.from('reviews').select('id').eq('user_email', req.user.email);
-  if (rList && rList.length >= wList.length) return res.status(403).json({ error: 'Вы исчерпали лимит отзывов. 1 покупка = 1 отзыв.' });
+    const { data: rList } = await supabase.from('reviews').select('id').eq('user_email', req.user.email);
+    if (rList && rList.length >= wList.length) return res.status(403).json({ error: 'Вы исчерпали лимит отзывов. 1 покупка = 1 отзыв.' });
+  }
 
-  const { error } = await supabase.from('reviews').insert([{ user_email: req.user.email, username: req.user.username, avatar_url: req.user.avatar_url, rating: rating, comment: comment, image_url: image }]);
-  if (error) return res.status(500).json({ error: 'Ошибка при сохранении отзыва' });
+  // ЗАПИСЫВАЕМ РОЛЬ ЮЗЕРА ПРИ СОЗДАНИИ ОТЗЫВА
+  const { error } = await supabase.from('reviews').insert([{ 
+      user_email: req.user.email, 
+      username: req.user.username, 
+      avatar_url: req.user.avatar_url, 
+      rating: rating, 
+      comment: comment, 
+      image_url: image,
+      user_role: req.user.role // <-- НОВОЕ ПОЛЕ
+  }]);
+  
+  if (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Ошибка при сохранении отзыва' });
+  }
   res.json({ success: true, message: 'Отзыв успешно добавлен!' });
 });
 
 app.get('/api/reviews/list', async (req, res) => {
+  // Теперь нужно обновить SQL таблицу reviews, добавив туда user_role
   const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error: 'Ошибка БД' });
   res.json({ success: true, reviews: data });
@@ -494,12 +519,26 @@ app.post('/api/ideas/add', authenticateUser, async (req, res) => {
   const { idea_text, images } = req.body; 
   if (!idea_text) return res.status(400).json({ error: 'Текст идеи не может быть пустым' });
 
-  const oneDayAgo = new Date(); oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-  const { data: recent } = await supabase.from('ideas').select('id').eq('user_email', req.user.email).gte('created_at', oneDayAgo.toISOString());
-  if (recent && recent.length > 0) return res.status(403).json({ error: 'Предлагать идеи можно 1 раз в сутки!' });
+  // Админы/создатели могут постить идеи без ограничений по времени
+  if (req.user.role !== 'admin' && req.user.role !== 'creator') {
+    const oneDayAgo = new Date(); oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    const { data: recent } = await supabase.from('ideas').select('id').eq('user_email', req.user.email).gte('created_at', oneDayAgo.toISOString());
+    if (recent && recent.length > 0) return res.status(403).json({ error: 'Предлагать идеи можно 1 раз в сутки!' });
+  }
 
-  const { error } = await supabase.from('ideas').insert([{ user_email: req.user.email, username: req.user.username, avatar_url: req.user.avatar_url, idea_text: idea_text, images: images || [] }]);
-  if (error) return res.status(500).json({ error: 'Ошибка при сохранении' });
+  const { error } = await supabase.from('ideas').insert([{ 
+      user_email: req.user.email, 
+      username: req.user.username, 
+      avatar_url: req.user.avatar_url, 
+      idea_text: idea_text, 
+      images: images || [],
+      user_role: req.user.role // <-- НОВОЕ ПОЛЕ
+  }]);
+  
+  if (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Ошибка при сохранении' });
+  }
   res.json({ success: true, message: 'Идея отправлена на модерацию!' });
 });
 
@@ -512,6 +551,7 @@ app.get('/api/ideas/list', async (req, res) => {
 // ==========================================
 // РОЗЫГРЫШИ
 // ==========================================
+// ... (Оставляем /api/giveaways/active, /api/giveaways/end, /api/giveaways/participate без изменений) ...
 app.get('/api/giveaways/active', async (req, res) => {
   const { data, error } = await supabase.from('giveaways').select('*').eq('is_active', true).order('end_time', { ascending: true });
   if (error) return res.status(500).json({ error: 'Ошибка БД' });
