@@ -66,18 +66,20 @@
         header { height: 80px; background: rgba(10, 12, 16, 0.6); backdrop-filter: blur(40px); border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: space-between; padding: 0 50px; position: sticky; top: 0; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
         .header-left { display: flex; align-items: center; gap: 25px; }
         .burger-btn { width: 45px; height: 45px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: #fff; cursor: pointer; transition: var(--transition); }
-        .burger-btn:hover { background: rgba(139, 92, 246, 0.15); border-color: var(--accent-purple); color: var(--accent-purple); box-shadow: 0 0 20px var(--accent-purple-glow); }
+        .burger-btn:hover { background: rgba(139, 92, 246, 0.15); border-color: var(--accent-purple); color: var(--accent-purple); box-shadow: 0 0 20px var(--accent-purple-glow); transform: scale(1.05); }
         .logo { font-size: 26px; font-weight: 900; letter-spacing: 1px; cursor: pointer; color: #fff; text-transform: uppercase; text-decoration: none;} 
         .logo span { color: var(--accent-purple); text-shadow: 0 0 20px var(--accent-purple-glow); }
         
-        .sidebar-menu { position: fixed; top: 0; left: -100vw; width: 320px; height: 100vh; background: rgba(10, 12, 18, 0.95); backdrop-filter: blur(35px); border-right: 1px solid var(--glass-border); z-index: 1000; transition: left 0.4s; padding: 40px 25px; box-shadow: 20px 0 60px rgba(0,0,0,0.7); display: flex; flex-direction: column; }
-        .sidebar-menu.active { left: 0 !important; }
+        .sidebar-menu { position: fixed; top: 0; left: -100vw; width: 320px; height: 100vh; background: rgba(10, 12, 18, 0.95); backdrop-filter: blur(35px); border-right: 1px solid var(--glass-border); z-index: 1000; transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 40px 25px; box-shadow: 20px 0 60px rgba(0,0,0,0.7); display: flex; flex-direction: column; }
+        .sidebar-menu.active { left: 0; }
         .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 999; display: none; opacity: 0; transition: opacity 0.4s; }
         .sidebar-overlay.active { display: block; opacity: 1; }
+        
         .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border); }
-        .sidebar-header h2 { font-size: 1.2rem; font-weight: 900; color: #fff; text-transform: uppercase; }
+        .sidebar-header h2 { font-size: 1.2rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         .sidebar-close { color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
         .sidebar-close:hover { color: var(--accent-red); transform: rotate(90deg); }
+        
         .sidebar-nav { display: flex; flex-direction: column; gap: 12px; }
         .sidebar-link { display: flex; align-items: center; gap: 15px; padding: 16px 20px; border-radius: 14px; text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent;}
         .sidebar-link i { font-size: 1.2rem; width: 25px; text-align: center; color: var(--accent-purple); transition: 0.3s;}
@@ -87,18 +89,23 @@
         .sidebar-link.active { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #fff; box-shadow: 0 5px 15px var(--accent-purple-glow);}
 
         .header-right { display: flex; align-items: center; gap: 20px; }
-        .custom-google-wrapper { position: relative; display: inline-block; cursor: pointer; border-radius: 14px; }
-        .login-btn { background: #fff; color: #000; height: 48px; min-width: 150px; padding: 0 25px; border-radius: 14px; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; transition: var(--transition); text-transform: uppercase;} 
-        .invisible-google-btn { position: absolute; inset: -10px; opacity: 0.01; z-index: 50; }
-        
-        .balance-module { display: none; align-items: center; background: rgba(0,0,0,0.4); border-radius: 14px; padding: 5px; border: 1px solid var(--glass-border); }
-        .balance-amount { padding: 0 15px; font-size: 16px; font-weight: 800; color: #fff; display: flex; gap: 4px; } 
+        .custom-google-wrapper { position: relative; display: inline-block; cursor: pointer; border-radius: 14px; z-index: 10; }
+        .login-btn { background: #fff; color: #000; height: 48px; min-width: 150px; padding: 0 25px; border-radius: 14px; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; transition: var(--transition); box-shadow: 0 0 25px rgba(255,255,255,0.15); pointer-events: none; text-transform: uppercase; letter-spacing: 1px;} 
+        .custom-google-wrapper:hover .login-btn { transform: translateY(-2px); box-shadow: 0 5px 30px rgba(255,255,255,0.3); }
+        .invisible-google-btn { position: absolute; top: -10px; left: -20px; right: -20px; bottom: -10px; opacity: 0.01; z-index: 50; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+
+        .balance-module { display: none; align-items: center; background: rgba(0,0,0,0.4); border-radius: 14px; padding: 5px; border: 1px solid var(--glass-border); box-shadow: inset 0 0 15px rgba(0,0,0,0.6); }
+        .balance-amount { padding: 0 15px; font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: baseline; gap: 4px; white-space: nowrap; } 
         .balance-amount span { color: var(--text-muted); font-size: 14px; }
-        .balance-add-btn { width: 40px; height: 40px; background: var(--accent-purple); color: #fff; border-radius: 10px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px var(--accent-purple-glow); }
+        .balance-add-btn { width: 40px; height: 40px; background: var(--accent-purple); color: #fff; border-radius: 10px; display: flex; justify-content: center; align-items: center; transition: var(--transition); box-shadow: 0 0 15px var(--accent-purple-glow); } .balance-add-btn:hover { filter: brightness(1.15); transform: scale(1.05); box-shadow: 0 0 25px var(--accent-purple-glow); }
         
         .profile-module { display: none; position: relative; }
-        .profile-trigger { display: flex; align-items: center; cursor: pointer; padding: 5px; border-radius: 14px; } 
-        .profile-trigger img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); }
+        .profile-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 14px; transition: 0.3s; border: 1px solid transparent;} 
+        .profile-trigger:hover { background: rgba(255,255,255,0.03); border-color: var(--glass-border); } 
+        .profile-trigger img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); background: var(--bg-input); }
+        .dropdown-menu { position: absolute; top: calc(100% + 20px); right: 0; width: 260px; background: rgba(15, 18, 26, 0.85); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; opacity: 0; visibility: hidden; transform: translateY(15px); transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 200; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02); } .profile-module.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: center; }
+        .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; color: var(--text-muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;} .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* =========================================
            TOP PAGE STYLES
@@ -121,6 +128,7 @@
             animation: fadeInUp 0.5s ease forwards;
         }
 
+        /* ЦВЕТА БОРДЕРОВ КАРТОЧЕК */
         .card-donators { border-top-color: var(--accent-diamond); box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 10px 30px rgba(0,229,255,0.03); }
         .card-withdrawals { border-top-color: var(--accent-gold); box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 10px 30px rgba(244,199,69,0.03); }
         .card-ideas { border-top-color: var(--accent-green); box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 10px 30px rgba(16,185,129,0.03); }
@@ -134,6 +142,7 @@
         .top-item { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; transition: 0.3s; position: relative; overflow: hidden;}
         .top-item:hover { background: rgba(0,0,0,0.6); transform: scale(1.02) translateX(5px); }
 
+        /* НЕОНОВЫЕ СВЕЧЕНИЯ ДЛЯ ЛИДЕРОВ */
         .top-item.rank-item-1 { background: linear-gradient(90deg, rgba(255, 215, 0, 0.05), rgba(0,0,0,0.4)); border-color: rgba(255, 215, 0, 0.2); }
         .top-item.rank-item-1::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--rank1-color); box-shadow: 0 0 15px var(--rank1-color); }
         
@@ -143,6 +152,7 @@
         .top-item.rank-item-3 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.05), rgba(0,0,0,0.4)); border-color: rgba(205, 127, 50, 0.2); }
         .top-item.rank-item-3::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--rank3-color); box-shadow: 0 0 15px var(--rank3-color); }
 
+        /* НЕОНОВЫЕ БЕЙДЖИ МЕСТ */
         .rank-badge { width: 42px; height: 42px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: 900; flex-shrink: 0; position: relative; z-index: 2; transition: 0.3s;}
         
         .rank-1 { background: rgba(255, 215, 0, 0.1); border: 2px solid var(--rank1-color); color: var(--rank1-color); box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.2); text-shadow: 0 0 10px var(--rank1-color); }
@@ -161,6 +171,7 @@
         .top-value { font-weight: 900; font-size: 14px; }
         .top-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;}
 
+        /* ЦВЕТА ЗНАЧЕНИЙ */
         .val-diamond { color: var(--accent-diamond); text-shadow: 0 0 10px var(--accent-diamond-glow); }
         .val-gold { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
         .val-green { color: var(--accent-green); text-shadow: 0 0 10px rgba(16,185,129,0.4); }
@@ -193,6 +204,7 @@
         .status-completed { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3);}
         .rev-text { color: #fff; font-weight: 600; font-size: 15px; line-height: 1.6; margin-bottom: 15px; word-wrap: break-word; white-space: pre-wrap;}
         .ic-reward { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(244, 199, 69, 0.1), transparent); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 8px 15px; border-radius: 10px; font-size: 13px; font-weight: 800; margin-bottom: 15px; box-shadow: 0 5px 15px var(--accent-gold-glow); }
+        
         .admin-reply { background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(0, 0, 0, 0.2) 100%); border: 1px solid rgba(139, 92, 246, 0.2); padding: 20px; border-radius: 16px; margin-top: 20px; position: relative; box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.02); }
         .admin-reply::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-purple); border-radius: 16px 0 0 16px; box-shadow: 0 0 15px var(--accent-purple-glow); }
         .admin-reply-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
@@ -205,7 +217,13 @@
             .logo { font-size: 20px; }
             .header-left { gap: 10px; }
             .header-right { gap: 10px; }
-            .burger-btn { width: 40px; height: 40px; font-size: 1.1rem; }
+            .burger-btn { width: 40px; height: 40px; font-size: 1.1rem; border-radius: 10px; }
+            .balance-module { padding: 3px; border-radius: 10px; }
+            .balance-amount { padding: 0 8px; font-size: 13px; }
+            .balance-add-btn { width: 30px; height: 30px; border-radius: 6px; }
+            .profile-trigger { padding: 2px; }
+            .profile-trigger img { width: 32px; height: 32px; border-radius: 8px; }
+            
             main { padding: 30px 15px; }
             .page-header h1 { font-size: 28px; }
             .top-card { padding: 25px 20px; }
@@ -227,7 +245,7 @@
     <div class="bg-orb orb-2"></div>
 
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-    <div class="sidebar-menu" id="sidebarMenu">
+    <div class="sidebar-menu" id="sidebarMenu" style="position: fixed; left: -100vw; top: 0; z-index: 1000;">
         <div class="sidebar-header">
             <h2>Навигация</h2>
             <i class="fa-solid fa-xmark sidebar-close" onclick="toggleSidebar()"></i>
@@ -259,8 +277,12 @@
                 <button class="balance-add-btn" onclick="window.location.href='https://whunx.shop/'"><i class="fa-solid fa-wallet"></i></button>
             </div>
             <div class="profile-module" id="profileModule">
-                <div class="profile-trigger" onclick="window.location.href='https://whunx.shop/'" title="Вернуться в профиль на главную">
+                <div class="profile-trigger" onclick="toggleDropdown()">
                     <img id="headerAvatar" src="https://whunx.shop/whunx_pp.png" alt="Avatar">
+                </div>
+                <div class="dropdown-menu" id="profileDropdown">
+                    <div class="dropdown-header"><div class="dropdown-name" id="dropdownName">Player</div></div>
+                    <div class="dropdown-item logout" onclick="logout()" style="color: var(--accent-red);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Выйти</div>
                 </div>
             </div>
         </div>
@@ -332,15 +354,26 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhucGJibXl0dGV4cW10YnR5YmpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2OTc4NDcsImV4cCI6MjEwMjI3Mzg0N30.7x3UDegy7zCeT88-2Fps-uF2nMR-PDAnnXcLt5we0zw';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let currentDbUser = null; 
         let currentSessionToken = null;
         let isLoggingIn = false;
         let topsCache = ''; 
         let currentTopIdeasCache = []; 
 
         function toggleSidebar() {
-            document.getElementById('sidebarMenu').classList.toggle('active');
-            document.getElementById('sidebarOverlay').classList.toggle('active');
+            const menu = document.getElementById('sidebarMenu');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (menu.style.left === '-100vw') menu.style.left = '';
+            
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            if (overlay.classList.contains('active')) overlay.style.display = 'block';
+            else setTimeout(() => { overlay.style.display = 'none'; }, 400);
         }
+
+        function toggleDropdown() { document.getElementById('profileModule').classList.toggle('active'); }
+        document.addEventListener('click', (e) => { const module = document.getElementById('profileModule'); if (module && module.classList.contains('active') && !module.contains(e.target)) module.classList.remove('active'); });
 
         window.addEventListener('DOMContentLoaded', async () => {
             loadTops(); 
@@ -358,14 +391,20 @@
 
         function initGoogleAuth() {
             const btn = document.getElementById("googleLoginBtn");
+            const fakeText = document.getElementById('fakeGoogleText');
             if (currentSessionToken) return;
-            if (window.google && window.google.accounts && btn) {
+            
+            if (window.google && window.google.accounts && btn && fakeText) {
                 try {
                     google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin });
                     google.accounts.id.renderButton(btn, { theme: "outline", size: "large", type: "standard", width: 250 });
-                    document.getElementById('fakeGoogleText').innerText = 'Войти';
-                } catch (e) { document.getElementById('fakeGoogleText').innerText = 'Ошибка'; }
-            } else { setTimeout(initGoogleAuth, 100); }
+                    fakeText.innerText = 'Войти';
+                } catch (e) {
+                    fakeText.innerText = 'Ошибка';
+                }
+            } else {
+                setTimeout(initGoogleAuth, 100);
+            }
         }
 
         async function handleGoogleLogin(response) {
@@ -373,26 +412,56 @@
             if (!error) handleUserLogin(data.session);
         }
 
-        async function handleUserLogin(session) {
-            if (isLoggingIn) return;
-            isLoggingIn = true;
-            try {
-                currentSessionToken = session.access_token;
-                document.getElementById('googleLoginWrapper').style.display = 'none';
-                document.getElementById('balanceModule').style.display = 'flex';
-                document.getElementById('profileModule').style.display = 'block';
+        async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); window.location.reload(); }
 
-                const { data: usersData } = await supabaseClient.from('users').select('*').eq('email', session.user.email).limit(1);
-                if (usersData && usersData.length > 0) {
-                    const dbUser = usersData[0];
-                    document.getElementById('balanceText').innerHTML = `${dbUser.balance} <span>₸</span>`;
-                    document.getElementById('headerAvatar').src = dbUser.avatar_url.startsWith('http') || dbUser.avatar_url.startsWith('data') ? dbUser.avatar_url : `https://whunx.shop/${dbUser.avatar_url}`;
-                }
-            } catch (err) {} finally { isLoggingIn = false; }
+        // ==========================================
+        // ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ БЕЙДЖЕЙ И ГАЛОЧЕК
+        // ==========================================
+        function getUserBadges(userRole, isVerified) {
+            let html = '';
+            if (isVerified) {
+                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
+            }
+            if (userRole === 'creator') {
+                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
+            } else if (userRole === 'admin') {
+                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
+            }
+            return html;
+        }
+
+        async function handleUserLogin(session) {
+            currentSessionToken = session.access_token;
+            const userAuth = session.user;
+            
+            document.getElementById('googleLoginWrapper').style.display = 'none';
+            document.getElementById('balanceModule').style.display = 'flex';
+            document.getElementById('profileModule').style.display = 'block';
+
+            let { data: dbUser } = await supabaseClient.from('users').select('*').eq('email', userAuth.email).single();
+            if (!dbUser) {
+                let defaultName = userAuth.user_metadata.full_name || 'whunx-user-' + Math.random().toString(36).substring(2, 8).toLowerCase();
+                const newUser = { email: userAuth.email, username: defaultName, avatar_url: 'whunx_pp.png', balance: 0, secret_id: crypto.randomUUID() };
+                const { data: insertedUser } = await supabaseClient.from('users').insert([newUser]).select().single();
+                dbUser = insertedUser;
+            }
+            currentDbUser = dbUser;
+            
+            document.getElementById('balanceText').innerHTML = `${currentDbUser.balance} <span>₸</span>`;
+            
+            // Вставляем бейджи в профиль
+            const badgesHtml = getUserBadges(currentDbUser.role, currentDbUser.is_verified);
+            document.getElementById('dropdownName').innerHTML = `${currentDbUser.username} ${badgesHtml}`;
+            
+            let safeAvatar = 'https://whunx.shop/whunx_pp.png';
+            if (currentDbUser.avatar_url) {
+                safeAvatar = currentDbUser.avatar_url.startsWith('http') || currentDbUser.avatar_url.startsWith('data:') ? currentDbUser.avatar_url : 'https://whunx.shop/' + currentDbUser.avatar_url;
+            }
+            document.getElementById('headerAvatar').src = safeAvatar;
         }
 
         function handleUserLogout() {
-            currentSessionToken = null;
+            currentDbUser = null; currentSessionToken = null;
             document.getElementById('googleLoginWrapper').style.display = 'inline-block';
             document.getElementById('balanceModule').style.display = 'none';
             document.getElementById('profileModule').style.display = 'none';
@@ -413,24 +482,9 @@
             return rank;
         }
 
-        // ==========================================
-        // ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ БЕЙДЖЕЙ И ГАЛОЧЕК
-        // ==========================================
-        function getUserBadges(userRole, isVerified) {
-            let html = '';
-            if (isVerified) {
-                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
-            }
-            if (userRole === 'creator') {
-                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
-            } else if (userRole === 'admin') {
-                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
-            }
-            return html;
-        }
-
         async function loadTops() {
             try {
+                // Загружаем все 5 функций
                 const [donators, withdrawals, ideas, charityKzt, charityGold] = await Promise.all([
                     supabaseClient.rpc('get_top_donators'),
                     supabaseClient.rpc('get_top_withdrawals'),
@@ -448,10 +502,6 @@
                 // Вытаскиваем уникальные имена пользователей (чтобы потом найти их роли в базе)
                 let allEmails = new Set();
                 const addEmails = (arr) => arr?.forEach(item => { if(item.user_email) allEmails.add(item.user_email); });
-                
-                // В SQL-скрипте топов нужно будет добавить возврат поля user_email. 
-                // Пока мы вытащим роли по email (если они есть) или по username.
-                // Для надежности сделаем запрос ко всем юзерам, чьи username есть в топах.
                 
                 let allUsernames = new Set();
                 const addUsernames = (arr) => arr?.forEach(item => { if(item.username) allUsernames.add(item.username); });
