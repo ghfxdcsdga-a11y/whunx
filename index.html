@@ -91,6 +91,11 @@
         .toast-content h4 { font-size: 14px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;} .toast-content p { font-size: 13px; color: var(--text-muted); font-weight: 600; line-height: 1.4; }
         @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
+        /* РОЛИ И БЕЙДЖИ */
+        .badge-creator { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #f59e0b, #f4c745); color: #000; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; box-shadow: 0 0 10px rgba(244,199,69,0.5); vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px;}
+        .badge-admin { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; box-shadow: 0 0 10px rgba(139,92,246,0.5); vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px;}
+        .badge-verified { color: #3b82f6; font-size: 16px; margin-left: 5px; vertical-align: middle; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));}
+
         /* =========================================
            HEADER & SIDEBAR MENU
         ========================================= */
@@ -137,7 +142,7 @@
         .profile-trigger:hover { background: rgba(255,255,255,0.03); border-color: var(--glass-border); } 
         .profile-trigger img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); background: var(--bg-input); }
         .dropdown-menu { position: absolute; top: calc(100% + 20px); right: 0; width: 260px; background: rgba(15, 18, 26, 0.85); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; opacity: 0; visibility: hidden; transform: translateY(15px); transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 200; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02); } .profile-module.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
-        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; }
+        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: center; }
         .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; color: var(--text-muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;} .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* =========================================
@@ -220,7 +225,9 @@
         #chatWidget.active { display: flex !important; transform: translateY(0) scale(1); opacity: 1; }
         .chat-header { background: rgba(0,0,0,0.3); padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); } .chat-header h4 { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;}
         .chat-messages { height: 300px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 600; line-height: 1.5; word-wrap: break-word; } .msg.user { background: var(--accent-purple); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 5px 15px var(--accent-purple-glow);} .msg.admin { background: rgba(255,255,255,0.08); color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--glass-border);}
+        .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 600; line-height: 1.5; word-wrap: break-word; } 
+        .msg.user { background: var(--accent-purple); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 5px 15px var(--accent-purple-glow);} 
+        .msg.admin { background: rgba(255,255,255,0.08); color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--glass-border);}
         .chat-input-area { padding: 15px; background: rgba(0,0,0,0.3); display: flex; gap: 10px; border-top: 1px solid var(--glass-border); } .chat-input { flex: 1; background: var(--bg-input); border: 1px solid var(--glass-border); padding: 12px 15px; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 600; outline: none; transition: 0.3s;} .chat-input:focus { border-color: var(--accent-purple); }
         .chat-send-btn { background: var(--accent-purple); color: #fff; width: 45px; height: 45px; border-radius: 12px; display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: 0 5px 15px var(--accent-purple-glow);} .chat-send-btn:hover { background: var(--accent-purple-hover); transform: scale(1.05);}
 
@@ -635,13 +642,17 @@
         <div class="modal-box" style="max-width: 550px;">
             <button class="modal-close" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title">Настройки аккаунта</div>
+            
             <div style="display:flex; align-items:center; gap:25px; margin-bottom:35px;">
                 <img id="settingsAvatar" src="https://whunx.shop/whunx_pp.png" alt="" style="width:80px; height:80px; border-radius:18px; border:1px solid var(--glass-border); object-fit:cover; background: rgba(0,0,0,0.5);">
                 <div>
+                    <!-- СЮДА БУДУТ ВСТАВЛЯТЬСЯ БЕЙДЖИ -->
+                    <div id="settingsUserBadges" style="margin-bottom: 10px;"></div>
                     <input type="file" id="siteAvatarInput" style="display:none;" accept="image/*" onchange="previewSiteAvatar(event)">
                     <button style="background:rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color:#fff; padding:10px 18px; border-radius:10px; font-weight:800; font-size:13px; transition:0.3s; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;" onclick="document.getElementById('siteAvatarInput').click()">Изменить аватарку</button>
                 </div>
             </div>
+            
             <div class="f-input-group">
                 <label class="f-input-label">Никнейм</label>
                 <div class="f-input-wrapper">
@@ -835,9 +846,7 @@
                     openGiftWithdrawModal(data.amount);
                 });
                 
-                // СОКЕТЫ ДЛЯ ДОНАТА
                 socket.on('donation_skin_ready', (data) => {
-                    // Когда админ вводит команду /setdar, открывается этот шаг
                     document.getElementById('donateStepWait').style.display = 'none';
                     document.getElementById('donateStepSkinReady').style.display = 'block';
                     document.getElementById('donateGameId').innerText = data.gameId;
@@ -902,6 +911,22 @@
             return null;
         }
 
+        // ==========================================
+        // ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ БЕЙДЖЕЙ И ГАЛОЧЕК
+        // ==========================================
+        function getUserBadges(user) {
+            let html = '';
+            if (user.is_verified) {
+                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
+            }
+            if (user.role === 'creator') {
+                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
+            } else if (user.role === 'admin') {
+                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
+            }
+            return html;
+        }
+
         async function handleUserLogin(session) {
             if (isLoggingIn) return;
             isLoggingIn = true;
@@ -952,7 +977,7 @@
                     let oldDisc = currentDbUser.active_discount?.code;
                     let newDisc = freshUser.active_discount?.code;
                     let oldBalance = currentDbUser.balance;
-                    let oldTg = currentDbUser.telegram_username; // Запоминаем старый юз
+                    let oldTg = currentDbUser.telegram_username;
                     
                     currentDbUser = freshUser;
                     
@@ -1034,7 +1059,11 @@
         function updateUI() {
             if(!currentDbUser) return;
             document.getElementById('balanceText').innerHTML = `${currentDbUser.balance} <span>₸</span>`;
-            document.getElementById('dropdownName').innerText = currentDbUser.username;
+            
+            // Внедряем бейджи рядом с ником
+            const badgesHtml = getUserBadges(currentDbUser);
+            document.getElementById('dropdownName').innerHTML = `${currentDbUser.username} ${badgesHtml}`;
+            document.getElementById('settingsUserBadges').innerHTML = badgesHtml;
             
             const safeAvatar = getSafeAvatar(currentDbUser.avatar_url);
             document.getElementById('headerAvatar').src = safeAvatar;
@@ -1050,7 +1079,6 @@
                 tgBtn.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                 tgText.innerText = currentDbUser.telegram_username ? `@${currentDbUser.telegram_username}` : 'Привязан';
                 
-                // КНОПКА СТАНОВИТСЯ КЛИКАБЕЛЬНОЙ ДЛЯ СИНХРОНИЗАЦИИ
                 tgIcon.className = 'fa-solid fa-arrows-rotate';
                 tgIcon.style.color = 'var(--accent-green)';
                 tgBtn.style.cursor = 'pointer';
@@ -1167,7 +1195,6 @@
                 document.getElementById('donateStepKzt').style.display = 'block';
             } else {
                 if (amount < 10) return showToast('Ошибка', 'Минимальное пожертвование голдой — 10 G', 'error');
-                // Отправляем на бэк для голды
                 try {
                     const response = await fetch(`${BACKEND_URL}/api/donate/create`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
@@ -1245,7 +1272,6 @@
             document.getElementById('donateTimerDisplay').innerText = `${m}:${s}`;
             document.getElementById('donateSkinTimerDisplay').innerText = `${m}:${s}`;
         }
-
 
         // ==========================================
         // АКТИВАЦИЯ ПРОМОКОДА
@@ -1419,7 +1445,7 @@
         }
 
         // ==========================================
-        // ЛОГИКА РОЗЫГРЫША (С РЕАЛ-ТАЙМ ОБНОВЛЕНИЕМ УЧАСТНИКОВ)
+        // ЛОГИКА РОЗЫГРЫША
         // ==========================================
         async function loadActiveGiveaway() {
             const { data, error } = await supabaseClient.from('giveaways').select('*').order('id', {ascending: false}).limit(1).maybeSingle();
@@ -1461,7 +1487,6 @@
                 document.getElementById('gwActionBtn').onclick = () => participateGw(data.id);
                 startGwTimer(endTime, data);
 
-                // РЕАЛ-ТАЙМ ПУЛЬС: тихо обновляем только количество участников каждые 3 секунды без дергания интерфейса
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 gwParticipantsInterval = setInterval(async () => {
                     try {
@@ -1519,11 +1544,7 @@
 
         async function participateGw(gwId) {
             if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт для участия', 'info');
-            
-            // Проверяем, привязан ли Telegram
-            if (!currentDbUser.tg_id) {
-                return showToast('Ошибка', 'Для участия необходимо привязать Telegram в настройках аккаунта!', 'error');
-            }
+            if (!currentDbUser.tg_id) return showToast('Ошибка', 'Для участия необходимо привязать Telegram в настройках аккаунта!', 'error');
 
             const btn = document.getElementById('gwActionBtn');
             const originalText = btn.innerText;
@@ -1531,11 +1552,8 @@
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Проверка подписки...';
 
             try {
-                // Отправляем запрос на наш бэкенд, где бот проверит подписку на каналы
                 const response = await fetch(`${BACKEND_URL}/api/giveaways/participate`, {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ gwId, userEmail: currentDbUser.email })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gwId, userEmail: currentDbUser.email })
                 });
                 
                 const result = await response.json();
@@ -1640,9 +1658,19 @@
                 const result = await response.json();
                 if (result.success && result.messages) {
                     const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
-                    chatBox.innerHTML = '<div class="msg admin">Привет! Если есть вопросы по пополнению или выводу — пиши сюда.</div>';
+                    chatBox.innerHTML = '<div class="msg admin"><div style="font-size: 10px; color: var(--accent-gold); margin-bottom: 4px; font-weight: 900; letter-spacing: 0.5px;"><i class="fa-solid fa-crown"></i> CREATOR</div>Привет! Если есть вопросы по пополнению или выводу — пиши сюда.</div>';
                     result.messages.forEach(msg => {
-                        const div = document.createElement('div'); div.className = msg.sender === 'user' ? 'msg user' : 'msg admin'; div.innerText = msg.text; chatBox.appendChild(div);
+                        const div = document.createElement('div'); 
+                        div.className = msg.sender === 'user' ? 'msg user' : 'msg admin'; 
+                        
+                        // Добавляем красивую подпись админа к его сообщениям в чате
+                        if (msg.sender === 'admin') {
+                            div.innerHTML = `<div style="font-size: 10px; color: var(--accent-gold); margin-bottom: 4px; font-weight: 900; letter-spacing: 0.5px;"><i class="fa-solid fa-crown"></i> CREATOR</div>${msg.text}`;
+                        } else {
+                            div.innerText = msg.text;
+                        }
+                        
+                        chatBox.appendChild(div);
                     });
                     if (isScrolledToBottom) { chatBox.scrollTop = chatBox.scrollHeight; }
                 }
@@ -1695,9 +1723,7 @@
             setTimeout(() => lb.style.opacity = '1', 10);
         }
         async function logout() { 
-            // Сбрасываем сессию в БД
             await supabaseClient.auth.signOut(); 
-            // Полностью обновляем страницу для надежной очистки
             window.location.reload(); 
         }
         function closeLightbox(e, force = false) {
