@@ -55,6 +55,11 @@
         button { cursor: pointer; border: none; outline: none; }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
+        /* РОЛИ И БЕЙДЖИ */
+        .badge-creator { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #f59e0b, #f4c745); color: #000; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; box-shadow: 0 0 10px rgba(244,199,69,0.5); vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px;}
+        .badge-admin { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; box-shadow: 0 0 10px rgba(139,92,246,0.5); vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px;}
+        .badge-verified { color: #3b82f6; font-size: 16px; margin-left: 5px; vertical-align: middle; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));}
+
         /* =========================================
            HEADER & SIDEBAR
         ========================================= */
@@ -129,7 +134,6 @@
         .top-item { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); padding: 15px; border-radius: 16px; transition: 0.3s; position: relative; overflow: hidden;}
         .top-item:hover { background: rgba(0,0,0,0.6); transform: scale(1.02) translateX(5px); }
 
-        /* НЕОНОВЫЕ СВЕЧЕНИЯ ДЛЯ ЛИДЕРОВ */
         .top-item.rank-item-1 { background: linear-gradient(90deg, rgba(255, 215, 0, 0.05), rgba(0,0,0,0.4)); border-color: rgba(255, 215, 0, 0.2); }
         .top-item.rank-item-1::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--rank1-color); box-shadow: 0 0 15px var(--rank1-color); }
         
@@ -139,7 +143,6 @@
         .top-item.rank-item-3 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.05), rgba(0,0,0,0.4)); border-color: rgba(205, 127, 50, 0.2); }
         .top-item.rank-item-3::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--rank3-color); box-shadow: 0 0 15px var(--rank3-color); }
 
-        /* НЕОНОВЫЕ БЕЙДЖИ МЕСТ */
         .rank-badge { width: 42px; height: 42px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: 900; flex-shrink: 0; position: relative; z-index: 2; transition: 0.3s;}
         
         .rank-1 { background: rgba(255, 215, 0, 0.1); border: 2px solid var(--rank1-color); color: var(--rank1-color); box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.2); text-shadow: 0 0 10px var(--rank1-color); }
@@ -153,7 +156,8 @@
 
         .top-avatar { width: 45px; height: 45px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); flex-shrink: 0;}
         .top-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; padding-left: 5px;}
-        .top-name { font-weight: 800; font-size: 15px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;}
+        .top-name-wrapper { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; padding-right: 25px;}
+        .top-name { font-weight: 800; font-size: 15px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
         .top-value { font-weight: 900; font-size: 14px; }
         .top-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 25px;}
 
@@ -181,6 +185,7 @@
         .review-card { background: linear-gradient(145deg, rgba(30, 34, 48, 0.95) 0%, rgba(15, 18, 26, 0.98) 100%); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 35px; box-shadow: 0 25px 50px rgba(0,0,0,0.8); width: 100%; position: relative;}
         .rev-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; padding-right: 30px;}
         .rev-avatar { width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--glass-border); object-fit: cover; background: rgba(0,0,0,0.5);}
+        .rev-name-wrapper { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
         .rev-name { font-weight: 900; color: #fff; font-size: 16px; letter-spacing: 0.5px;}
         .rev-date { color: var(--text-muted); font-size: 12px; font-weight: 700; margin-top: 3px;}
         .idea-status { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -408,6 +413,22 @@
             return rank;
         }
 
+        // ==========================================
+        // ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ БЕЙДЖЕЙ И ГАЛОЧЕК
+        // ==========================================
+        function getUserBadges(userRole, isVerified) {
+            let html = '';
+            if (isVerified) {
+                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
+            }
+            if (userRole === 'creator') {
+                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
+            } else if (userRole === 'admin') {
+                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
+            }
+            return html;
+        }
+
         async function loadTops() {
             try {
                 const [donators, withdrawals, ideas, charityKzt, charityGold] = await Promise.all([
@@ -423,7 +444,33 @@
                 topsCache = newDataString;
 
                 currentTopIdeasCache = ideas.data || [];
+
+                // Вытаскиваем уникальные имена пользователей (чтобы потом найти их роли в базе)
+                let allEmails = new Set();
+                const addEmails = (arr) => arr?.forEach(item => { if(item.user_email) allEmails.add(item.user_email); });
                 
+                // В SQL-скрипте топов нужно будет добавить возврат поля user_email. 
+                // Пока мы вытащим роли по email (если они есть) или по username.
+                // Для надежности сделаем запрос ко всем юзерам, чьи username есть в топах.
+                
+                let allUsernames = new Set();
+                const addUsernames = (arr) => arr?.forEach(item => { if(item.username) allUsernames.add(item.username); });
+                
+                addUsernames(donators.data); addUsernames(withdrawals.data); addUsernames(ideas.data);
+                addUsernames(charityKzt.data); addUsernames(charityGold.data);
+
+                let usersMap = {};
+                if (allUsernames.size > 0) {
+                    const { data: usersData } = await supabaseClient
+                        .from('users')
+                        .select('username, is_verified, role')
+                        .in('username', Array.from(allUsernames));
+                    
+                    if (usersData) {
+                        usersData.forEach(u => usersMap[u.username] = u);
+                    }
+                }
+
                 // Вспомогательная функция для рендера
                 const renderList = (data, containerId, valueKey, valueSuffix, valueClass) => {
                     const container = document.getElementById(containerId);
@@ -439,12 +486,21 @@
                                 descHtml = `<div class="top-desc">"${item.idea_text}"</div>`;
                             }
 
+                            // Подтягиваем бейджи
+                            const authorInfo = usersMap[item.username] || {};
+                            const isVerified = authorInfo.is_verified || false;
+                            const role = authorInfo.role || 'user';
+                            const userBadges = getUserBadges(role, isVerified);
+
                             return `
                                 <div class="top-item ${itemClass}" ${onClickAttr}>
                                     <div class="rank-badge ${rankClass}">${getRankIcon(index + 1)}</div>
                                     <img src="${getSafeAvatar(item.avatar_url)}" class="top-avatar">
                                     <div class="top-info">
-                                        <div class="top-name">${item.username}</div>
+                                        <div class="top-name-wrapper">
+                                            <span class="top-name">${item.username}</span>
+                                            ${userBadges}
+                                        </div>
                                         <div class="top-value ${valueClass}">${item[valueKey]} ${valueSuffix}</div>
                                         ${descHtml}
                                     </div>
@@ -467,7 +523,7 @@
         // ==========================================
         // ЛОГИКА ОТКРЫТИЯ ИДЕИ
         // ==========================================
-        function openIdeaModal(index) {
+        async function openIdeaModal(index) {
             const idea = currentTopIdeasCache[index];
             if (!idea) return;
 
@@ -493,12 +549,24 @@
                 dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
             }
 
+            // Докачиваем бейджи для модалки
+            let isVerified = false;
+            let role = 'user';
+            try {
+                const { data: uInfo } = await supabaseClient.from('users').select('is_verified, role').eq('username', idea.username).single();
+                if (uInfo) { isVerified = uInfo.is_verified; role = uInfo.role; }
+            } catch(e) {}
+            const userBadges = getUserBadges(role, isVerified);
+
             document.getElementById('ideaViewCard').innerHTML = `
                 <button class="modal-close" onclick="closeIdeaModal()"><i class="fa-solid fa-xmark"></i></button>
                 <div class="rev-header">
                     <img src="${getSafeAvatar(idea.avatar_url)}" class="rev-avatar">
                     <div>
-                        <div class="rev-name">${idea.username}</div>
+                        <div class="rev-name-wrapper">
+                            <span class="rev-name">${idea.username}</span>
+                            ${userBadges}
+                        </div>
                         <div class="rev-date">${dateStr}</div>
                     </div>
                     <div class="idea-status ${statusClass}"><i class="fa-solid ${statusIcon}"></i> ${statusText}</div>
