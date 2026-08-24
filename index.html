@@ -658,6 +658,12 @@
                 <div class="f-input-wrapper">
                     <input type="text" id="inputSetNick" class="f-input" value="Player">
                 </div>
+                
+                <!-- НОВАЯ ПЛАШКА ПРЕДУПРЕЖДЕНИЯ О ГАЛОЧКЕ -->
+                <div id="verifiedWarningText" style="display: none; color: var(--accent-blue); font-size: 11px; font-weight: 800; margin-top: 12px; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.3); line-height: 1.4;">
+                    <i class="fa-solid fa-circle-info" style="font-size: 14px;"></i> Ваш аккаунт верифицирован. Если вы измените никнейм, статус верификации будет навсегда снят.
+                </div>
+                
             </div>
             
             <div class="tg-bind-btn" id="tgBindBtn" style="background: rgba(36, 161, 222, 0.1); border: 1px solid rgba(36, 161, 222, 0.3); border-radius: 14px; padding: 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.3s; margin-bottom: 15px; gap: 10px;">
@@ -1061,7 +1067,7 @@
             document.getElementById('balanceText').innerHTML = `${currentDbUser.balance} <span>₸</span>`;
             
             // Внедряем бейджи рядом с ником
-            const badgesHtml = getUserBadges(currentDbUser);
+            const badgesHtml = getUserBadges(currentDbUser.role, currentDbUser.is_verified);
             document.getElementById('dropdownName').innerHTML = `${currentDbUser.username} ${badgesHtml}`;
             document.getElementById('settingsUserBadges').innerHTML = badgesHtml;
             
@@ -1069,6 +1075,13 @@
             document.getElementById('headerAvatar').src = safeAvatar;
             document.getElementById('settingsAvatar').src = safeAvatar;
             document.getElementById('inputSetNick').value = currentDbUser.username;
+
+            // ---> НОВЫЙ КОД: ПОКАЗЫВАЕМ ИЛИ СКРЫВАЕМ ПРЕДУПРЕЖДЕНИЕ О ГАЛОЧКЕ <---
+            const verifiedWarning = document.getElementById('verifiedWarningText');
+            if (verifiedWarning) {
+                // Если юзер верифицирован - показываем как flex, иначе скрываем
+                verifiedWarning.style.display = currentDbUser.is_verified ? 'flex' : 'none';
+            }
 
             const tgBtn = document.getElementById('tgBindBtn');
             const tgText = document.getElementById('tgBindText');
