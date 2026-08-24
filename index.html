@@ -1045,10 +1045,16 @@
                 tgBtn.style.background = 'rgba(16, 185, 129, 0.05)';
                 tgBtn.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                 tgText.innerText = currentDbUser.telegram_username ? `@${currentDbUser.telegram_username}` : 'Привязан';
-                tgIcon.className = 'fa-solid fa-check';
+                
+                // КНОПКА СТАНОВИТСЯ КЛИКАБЕЛЬНОЙ ДЛЯ СИНХРОНИЗАЦИИ
+                tgIcon.className = 'fa-solid fa-arrows-rotate';
                 tgIcon.style.color = 'var(--accent-green)';
-                tgBtn.onclick = null; 
-                tgBtn.style.cursor = 'default';
+                tgBtn.style.cursor = 'pointer';
+                
+                tgBtn.onclick = () => {
+                    const botUsername = 'WhunxShopAdmin_bot'; 
+                    window.open(`https://t.me/${botUsername}?start=BIND_${currentDbUser.secret_id}`, '_blank');
+                };
             } else {
                 tgBtn.style.background = 'rgba(36, 161, 222, 0.1)';
                 tgBtn.style.borderColor = 'rgba(36, 161, 222, 0.3)';
