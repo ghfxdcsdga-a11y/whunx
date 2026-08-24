@@ -75,6 +75,11 @@
         .toast-content h4 { font-size: 14px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;} .toast-content p { font-size: 13px; color: var(--text-muted); font-weight: 600; line-height: 1.4; }
         @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
+        /* РОЛИ И БЕЙДЖИ */
+        .badge-creator { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #f59e0b, #f4c745); color: #000; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; box-shadow: 0 0 10px rgba(244,199,69,0.5); vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px;}
+        .badge-admin { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; box-shadow: 0 0 10px rgba(139,92,246,0.5); vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px;}
+        .badge-verified { color: #3b82f6; font-size: 16px; margin-left: 5px; vertical-align: middle; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));}
+
         /* =========================================
            HEADER & SIDEBAR MENU
         ========================================= */
@@ -122,7 +127,7 @@
         .profile-trigger:hover { background: rgba(255,255,255,0.03); border-color: var(--glass-border); } 
         .profile-trigger img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); background: var(--bg-input); }
         .dropdown-menu { position: absolute; top: calc(100% + 20px); right: 0; width: 260px; background: rgba(15, 18, 26, 0.85); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; opacity: 0; visibility: hidden; transform: translateY(15px); transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 200; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02); } .profile-module.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
-        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; }
+        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: center; }
         .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; color: var(--text-muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;} .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* =========================================
@@ -165,6 +170,7 @@
         
         .rev-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;}
         .rev-avatar { width: 50px; height: 50px; border-radius: 14px; border: 1px solid var(--glass-border); object-fit: cover; background: rgba(0,0,0,0.5);}
+        .rev-name-wrapper { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
         .rev-name { font-weight: 900; color: #fff; font-size: 16px; letter-spacing: 0.5px;}
         .rev-date { color: var(--text-muted); font-size: 12px; font-weight: 700; margin-top: 3px;}
         
@@ -234,8 +240,8 @@
 
     <div id="toastContainer"></div>
 
-    <!-- БОКОВОЕ МЕНЮ (ИСПРАВЛЕН FOUC: жесткий стиль left: -100vw) -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()" style="display: none;"></div>
+    <!-- БОКОВОЕ МЕНЮ -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
     <div class="sidebar-menu" id="sidebarMenu" style="position: fixed; left: -100vw; top: 0; z-index: 1000;">
         <div class="sidebar-header">
             <h2>Навигация</h2>
@@ -244,7 +250,7 @@
         <div class="sidebar-nav">
             <a href="https://whunx.shop/" class="sidebar-link"><i class="fa-solid fa-store"></i> Магазин голды</a>
             <a href="https://whunx.shop/comment" class="sidebar-link"><i class="fa-solid fa-star"></i> Отзывы клиентов</a>
-            <a href="https://whunx.shop/idea" class="sidebar-link active"><i class="fa-solid fa-lightbulb"></i> Предложить идею</a>
+            <a href="https://whunx.shop/idea" class="sidebar-link active" style="background: rgba(255,255,255,0.05); border-color: var(--glass-border); color: #fff;"><i class="fa-solid fa-lightbulb"></i> Предложить идею</a>
             <a href="https://whunx.shop/top" class="sidebar-link"><i class="fa-solid fa-trophy"></i> Зал Славы</a>
         </div>
     </div>
@@ -335,15 +341,8 @@
         }
 
         function toggleSidebar() {
-            const menu = document.getElementById('sidebarMenu');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (menu.style.left === '-100vw') menu.style.left = '';
-            
-            menu.classList.toggle('active');
-            overlay.classList.toggle('active');
-            
-            if (overlay.classList.contains('active')) overlay.style.display = 'block';
-            else setTimeout(() => { overlay.style.display = 'none'; }, 400);
+            document.getElementById('sidebarMenu').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
         }
 
         function toggleDropdown() { document.getElementById('profileModule').classList.toggle('active'); }
@@ -425,6 +424,22 @@
 
         async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); window.location.reload(); }
 
+        // ==========================================
+        // ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ БЕЙДЖЕЙ И ГАЛОЧЕК
+        // ==========================================
+        function getUserBadges(userRole, isVerified) {
+            let html = '';
+            if (isVerified) {
+                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
+            }
+            if (userRole === 'creator') {
+                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
+            } else if (userRole === 'admin') {
+                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
+            }
+            return html;
+        }
+
         async function handleUserLogin(session) {
             currentSessionToken = session.access_token;
             const userAuth = session.user;
@@ -443,7 +458,10 @@
             currentDbUser = dbUser;
             
             document.getElementById('balanceText').innerHTML = `${currentDbUser.balance} <span>₸</span>`;
-            document.getElementById('dropdownName').innerText = currentDbUser.username;
+            
+            // Вставляем бейджи в профиль
+            const badgesHtml = getUserBadges(currentDbUser.role, currentDbUser.is_verified);
+            document.getElementById('dropdownName').innerHTML = `${currentDbUser.username} ${badgesHtml}`;
             
             let safeAvatar = 'https://whunx.shop/whunx_pp.png';
             if (currentDbUser.avatar_url) {
@@ -547,10 +565,17 @@
         async function loadIdeasFeed() {
             const container = document.getElementById('ideasContainer');
             try {
-                const { data: ideas, error } = await supabaseClient.from('ideas').select('*').order('created_at', { ascending: false });
+                // Подтягиваем идеи вместе с данными юзера
+                const { data: ideas, error } = await supabaseClient
+                    .from('ideas')
+                    .select(`
+                        *,
+                        users:user_email (is_verified)
+                    `)
+                    .order('created_at', { ascending: false });
+                
                 if (error) throw new Error('DB Error');
 
-                // Проверяем, изменились ли данные (чтобы не перерисовывать страницу просто так каждые 3 секунды)
                 const newDataString = JSON.stringify(ideas);
                 if (newDataString === ideasCache) return; 
                 ideasCache = newDataString; 
@@ -559,19 +584,16 @@
                 
                 if(ideas && ideas.length > 0) {
                     ideas.forEach(idea => {
-                        // Определяем статус и бейдж
                         let statusClass = ''; let statusText = ''; let statusIcon = '';
                         if (idea.status === 'pending') { statusClass = 'status-pending'; statusText = 'На модерации'; statusIcon = 'fa-clock'; }
                         else if (idea.status === 'approved') { statusClass = 'status-approved'; statusText = 'Одобрено'; statusIcon = 'fa-check'; }
                         else if (idea.status === 'completed') { statusClass = 'status-completed'; statusText = 'Выполнено'; statusIcon = 'fa-check-double'; }
                         else if (idea.status === 'rejected') { statusClass = 'status-rejected'; statusText = 'Отклонено'; statusIcon = 'fa-xmark'; }
 
-                        // HTML Награды
                         const rewardHtml = (idea.status === 'approved' || idea.status === 'completed') && idea.reward_amount > 0
                             ? `<div class="ic-reward"><i class="fa-solid fa-gift"></i> Награда автору: ${idea.reward_amount} ₸</div>` 
                             : '';
 
-                        // HTML Ответа админа
                         let replyHtml = idea.admin_reply ? `
                             <div class="admin-reply">
                                 <div class="admin-reply-header">
@@ -582,7 +604,6 @@
                             </div>
                         ` : '';
 
-                        // HTMLртинок идеи
                         let imagesHtml = '';
                         if (idea.images && Array.isArray(idea.images) && idea.images.length > 0) {
                             imagesHtml = '<div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">';
@@ -592,7 +613,6 @@
                             imagesHtml += '</div>';
                         }
 
-                        // Информация о юзере
                         const userName = idea.username || idea.user_email.split('@')[0];
                         let safeAvatar = 'https://whunx.shop/whunx_pp.png';
                         if (idea.avatar_url) {
@@ -602,13 +622,21 @@
                         const dateObj = new Date(idea.created_at);
                         const dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
 
+                        // Подтягиваем актуальный бейдж и галочку
+                        const isVerified = idea.users ? idea.users.is_verified : false;
+                        const role = idea.user_role || 'user';
+                        const userBadges = getUserBadges(role, isVerified);
+
                         const card = document.createElement('div');
                         card.className = 'review-card';
                         card.innerHTML = `
                             <div class="rev-header">
                                 <img src="${safeAvatar}" class="rev-avatar" onerror="this.src='https://whunx.shop/whunx_pp.png'">
                                 <div>
-                                    <div class="rev-name">${userName}</div>
+                                    <div class="rev-name-wrapper">
+                                        <span class="rev-name">${userName}</span>
+                                        ${userBadges}
+                                    </div>
                                     <div class="rev-date">${dateStr}</div>
                                 </div>
                                 <div class="idea-status ${statusClass}"><i class="fa-solid ${statusIcon}"></i> ${statusText}</div>
