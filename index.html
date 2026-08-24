@@ -1669,9 +1669,11 @@
         // ==========================================
         // ПАРТНЕРЫ
         // ==========================================
-        async function loadPartners() {
+       async function loadPartners() {
             try {
                 const { data, error } = await supabaseClient.from('partners').select('*').order('sort_order', {ascending: true});
+                console.log("Данные партнеров из БД:", data); // <--- Посмотрит что выведет в F12 -> Console
+
                 const section = document.getElementById('partnersSection');
                 const grid = document.getElementById('partnersGrid');
                 
@@ -1683,8 +1685,12 @@
                         else if (p.platform === 'youtube') iconHtml = '<i class="fa-brands fa-youtube partner-icon youtube"></i>';
                         else if (p.platform === 'tiktok') iconHtml = '<i class="fa-brands fa-tiktok partner-icon tiktok"></i>';
                         else if (p.platform === 'website') {
-                            const domain = new URL(p.link).hostname;
-                            iconHtml = `<img src="https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=64" class="partner-img-icon" alt="site-icon">`;
+                            try {
+                                const domain = new URL(p.link).hostname;
+                                iconHtml = `<img src="https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=64" class="partner-img-icon" alt="site-icon">`;
+                            } catch(e) {
+                                iconHtml = '<i class="fa-solid fa-globe partner-icon"></i>';
+                            }
                         }
                         
                         return `<a href="${p.link}" target="_blank" class="partner-card">
@@ -1697,6 +1703,7 @@
                     section.style.display = 'none';
                 }
             } catch(e) {
+                console.error("Ошибка загрузки партнеров:", e);
                 document.getElementById('partnersSection').style.display = 'none';
             }
         }
