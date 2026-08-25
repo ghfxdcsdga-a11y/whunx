@@ -482,7 +482,7 @@
             return rank;
         }
 
-        async function loadTops() {
+                async function loadTops() {
             try {
                 // Загружаем все 5 функций
                 const [donators, withdrawals, ideas, charityKzt, charityGold] = await Promise.all([
@@ -499,26 +499,45 @@
 
                 currentTopIdeasCache = ideas.data || [];
 
-                // Вытаскиваем уникальные имена пользователей (чтобы потом найти их роли в базе)
-                let allEmails = new Set();
-                const addEmails = (arr) => arr?.forEach(item => { if(item.user_email) allEmails.add(item.user_email); });
+                // СОБИРАЕМ ПОЧТЫ И НИКИ (БЕЗ UNDEFINED)
+                let allKeys = new Set();
+                const extractKeys = (arr) => {
+                    if(!arr) return;
+                    arr.forEach(item => {
+                        if(item.user_email) allKeys.add(item.user_email);
+                        if(item.email) allKeys.add(item.email);
+                        if(item.username) allKeys.add(item.username);
+                    });
+                };
                 
-                let allUsernames = new Set();
-                const addUsernames = (arr) => arr?.forEach(item => { if(item.username) allUsernames.add(item.username); });
-                
-                addUsernames(donators.data); addUsernames(withdrawals.data); addUsernames(ideas.data);
-                addUsernames(charityKzt.data); addUsernames(charityGold.data);
+                extractKeys(donators.data); extractKeys(withdrawals.data); extractKeys(ideas.data);
+                extractKeys(charityKzt.data); extractKeys(charityGold.data);
 
                 let usersMap = {};
-                if (allUsernames.size > 0) {
-                    const { data: usersData } = await supabaseClient
-                        .from('users')
-                        .select('username, is_verified, role')
-                        .in('username', Array.from(allUsernames));
+                if (allKeys.size > 0) {
+                    const keysArray = Array.from(allKeys);
                     
-                    if (usersData) {
-                        usersData.forEach(u => usersMap[u.username] = u);
-                    }
+                    // Ищем юзеров по почте
+                    const { data: usersByEmail } = await supabaseClient
+                        .from('users')
+                        .select('email, username, is_verified, role, avatar_url')
+                        .in('email', keysArray);
+                        
+                    if (usersByEmail) usersByEmail.forEach(u => { 
+                        usersMap[u.email] = u; 
+                        if (u.username) usersMap[u.username] = u; 
+                    });
+                    
+                    // Ищем юзеров по нику (на случай если почты нет)
+                    const { data: usersByNick } = await supabaseClient
+                        .from('users')
+                        .select('email, username, is_verified, role, avatar_url')
+                        .in('username', keysArray);
+                        
+                    if (usersByNick) usersByNick.forEach(u => { 
+                        usersMap[u.email] = u; 
+                        if (u.username) usersMap[u.username] = u; 
+                    });
                 }
 
                 // Вспомогательная функция для рендера
@@ -536,19 +555,25 @@
                                 descHtml = `<div class="top-desc">"${item.idea_text}"</div>`;
                             }
 
-                            // Подтягиваем бейджи
-                            const authorInfo = usersMap[item.username] || {};
+                            // ЖЕЛЕЗОБЕТОННЫЙ ПОИСК ДАННЫХ ЮЗЕРА
+                            const lookupKey = item.user_email || item.email || item.username;
+                            const authorInfo = (lookupKey && usersMap[lookupKey]) ? usersMap[lookupKey] : {};
+                            
                             const isVerified = authorInfo.is_verified || false;
                             const role = authorInfo.role || 'user';
                             const userBadges = getUserBadges(role, isVerified);
+                            
+                            // Защита от вывода слова undefined
+                            const displayUsername = item.username || authorInfo.username || lookupKey || 'Аноним';
+                            const displayAvatar = item.avatar_url || authorInfo.avatar_url;
 
                             return `
                                 <div class="top-item ${itemClass}" ${onClickAttr}>
                                     <div class="rank-badge ${rankClass}">${getRankIcon(index + 1)}</div>
-                                    <img src="${getSafeAvatar(item.avatar_url)}" class="top-avatar">
+                                    <img src="${getSafeAvatar(displayAvatar)}" class="top-avatar">
                                     <div class="top-info">
                                         <div class="top-name-wrapper">
-                                            <span class="top-name">${item.username}</span>
+                                            <span class="top-name">${displayUsername}</span>
                                             ${userBadges}
                                         </div>
                                         <div class="top-value ${valueClass}">${item[valueKey]} ${valueSuffix}</div>
@@ -567,7 +592,9 @@
                 renderList(charityKzt.data, 'charityKztList', 'total_donated', '₸', 'val-purple');
                 renderList(charityGold.data, 'charityGoldList', 'total_donated', 'G', 'val-red');
 
-            } catch(e) { }
+            } catch(e) { 
+                console.error("Ошибка загрузки топов:", e); 
+            }
         }
 
         // ==========================================
