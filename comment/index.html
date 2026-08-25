@@ -683,8 +683,6 @@
         async function loadReviews() {
             const container = document.getElementById('reviewsContainer');
             try {
-                // ЭКОНОМИЯ EGRESS: Больше не обращаемся к Supabase напрямую с сайта!
-                // Теперь мы просто просим готовый список у нашего бесплатного Render-бэкенда.
                 const response = await fetch(`${BACKEND_URL}/api/reviews/list`);
                 const result = await response.json();
                 
@@ -698,8 +696,12 @@
                 container.innerHTML = '';
                 
                 if(reviews && reviews.length > 0) {
-                    // ЭКОНОМИЯ EGRESS X2: Нам больше не нужно дергать таблицу `users`, 
-                    // так как мы заранее сохраняем все аватарки и роли прямо в отзывы!
+                    // Возвращаем легкий запрос для галочек!
+                    const emails = [...new Set(reviews.map(r => r.user_email))];
+                    const { data: usersData } = await supabaseClient.from('users').select('email, is_verified').in('email', emails);
+                    const verifiedMap = {};
+                    if (usersData) usersData.forEach(u => verifiedMap[u.email] = u.is_verified);
+
                     reviews.forEach(r => {
                         let starsHtml = '';
                         for(let i = 1; i <= 5; i++) {
@@ -725,7 +727,9 @@
                         const dateObj = new Date(r.created_at);
                         const dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
 
-                        const userBadges = getUserBadges(r.user_role || 'user', false); // Галочку для отзывов пока не тащим ради экономии
+                        // Подтягиваем галочку из нашей легкой карты
+                        const isVerified = verifiedMap[r.user_email] || false;
+                        const userBadges = getUserBadges(r.user_role || 'user', isVerified);
 
                         const card = document.createElement('div');
                         card.className = 'review-card';
