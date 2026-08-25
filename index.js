@@ -15,12 +15,13 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const PORT = process.env.PORT || 10000;
 
 // ==========================================
-// SOCKET.IO
+// SOCKET.IO И ГЛОБАЛЬНЫЕ ТАЙМЕРЫ ЧАТОВ
 // ==========================================
 const server = require('http').createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
 const connectedUsers = {};
+const resolveTimeouts = {}; // Хранит таймеры 5-минутного закрытия чатов
 
 io.on('connection', (socket) => {
   socket.on('register_client', async (data) => {
@@ -37,6 +38,19 @@ io.on('connection', (socket) => {
   });
 });
 
+async function closeAndClearChat(userEmail) {
+    // Удаляем всю историю из БД (ЭКОНОМИЯ EGRESS)
+    await supabase.from('support_messages').delete().eq('user_email', userEmail);
+    // Отправляем сигнал на очистку клиенту
+    const socketId = connectedUsers[userEmail];
+    if (socketId) io.to(socketId).emit('chat_closed');
+    // Сбрасываем таймер
+    if (resolveTimeouts[userEmail]) {
+        clearTimeout(resolveTimeouts[userEmail]);
+        delete resolveTimeouts[userEmail];
+    }
+}
+
 // ==========================================
 // КЭШИРОВАНИЕ ТОПОВ (БОРЬБА С EGRESS)
 // ==========================================
@@ -52,23 +66,14 @@ async function updateTopsCache() {
             supabase.rpc('get_top_charity_gold')
         ]);
         topsCacheData = {
-            d: d.data || [],
-            w: w.data || [],
-            i: i.data || [],
-            ck: ck.data || [],
-            cg: cg.data || []
+            d: d.data || [], w: w.data || [], i: i.data || [], ck: ck.data || [], cg: cg.data || []
         };
-        console.log("Кэш топов успешно обновлен");
-    } catch (err) {
-        console.error('Ошибка обновления кэша топов:', err);
-    }
+    } catch (err) {}
 }
-// Render сам опрашивает Supabase раз в 60 секунд (Экономия 99% Egress)
 setInterval(updateTopsCache, 60000);
 updateTopsCache();
 
 app.get('/api/tops/cache', (req, res) => {
-    // Отдаем юзерам данные прямо из оперативки Render, не дергая Supabase!
     res.json({ success: true, data: topsCacheData });
 });
 
@@ -80,29 +85,19 @@ const ADMIN_CHAT_ID = 1210777759;
 
 bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
   if (msg.chat.id !== ADMIN_CHAT_ID) return;
-  const userEmail = match[1].trim();
-  const goldAmount = parseInt(match[2].trim());
-
+  const userEmail = match[1].trim(); const goldAmount = parseInt(match[2].trim());
   const socketId = connectedUsers[userEmail];
   if (socketId) {
     io.to(socketId).emit('open_plashka', { amount: goldAmount });
     bot.sendMessage(ADMIN_CHAT_ID, `✅ Модалка выдачи приза на ${goldAmount} G отправлена пользователю ${userEmail}.`);
-  } else {
-    bot.sendMessage(ADMIN_CHAT_ID, `⚠️ Пользователь ${userEmail} сейчас не онлайн.`);
-  }
+  } else bot.sendMessage(ADMIN_CHAT_ID, `⚠️ Пользователь ${userEmail} сейчас не онлайн.`);
 });
 
 bot.onText(/^\/setdar\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([\d.]+)$/, async (msg, match) => {
   if (msg.chat.id !== ADMIN_CHAT_ID) return;
-  const userEmail = match[1].trim();
-  const gameId = match[2].trim();
-  const pattern = match[3].trim();
-  const skinPrice = parseFloat(match[4].trim());
-
+  const userEmail = match[1].trim(); const gameId = match[2].trim(); const pattern = match[3].trim(); const skinPrice = parseFloat(match[4].trim());
   const { data: donate, error } = await supabase.from('donations').select('*').eq('user_email', userEmail).eq('donate_type', 'gold').eq('status', 'pending').order('created_at', { ascending: false }).limit(1).single();
-
   if (error || !donate) return bot.sendMessage(ADMIN_CHAT_ID, `❌ Заявка на донат голдой не найдена.`);
-
   await supabase.from('donations').update({ game_id: gameId, skin_pattern: pattern, skin_price: skinPrice, status: 'waiting_skin' }).eq('id', donate.id);
 
   const socketId = connectedUsers[userEmail];
@@ -113,10 +108,7 @@ bot.onText(/^\/setdar\s+([^\s]+)\s+([^\s]+)\s+([^\s]+)\s+([\d.]+)$/, async (msg,
 });
 
 bot.onText(/^\/start BIND_(.+)$/, async (msg, match) => {
-  const secretId = match[1].trim();
-  const tgId = msg.from.id;
-  const tgUsername = msg.from.username || null;
-
+  const secretId = match[1].trim(); const tgId = msg.from.id; const tgUsername = msg.from.username || null;
   const { data: targetUser } = await supabase.from('users').select('*').eq('secret_id', secretId).single();
   if (!targetUser) return bot.sendMessage(msg.chat.id, '❌ Аккаунт не найден.');
 
@@ -141,7 +133,6 @@ bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
   
   const { data: txs } = await supabase.from('transactions').select('*').eq('user_email', user.email).order('created_at', { ascending: true });
   let response = `👤 **Пользователь:** ${user.username}\n💰 **Баланс:** ${user.balance} ₸\n\n`;
-  
   if (!txs || txs.length === 0) response += '`Транзакций пока нет.`';
   else {
     txs.forEach(tx => {
@@ -154,19 +145,49 @@ bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
   bot.sendMessage(ADMIN_CHAT_ID, response, { parse_mode: 'Markdown' });
 });
 
+// ВЫДАЧА МУТА (Команда из Telegram)
+bot.onText(/^\/mute\s+([^\s]+)\s+(\d+)\s+(.+)$/, async (msg, match) => {
+    if (msg.chat.id !== ADMIN_CHAT_ID) return;
+    const userEmail = match[1]; const minutes = parseInt(match[2]); const reason = match[3];
+    
+    const muteUntil = new Date(Date.now() + minutes * 60000).toISOString();
+    const { data, error } = await supabase.from('users').update({ mute_until: muteUntil }).eq('email', userEmail).select().single();
+    if (error || !data) return bot.sendMessage(ADMIN_CHAT_ID, `❌ Ошибка: Пользователь ${userEmail} не найден.`);
+    
+    const socketId = connectedUsers[userEmail];
+    if (socketId) io.to(socketId).emit('chat_muted', { mute_until: muteUntil });
+    
+    bot.sendMessage(ADMIN_CHAT_ID, `🔇 Пользователю ${userEmail} выдан мут на ${minutes} мин.\nПричина: ${reason}`);
+});
+
 bot.on('message', async (msg) => {
-  // ОТВЕТ АДМИНА В ТЕХПОДДЕРЖКЕ
+  // ОТВЕТ АДМИНА В ТЕХПОДДЕРЖКЕ С ПОДДЕРЖКОЙ ФОТО
   if (msg.chat.id === ADMIN_CHAT_ID && msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes('Почта:')) {
-    const replyText = msg.text;
+    const replyText = msg.text || msg.caption || '';
     const emailMatch = msg.reply_to_message.text.match(/Почта:\s*([^\s\n]+)/);
     if (emailMatch && emailMatch[1]) {
       const userEmail = emailMatch[1];
-      await supabase.from('support_messages').insert([{ user_email: userEmail, sender: 'admin', text: replyText }]);
-      bot.sendMessage(ADMIN_CHAT_ID, `✅ Ответ отправлен пользователю ${userEmail}`);
+      let imagesArray = [];
+
+      // Если админ прикрепил фото
+      if (msg.photo && msg.photo.length > 0) {
+          const photo = msg.photo[msg.photo.length - 1]; // Берем лучшее качество
+          const fileLink = await bot.getFileLink(photo.file_id);
+          try {
+              const imgResp = await fetch(fileLink);
+              const buffer = await imgResp.arrayBuffer();
+              const base64 = Buffer.from(buffer).toString('base64');
+              imagesArray.push(`data:image/jpeg;base64,${base64}`);
+          } catch(e) { console.error("Ошибка загрузки фото админа", e); }
+      }
+
+      // Если в таблице support_messages нет колонки role/images, они не сохранятся, но мы передадим их по сокету
+      const msgData = { user_email: userEmail, sender: 'admin', text: replyText, images: imagesArray, role: 'creator' };
+      await supabase.from('support_messages').insert([{ user_email: userEmail, sender: 'admin', text: replyText }]); // Сохраняем хотя бы текст
       
-      // МГНОВЕННЫЙ ПУШ СООБЩЕНИЯ НА САЙТ (БЕЗ ТАЙМЕРОВ!)
+      bot.sendMessage(ADMIN_CHAT_ID, `✅ Ответ отправлен пользователю ${userEmail}`);
       const socketId = connectedUsers[userEmail];
-      if (socketId) io.to(socketId).emit('new_chat_message', { sender: 'admin', text: replyText });
+      if (socketId) io.to(socketId).emit('new_chat_message', msgData);
     }
   }
 });
@@ -174,6 +195,37 @@ bot.on('message', async (msg) => {
 bot.on('callback_query', async (query) => {
   if (query.from.id !== ADMIN_CHAT_ID) return;
 
+  // ОБРАБОТКА НОВЫХ КНОПОК ПОДДЕРЖКИ
+  if (query.data.startsWith('respr_')) {
+      const userEmail = query.data.substring(6);
+      const msgData = { user_email: userEmail, sender: 'admin', type: 'resolve_prompt', text: 'Пожалуйста, подтвердите, решена ли ваша проблема:' };
+      
+      const { data: savedMsg } = await supabase.from('support_messages').insert([msgData]).select().single();
+      const socketId = connectedUsers[userEmail];
+      if (socketId) io.to(socketId).emit('chat_resolve_prompt', savedMsg);
+      
+      // Таймер на авто-закрытие через 5 минут
+      resolveTimeouts[userEmail] = setTimeout(async () => {
+          await closeAndClearChat(userEmail);
+          bot.sendMessage(ADMIN_CHAT_ID, `⏳ Чат с ${userEmail} автоматически закрыт (Тайм-аут 5 мин).`);
+      }, 5 * 60 * 1000);
+      
+      bot.answerCallbackQuery(query.id, { text: 'Вопрос отправлен!' });
+      return bot.editMessageText(`${query.message.text}\n\n[❓ Запрошено подтверждение решения]`, { chat_id: query.message.chat.id, message_id: query.message.message_id });
+  }
+  else if (query.data.startsWith('closechat_')) {
+      const userEmail = query.data.substring(10);
+      await closeAndClearChat(userEmail);
+      bot.answerCallbackQuery(query.id, { text: 'Чат принудительно закрыт!' });
+      return bot.editMessageText(`${query.message.text}\n\n[🔒 Чат принудительно закрыт администратором]`, { chat_id: query.message.chat.id, message_id: query.message.message_id });
+  }
+  else if (query.data.startsWith('mutebtn_')) {
+      const userEmail = query.data.substring(8);
+      bot.answerCallbackQuery(query.id);
+      return bot.sendMessage(ADMIN_CHAT_ID, `Для выдачи мута скопируйте команду и вставьте свои значения:\n\`/mute ${userEmail} [минуты] [причина]\`\n\nПример: \`/mute ${userEmail} 60 Оскорбление\``, { parse_mode: 'Markdown' });
+  }
+
+  // СТАРЫЕ ОБРАБОТЧИКИ
   const action = query.data.split('_')[0]; 
   const orderId = query.data.split('_')[1];
 
@@ -205,8 +257,6 @@ bot.on('callback_query', async (query) => {
         const newBalance = Number(user.balance) + Number(request.amount);
         await supabase.from('users').update({ balance: newBalance }).eq('email', request.user_email);
         await supabase.from('transactions').insert([{ user_email: request.user_email, type: 'deposit', amount: request.amount, description: 'Пополнение Kaspi' }]);
-        
-        // МГНОВЕННОЕ ОБНОВЛЕНИЕ БАЛАНСА БЕЗ ТАЙМЕРА!
         const socketId = connectedUsers[request.user_email];
         if (socketId) io.to(socketId).emit('balance_updated', { balance: newBalance });
       }
@@ -230,15 +280,10 @@ bot.on('callback_query', async (query) => {
       const newBalance = Number(user.balance) + Number(order.spent_rubles);
       await supabase.from('users').update({ balance: newBalance }).eq('email', order.user_email);
       await supabase.from('transactions').insert([{ user_email: order.user_email, type: 'refund', amount: order.spent_rubles, description: `Возврат за отмену заказа #${order.id}` }]);
-      
-      // МГНОВЕННОЕ ОБНОВЛЕНИЕ БАЛАНСА БЕЗ ТАЙМЕРА!
       const socketId = connectedUsers[order.user_email];
       if (socketId) io.to(socketId).emit('balance_updated', { balance: newBalance });
     }
-    
-    if (order.applied_promo) {
-      await supabase.from('used_promocodes').update({ is_spent: false }).eq('user_email', order.user_email).eq('promo_code', order.applied_promo);
-    }
+    if (order.applied_promo) await supabase.from('used_promocodes').update({ is_spent: false }).eq('user_email', order.user_email).eq('promo_code', order.applied_promo);
   }
 
   await supabase.from('withdrawals').update({ status: newStatus }).eq('id', orderId);
@@ -248,7 +293,6 @@ bot.on('callback_query', async (query) => {
   if (query.message.photo) bot.editMessageCaption(newText, opts).catch(err => console.error(err));
   else bot.editMessageText(newText, opts).catch(err => console.error(err));
 });
-
 
 // ==========================================
 // МИДЛВАРЫ
@@ -273,6 +317,89 @@ const authenticateUser = async (req, res, next) => {
     next();
   } catch (err) { res.status(401).json({ error: 'Ошибка авторизации' }); }
 };
+
+// ==========================================
+// НОВЫЕ РОУТЫ ЧАТА ПОДДЕРЖКИ
+// ==========================================
+app.get('/api/chat/history', authenticateUser, async (req, res) => {
+    const now = new Date();
+    const isMuted = req.user.mute_until && new Date(req.user.mute_until) > now;
+
+    const { data } = await supabase.from('support_messages').select('*').eq('user_email', req.user.email).order('created_at', { ascending: true });
+    
+    // Если в таблице нет колонок role и images, они просто не вернутся, но текст будет
+    res.json({ 
+        success: true, 
+        messages: data || [], 
+        muted: !!isMuted, 
+        mute_until: isMuted ? req.user.mute_until : null 
+    });
+});
+
+app.post('/api/chat/send', authenticateUser, async (req, res) => {
+    const { message, images } = req.body;
+    
+    const now = new Date();
+    if (req.user.mute_until && new Date(req.user.mute_until) > now) {
+        return res.status(403).json({ error: 'Чат заблокирован' });
+    }
+
+    // Сохраняем в БД (Колонки images может не быть, но текст сохранится)
+    await supabase.from('support_messages').insert([{ user_email: req.user.email, sender: 'user', text: message }]);
+
+    let tgText = `✉️ **Новое обращение**\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID:** \`${req.user.secret_id}\`\n\nСообщение: ${message || '[Только фото]'}`;
+    
+    const keyboard = {
+        inline_keyboard: [
+            [{ text: '❓ Проблема решена?', callback_data: `respr_${req.user.email}` }],
+            [{ text: '🔒 Закрыть чат', callback_data: `closechat_${req.user.email}` }, { text: '🔇 Мут', callback_data: `mutebtn_${req.user.email}` }]
+        ]
+    };
+
+    try {
+        if (images && images.length > 0) {
+            // Отправляем фото админу
+            for (let img of images) {
+                const buffer = Buffer.from(img.replace(/^data:image\/\w+;base64,/, ""), 'base64');
+                await bot.sendPhoto(ADMIN_CHAT_ID, buffer);
+            }
+        }
+        bot.sendMessage(ADMIN_CHAT_ID, tgText, { parse_mode: 'Markdown', reply_markup: keyboard });
+    } catch (err) { console.error(err); }
+
+    res.json({ success: true });
+});
+
+app.post('/api/chat/resolve-answer', authenticateUser, async (req, res) => {
+    const { msgId, answer } = req.body;
+    
+    // Удаляем промпт из БД, чтобы он больше не выводился при релоаде
+    if (msgId) await supabase.from('support_messages').delete().eq('id', msgId);
+    
+    if (resolveTimeouts[req.user.email]) {
+        clearTimeout(resolveTimeouts[req.user.email]);
+        delete resolveTimeouts[req.user.email];
+    }
+
+    if (answer === 'yes') {
+        await closeAndClearChat(req.user.email);
+        bot.sendMessage(ADMIN_CHAT_ID, `✅ Пользователь ${req.user.email} подтвердил решение проблемы. Чат закрыт и очищен.`);
+    } else {
+        await supabase.from('support_messages').insert([{ user_email: req.user.email, sender: 'user', text: '[Пользователь указал, что проблема НЕ решена]' }]);
+        bot.sendMessage(ADMIN_CHAT_ID, `❌ Пользователь ${req.user.email} указал, что проблема НЕ решена! Чат продолжается.`);
+        
+        const socketId = connectedUsers[req.user.email];
+        if (socketId) io.to(socketId).emit('new_chat_message', { sender: 'user', text: '[Проблема не решена]' });
+    }
+    res.json({ success: true });
+});
+
+app.get('/api/chat/check-mute', authenticateUser, async (req, res) => {
+    const now = new Date();
+    const isMuted = req.user.mute_until && new Date(req.user.mute_until) > now;
+    res.json({ success: true, muted: !!isMuted, mute_until: isMuted ? req.user.mute_until : null });
+});
+
 
 // ==========================================
 // БАЗОВЫЕ РОУТЫ
@@ -307,18 +434,6 @@ app.post('/api/notifications/read', authenticateUser, async (req, res) => {
   const { withdrawalIds, topupIds } = req.body;
   if (withdrawalIds && withdrawalIds.length > 0) await supabase.from('withdrawals').update({ is_notified: true }).in('id', withdrawalIds).eq('user_email', req.user.email);
   if (topupIds && topupIds.length > 0) await supabase.from('topup_requests').update({ is_notified: true }).in('id', topupIds).eq('user_email', req.user.email);
-  res.json({ success: true });
-});
-
-app.get('/api/chat/history', authenticateUser, async (req, res) => {
-  const { data } = await supabase.from('support_messages').select('*').eq('user_email', req.user.email).order('created_at', { ascending: true });
-  res.json({ success: true, messages: data || [] });
-});
-
-app.post('/api/chat/send', authenticateUser, async (req, res) => {
-  const { message } = req.body;
-  await supabase.from('support_messages').insert([{ user_email: req.user.email, sender: 'user', text: message }]);
-  bot.sendMessage(ADMIN_CHAT_ID, `✉️ **Новое сообщение в техподдержку**\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID:** \`${req.user.secret_id}\`\n\nСообщение: ${message}`, { parse_mode: 'Markdown' });
   res.json({ success: true });
 });
 
