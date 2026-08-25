@@ -705,7 +705,6 @@
         async function loadIdeasFeed() {
             const container = document.getElementById('ideasContainer');
             try {
-                // ЭКОНОМИЯ EGRESS: Обращаемся к легкому API бэкенда вместо тяжелого запроса к базе!
                 const response = await fetch(`${BACKEND_URL}/api/ideas/list`);
                 const result = await response.json();
                 
@@ -719,8 +718,12 @@
                 container.innerHTML = '';
                 
                 if(ideas && ideas.length > 0) {
-                    // ЭКОНОМИЯ EGRESS X2: Больше не нужно делать запрос к таблице users. 
-                    // Имена, аватарки и роли уже сохранены внутри идеи!
+                    // Возвращаем легкий запрос для галочек!
+                    const emails = [...new Set(ideas.map(i => i.user_email))];
+                    const { data: usersData } = await supabaseClient.from('users').select('email, is_verified').in('email', emails);
+                    const verifiedMap = {};
+                    if (usersData) usersData.forEach(u => verifiedMap[u.email] = u.is_verified);
+
                     ideas.forEach(idea => {
                         let statusClass = ''; let statusText = ''; let statusIcon = '';
                         if (idea.status === 'pending') { statusClass = 'status-pending'; statusText = 'На модерации'; statusIcon = 'fa-clock'; }
@@ -760,7 +763,9 @@
                         const dateObj = new Date(idea.created_at);
                         const dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
 
-                        const userBadges = getUserBadges(idea.user_role || 'user', false);
+                        // Подтягиваем галочку
+                        const isVerified = verifiedMap[idea.user_email] || false;
+                        const userBadges = getUserBadges(idea.user_role || 'user', isVerified);
 
                         const card = document.createElement('div');
                         card.className = 'review-card';
