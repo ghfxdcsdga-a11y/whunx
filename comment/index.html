@@ -30,6 +30,7 @@
             --accent-purple-glow: rgba(139, 92, 246, 0.4);
             --accent-green: #10b981;
             --accent-red: #ef4444;
+            --accent-red-glow: rgba(239, 68, 68, 0.4);
             --text-main: #ffffff;
             --text-muted: #a3a8b5;
             --glass-border: rgba(255, 255, 255, 0.08);
@@ -104,9 +105,6 @@
         .sidebar-link:hover { background: rgba(255,255,255,0.03); color: #fff; border-color: var(--glass-border); transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2);}
         .sidebar-link:hover i { text-shadow: 0 0 15px var(--accent-purple-glow); }
         
-        /* Свечение активной вкладки (фиолетовое) */
-        .sidebar-link.active { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #fff; box-shadow: 0 5px 15px var(--accent-purple-glow);}
-
         .logo { font-size: 26px; font-weight: 900; letter-spacing: 1px; cursor: pointer; color: #fff; text-transform: uppercase;} 
         .logo span { color: var(--accent-purple); text-shadow: 0 0 20px var(--accent-purple-glow); }
         .header-right { display: flex; align-items: center; gap: 20px; }
@@ -126,7 +124,7 @@
         .profile-trigger:hover { background: rgba(255,255,255,0.03); border-color: var(--glass-border); } 
         .profile-trigger img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border); background: var(--bg-input); }
         .dropdown-menu { position: absolute; top: calc(100% + 20px); right: 0; width: 260px; background: rgba(15, 18, 26, 0.85); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; opacity: 0; visibility: hidden; transform: translateY(15px); transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 200; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02); } .profile-module.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
-        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: center; }
+        .dropdown-header { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); } .dropdown-name { font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
         .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; color: var(--text-muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;} .dropdown-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* =========================================
@@ -160,7 +158,7 @@
         .form-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px; color: #fff; font-size: 15px; font-weight: 600; outline: none; transition: 0.3s; box-shadow: inset 0 5px 10px rgba(0,0,0,0.3); resize: none;}
         .form-input:focus { border-color: var(--accent-gold); box-shadow: inset 0 5px 10px rgba(0,0,0,0.3), 0 0 15px var(--accent-gold-glow); }
         
-        .upload-area { background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 14px; padding: 18px; text-align: center; cursor: pointer; transition: 0.3s; font-weight: 700; font-size: 14px; margin-bottom: 20px; } 
+        .upload-area { background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 14px; padding: 18px; text-align: center; cursor: pointer; transition: 0.3s; font-weight: 700; font-size: 14px; margin-bottom: 20px; color: #fff;} 
         .upload-area:hover { border-color: var(--accent-gold); background: rgba(244, 199, 69, 0.08); }
 
         .btn-submit { width: 100%; background: var(--accent-gold); color: #000; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 800; transition: 0.3s; box-shadow: 0 10px 25px var(--accent-gold-glow); text-transform: uppercase; letter-spacing: 1px;} 
@@ -192,6 +190,92 @@
         .admin-reply-text { color: #e2e8f0; font-size: 14px; font-weight: 600; line-height: 1.6; margin-left: 44px; }
 
         /* =========================================
+           ОБНОВЛЕННЫЙ ФУТЕР
+        ========================================= */
+        footer { background: rgba(10, 12, 16, 0.8); backdrop-filter: blur(40px); padding: 40px 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto; z-index: 10; position: relative; display: flex; justify-content: center; align-items: center; }
+        footer::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); }
+        .footer-buttons-wrapper { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        
+        .btn-footer {
+            background: linear-gradient(145deg, rgba(30, 34, 48, 0.4) 0%, rgba(15, 18, 26, 0.8) 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 16px 36px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .btn-footer i { font-size: 16px; z-index: 2; transition: 0.3s; }
+        .btn-footer span { z-index: 2; }
+        
+        .btn-footer.donate { border-bottom: 2px solid var(--accent-gold); }
+        .btn-footer.donate i { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
+        .btn-footer.donate:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(244,199,69,0.15); border-color: rgba(244,199,69,0.4); }
+
+        .btn-footer.support { border-bottom: 2px solid var(--accent-purple); }
+        .btn-footer.support i { color: var(--accent-purple); text-shadow: 0 0 10px var(--accent-purple-glow); }
+        .btn-footer.support:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.4); }
+
+        /* =========================================
+           ОБНОВЛЕННЫЙ ЧАТ ТЕХ. ПОДДЕРЖКИ
+        ========================================= */
+        #chatWidget { position: fixed; bottom: 20px; right: 20px; width: 380px; background: rgba(15, 18, 26, 0.95); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02); display: none; flex-direction: column; overflow: hidden; z-index: 1000; transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); transform: translateY(20px) scale(0.95); opacity: 0; }
+        #chatWidget.active { display: flex !important; transform: translateY(0) scale(1); opacity: 1; }
+        .chat-header { background: rgba(0,0,0,0.4); padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); } 
+        .chat-header h4 { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;}
+        
+        .chat-messages { height: 350px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg { max-width: 85%; padding: 14px 18px; border-radius: 18px; font-size: 13px; font-weight: 600; line-height: 1.5; word-wrap: break-word; position: relative; }
+        .msg.user { background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-purple-hover) 100%); color: #fff; align-self: flex-end; border-bottom-right-radius: 6px; box-shadow: 0 5px 20px var(--accent-purple-glow); }
+        
+        .msg.admin { align-self: flex-start; border-bottom-left-radius: 6px; }
+        .msg.admin.creator { background: linear-gradient(145deg, rgba(244, 199, 69, 0.1) 0%, rgba(0,0,0,0.6) 100%); border: 1px solid var(--accent-gold); box-shadow: 0 0 15px var(--accent-gold-glow), inset 0 0 15px rgba(244,199,69,0.05); animation: creatorPulse 3s infinite alternate; }
+        @keyframes creatorPulse { from { box-shadow: 0 0 10px var(--accent-gold-glow); } to { box-shadow: 0 0 25px rgba(244, 199, 69, 0.6); border-color: #ffd700; } }
+        .msg.admin.regular { background: linear-gradient(145deg, rgba(239, 68, 68, 0.1) 0%, rgba(0,0,0,0.6) 100%); border: 1px solid var(--accent-red); box-shadow: 0 0 15px var(--accent-red-glow); }
+        
+        .msg-sender-title { font-size: 10px; margin-bottom: 6px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+        .msg.admin.creator .msg-sender-title { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
+        .msg.admin.regular .msg-sender-title { color: var(--accent-red); text-shadow: 0 0 10px var(--accent-red-glow); }
+
+        .chat-img-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .chat-img-grid img { max-width: 150px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
+        .chat-img-grid img:hover { transform: scale(1.05); border-color: rgba(255,255,255,0.3); }
+
+        .chat-input-wrapper { display: flex; flex-direction: column; background: rgba(0,0,0,0.4); border-top: 1px solid var(--glass-border); }
+        #chatImagePreview { display: flex; gap: 10px; padding: 10px 15px; overflow-x: auto; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .chat-preview-item { position: relative; width: 60px; height: 60px; border-radius: 10px; overflow: hidden; border: 1px solid var(--glass-border); flex-shrink: 0; }
+        .chat-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .chat-preview-item .remove-img { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: #fff; border-radius: 50%; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; font-size: 10px; cursor: pointer; transition: 0.3s;}
+        .chat-preview-item .remove-img:hover { background: var(--accent-red); }
+
+        .chat-input-area { padding: 15px; display: flex; gap: 10px; align-items: center; }
+        .chat-attach-btn { background: rgba(255,255,255,0.05); color: var(--text-muted); width: 45px; height: 45px; border-radius: 14px; font-size: 18px; transition: 0.3s; border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; flex-shrink: 0;}
+        .chat-attach-btn:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.3);}
+        .chat-input { flex: 1; background: var(--bg-input); border: 1px solid var(--glass-border); padding: 12px 15px; border-radius: 14px; color: #fff; font-size: 14px; font-weight: 600; outline: none; transition: 0.3s;} .chat-input:focus { border-color: var(--accent-purple); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .chat-send-btn { background: var(--accent-purple); color: #fff; width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: 0 5px 15px var(--accent-purple-glow); flex-shrink: 0;} .chat-send-btn:hover { background: var(--accent-purple-hover); transform: scale(1.05);}
+
+        .mute-timer-area { padding: 20px; text-align: center; background: linear-gradient(0deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%); border-top: 1px solid rgba(239, 68, 68, 0.3); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .mute-timer-text { color: var(--accent-red); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+        .mute-timer-countdown { font-size: 26px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: 2px;}
+
+        .resolve-prompt { margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.15); }
+        .resolve-prompt-text { font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;}
+        .resolve-btns { display: flex; gap: 10px; justify-content: center; }
+        .res-btn { flex: 1; padding: 10px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.3s; text-transform: uppercase; border: 1px solid transparent; background: rgba(0,0,0,0.3);}
+        .res-btn.yes { color: var(--accent-green); border-color: rgba(16, 185, 129, 0.3); } .res-btn.yes:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+        .res-btn.no { color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3); } .res-btn.no:hover { background: var(--accent-red); color: #000; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+
+        /* =========================================
            MOBILE RESPONSIVENESS
         ========================================= */
         @media (max-width: 768px) {
@@ -214,6 +298,10 @@
             .rev-header { flex-wrap: wrap; }
             .rev-stars { margin-left: 0; width: 100%; margin-top: 5px; }
             .admin-reply-text { margin-left: 0; margin-top: 10px; }
+            
+            #chatWidget { width: calc(100% - 30px); bottom: 15px; right: 15px; border-radius: 18px; }
+            .btn-footer { padding: 14px 20px; font-size: 12px; width: 100%; justify-content: center;}
+            .footer-buttons-wrapper { flex-direction: column; width: 100%; gap: 12px;}
         }
         @media (max-width: 400px) {
             .logo span { display: none; }
@@ -290,9 +378,48 @@
 
         <!-- КОНТЕЙНЕР ДЛЯ КАРТОЧЕК -->
         <div class="reviews-list" id="reviewsContainer">
-            <div style="text-align:center; padding: 40px; color: var(--text-muted); font-weight: 700;">Загрузка отзывов...</div>
+            <div style="text-align:center; padding: 40px; color: var(--text-muted); font-weight: 700;"><i class="fa-solid fa-circle-notch fa-spin"></i> Загрузка отзывов...</div>
         </div>
     </main>
+
+    <footer>
+        <div class="footer-buttons-wrapper">
+            <div class="btn-footer donate" onclick="window.location.href='https://whunx.shop/'">
+                <i class="fa-solid fa-heart"></i>
+                <span>Пожертвовать проекту</span>
+            </div>
+            <div class="btn-footer support" onclick="toggleChat()">
+                <i class="fa-solid fa-headset"></i>
+                <span>Тех. поддержка</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ВИДЖЕТ ТЕХ. ПОДДЕРЖКИ (ОБНОВЛЕННЫЙ) -->
+    <div id="chatWidget" style="display: none;">
+        <div class="chat-header">
+            <h4><i class="fa-solid fa-headset" style="color:var(--accent-purple);"></i> Поддержка онлайн</h4>
+            <i class="fa-solid fa-xmark" style="cursor:pointer; color:var(--text-muted); transition: 0.3s;" onclick="toggleChat()" onmouseover="this.style.color='var(--accent-red)'" onmouseout="this.style.color='var(--text-muted)'"></i>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages"></div>
+        
+        <div class="chat-input-wrapper" id="chatInputWrapper">
+            <div id="chatImagePreview" style="display:none;"></div>
+            <div class="chat-input-area">
+                <input type="file" id="chatUploadImg" accept="image/*" multiple style="display:none;" onchange="handleChatImageSelect(event)">
+                <button class="chat-attach-btn" onclick="document.getElementById('chatUploadImg').click()"><i class="fa-solid fa-paperclip"></i></button>
+                <input type="text" id="chatInput" class="chat-input" placeholder="Введите сообщение..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button class="chat-send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <div id="muteTimerArea" class="mute-timer-area" style="display: none;">
+            <div class="mute-timer-text">Чат заблокирован администратором</div>
+            <div class="mute-timer-countdown" id="muteCountdownText">00:00:00</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Возможность писать откроется по истечению времени</div>
+        </div>
+    </div>
 
     <!-- МОДАЛКА НАПИСАНИЯ ОТЗЫВА -->
     <div class="modal-overlay" id="addReviewModal">
@@ -329,6 +456,12 @@
         </div>
     </div>
 
+    <!-- ЛАЙТБОКС ДЛЯ ПРОСМОТРА СКРИНШОТОВ -->
+    <div class="lightbox-overlay" id="imageLightbox" onclick="closeLightbox(event)">
+        <i class="fa-solid fa-xmark lightbox-close" onclick="closeLightbox(event, true)"></i>
+        <img id="lightboxImg" class="lightbox-img" src="">
+    </div>
+
     <script>
         const GOOGLE_CLIENT_ID = '259244951144-dc5hm679lgjkfa21k5g7hgr9i3lj2e51.apps.googleusercontent.com';
         const BACKEND_URL = 'https://whunx-backend.onrender.com';
@@ -339,7 +472,10 @@
         let currentDbUser = null; 
         let currentSessionToken = null;
         let currentReviewImageBase64 = null;
-        let reviewsCache = ''; // Для проверки обновлений
+        let reviewsCache = ''; 
+        let socket = null;
+        let currentChatImages = [];
+        let muteTimerInterval = null;
 
         function showToast(title, message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -363,6 +499,7 @@
             modal.style.display = 'flex'; 
             setTimeout(() => { modal.style.opacity = '1'; modal.querySelector('.modal-box').style.transform = 'scale(1)'; }, 10); 
         }
+        
         function openLightbox(src) {
             document.getElementById('lightboxImg').src = src;
             const lb = document.getElementById('imageLightbox');
@@ -377,6 +514,7 @@
                 setTimeout(() => lb.style.display = 'none', 300);
             }
         }
+        
         function closeModal(id) { 
             const modal = document.getElementById(id); 
             modal.style.opacity = '0'; 
@@ -385,20 +523,39 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            loadReviews(); // Моментальная загрузка
-            setInterval(loadReviews, 3000); // Живое обновление каждые 3 сек
+            loadReviews(); 
+            // ЭКОНОМИЯ EGRESS: Обновляем только раз в 60 сек вместо 3
+            setInterval(loadReviews, 60000); 
 
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                handleUserLogin(session);
-            } else {
-                initGoogleAuth();
-            }
+            if (session) handleUserLogin(session);
+            else initGoogleAuth();
 
             supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_IN' && session) handleUserLogin(session);
                 else if (event === 'SIGNED_OUT') handleUserLogout();
             });
+
+            // ПОДКЛЮЧАЕМ СОКЕТЫ ДЛЯ ЧАТА
+            try {
+                socket = io(BACKEND_URL);
+                socket.on('new_chat_message', (msg) => {
+                    renderChatMessage(msg);
+                    const widget = document.getElementById('chatWidget');
+                    if (widget.style.display === 'none' || !widget.classList.contains('active')) {
+                        showToast('Новое сообщение', 'Вам ответила поддержка', 'info');
+                    }
+                });
+                socket.on('chat_resolve_prompt', (msg) => renderChatMessage(msg));
+                socket.on('chat_closed', () => {
+                    document.getElementById('chatMessages').innerHTML = '';
+                    renderChatMessage({ sender: 'system', text: 'Чат был завершен и история очищена.' });
+                });
+                socket.on('chat_muted', (data) => {
+                    renderChatMessage({ sender: 'system', text: 'Вы получили блокировку чата от администратора.' });
+                    startMuteTimer(data.mute_until);
+                });
+            } catch(e) {}
         });
 
         function initGoogleAuth() {
@@ -409,12 +566,8 @@
                     google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin });
                     google.accounts.id.renderButton(btn, { theme: "outline", size: "large", type: "standard", width: 250 });
                     document.getElementById('fakeGoogleText').innerText = 'Войти';
-                } catch (e) {
-                    document.getElementById('fakeGoogleText').innerText = 'Ошибка';
-                }
-            } else {
-                setTimeout(initGoogleAuth, 100);
-            }
+                } catch (e) { document.getElementById('fakeGoogleText').innerText = 'Ошибка'; }
+            } else { setTimeout(initGoogleAuth, 100); }
         }
 
         async function handleGoogleLogin(response) {
@@ -425,19 +578,11 @@
 
         async function logout() { await supabaseClient.auth.signOut(); document.getElementById('profileDropdown').classList.remove('active'); }
 
-        // ==========================================
-        // ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ БЕЙДЖЕЙ И ГАЛОЧЕК
-        // ==========================================
         function getUserBadges(userRole, isVerified) {
             let html = '';
-            if (isVerified) {
-                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
-            }
-            if (userRole === 'creator') {
-                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
-            } else if (userRole === 'admin') {
-                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
-            }
+            if (isVerified) html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
+            if (userRole === 'creator') html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
+            else if (userRole === 'admin') html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
             return html;
         }
 
@@ -460,15 +605,14 @@
             
             document.getElementById('balanceText').innerHTML = `${currentDbUser.balance} <span>₸</span>`;
             
-            // Вставляем бейджи в профиль
             const badgesHtml = getUserBadges(currentDbUser.role, currentDbUser.is_verified);
             document.getElementById('dropdownName').innerHTML = `${currentDbUser.username} ${badgesHtml}`;
             
             let safeAvatar = 'https://whunx.shop/whunx_pp.png';
-            if (currentDbUser.avatar_url) {
-                safeAvatar = currentDbUser.avatar_url.startsWith('http') || currentDbUser.avatar_url.startsWith('data:') ? currentDbUser.avatar_url : 'https://whunx.shop/' + currentDbUser.avatar_url;
-            }
+            if (currentDbUser.avatar_url) safeAvatar = currentDbUser.avatar_url.startsWith('http') || currentDbUser.avatar_url.startsWith('data:') ? currentDbUser.avatar_url : 'https://whunx.shop/' + currentDbUser.avatar_url;
             document.getElementById('headerAvatar').src = safeAvatar;
+
+            if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
         }
 
         function handleUserLogout() {
@@ -480,9 +624,8 @@
         }
 
         // ==========================================
-        // ЛОГИКА ОТЗЫВОВ
+        // ЛОГИКА ОТЗЫВОВ (ОПТИМИЗИРОВАНО)
         // ==========================================
-
         function previewReviewPhoto(event) {
             const file = event.target.files[0];
             if(file) {
@@ -490,8 +633,7 @@
                 reader.onload = function(e) { 
                     currentReviewImageBase64 = e.target.result;
                     const preview = document.getElementById('reviewPhotoPreview');
-                    preview.src = currentReviewImageBase64;
-                    preview.style.display = 'block';
+                    preview.src = currentReviewImageBase64; preview.style.display = 'block';
                     document.getElementById('removeRevPhotoBtn').style.display = 'block';
                     document.getElementById('reviewPhotoBtn').innerHTML = `Фото прикреплено <i class="fa-solid fa-check-double" style="color:var(--accent-green); margin-left: 5px;"></i>`;
                 }
@@ -502,8 +644,7 @@
         function removeReviewPhoto() {
             currentReviewImageBase64 = null;
             const preview = document.getElementById('reviewPhotoPreview');
-            preview.src = '';
-            preview.style.display = 'none';
+            preview.src = ''; preview.style.display = 'none';
             document.getElementById('removeRevPhotoBtn').style.display = 'none';
             document.getElementById('reviewPhotoInput').value = '';
             document.getElementById('reviewPhotoBtn').innerHTML = `Прикрепить скриншот <i class="fa-solid fa-image" style="margin-left: 5px;"></i>`;
@@ -511,40 +652,29 @@
 
         async function submitReview() {
             if (!currentSessionToken) return showToast('Внимание', 'Сначала войдите в аккаунт!', 'info');
-            
             const text = document.getElementById('reviewText').value.trim();
             if (!text) return showToast('Ошибка', 'Напишите текст отзыва!', 'error');
 
             let rating = 5;
             const radios = document.getElementsByName('rating');
-            for (let r of radios) {
-                if (r.checked) { rating = parseInt(r.value); break; }
-            }
+            for (let r of radios) { if (r.checked) { rating = parseInt(r.value); break; } }
 
             document.getElementById('submitReviewBtn').disabled = true;
             document.getElementById('submitReviewBtn').innerText = 'Публикация...';
 
             try {
                 const response = await fetch(`${BACKEND_URL}/api/reviews/add`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
                     body: JSON.stringify({ rating: rating, comment: text, image: currentReviewImageBase64 })
                 });
                 const result = await response.json();
                 
                 if (result.success) {
                     showToast('Успех', 'Отзыв успешно опубликован!', 'success');
-                    document.getElementById('reviewText').value = '';
-                    removeReviewPhoto();
-                    closeModal('addReviewModal');
-                    reviewsCache = ''; // Сбрасываем кэш, чтобы форсировать загрузку
-                    loadReviews(); 
-                } else {
-                    showToast('Ошибка', result.error, 'error');
-                }
-            } catch(e) {
-                showToast('Ошибка', 'Сбой связи с сервером', 'error');
-            }
+                    document.getElementById('reviewText').value = ''; removeReviewPhoto();
+                    closeModal('addReviewModal'); reviewsCache = ''; loadReviews(); 
+                } else showToast('Ошибка', result.error, 'error');
+            } catch(e) { showToast('Ошибка', 'Сбой связи с сервером', 'error'); }
 
             document.getElementById('submitReviewBtn').disabled = false;
             document.getElementById('submitReviewBtn').innerText = 'Опубликовать отзыв';
@@ -553,14 +683,14 @@
         async function loadReviews() {
             const container = document.getElementById('reviewsContainer');
             try {
-                // ЧИСТЫЙ И БЕЗОПАСНЫЙ ЗАПРОС (БЕЗ FOREIGN KEY JOINS)
-                const { data: reviews, error } = await supabaseClient
-                    .from('reviews')
-                    .select('*')
-                    .order('created_at', { ascending: false });
+                // ЭКОНОМИЯ EGRESS: Больше не обращаемся к Supabase напрямую с сайта!
+                // Теперь мы просто просим готовый список у нашего бесплатного Render-бэкенда.
+                const response = await fetch(`${BACKEND_URL}/api/reviews/list`);
+                const result = await response.json();
                 
-                if (error) throw new Error('DB Error');
+                if (!result.success) throw new Error('Backend Error');
 
+                const reviews = result.reviews;
                 const newDataString = JSON.stringify(reviews);
                 if (newDataString === reviewsCache) return; 
                 reviewsCache = newDataString; 
@@ -568,20 +698,8 @@
                 container.innerHTML = '';
                 
                 if(reviews && reviews.length > 0) {
-                    // Вытаскиваем уникальные email авторов
-                    const emails = [...new Set(reviews.map(r => r.user_email))];
-                    
-                    // Скачиваем актуальные данные о ролях и галочках авторов
-                    const { data: usersData } = await supabaseClient
-                        .from('users')
-                        .select('email, is_verified, role')
-                        .in('email', emails);
-                    
-                    const usersMap = {};
-                    if (usersData) {
-                        usersData.forEach(u => usersMap[u.email] = u);
-                    }
-
+                    // ЭКОНОМИЯ EGRESS X2: Нам больше не нужно дергать таблицу `users`, 
+                    // так как мы заранее сохраняем все аватарки и роли прямо в отзывы!
                     reviews.forEach(r => {
                         let starsHtml = '';
                         for(let i = 1; i <= 5; i++) {
@@ -602,18 +720,12 @@
 
                         const userName = r.username || r.user_email.split('@')[0];
                         let safeAvatar = 'https://whunx.shop/whunx_pp.png';
-                        if (r.avatar_url) {
-                            safeAvatar = r.avatar_url.startsWith('http') || r.avatar_url.startsWith('data:') ? r.avatar_url : 'https://whunx.shop/' + r.avatar_url;
-                        }
+                        if (r.avatar_url) safeAvatar = r.avatar_url.startsWith('http') || r.avatar_url.startsWith('data:') ? r.avatar_url : 'https://whunx.shop/' + r.avatar_url;
                         
                         const dateObj = new Date(r.created_at);
                         const dateStr = dateObj.toLocaleDateString('ru-RU') + ' в ' + dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
 
-                        // Подтягиваем актуальный бейдж и галочку
-                        const authorInfo = usersMap[r.user_email] || {};
-                        const isVerified = authorInfo.is_verified || false;
-                        const role = authorInfo.role || r.user_role || 'user';
-                        const userBadges = getUserBadges(role, isVerified);
+                        const userBadges = getUserBadges(r.user_role || 'user', false); // Галочку для отзывов пока не тащим ради экономии
 
                         const card = document.createElement('div');
                         card.className = 'review-card';
@@ -639,16 +751,157 @@
                     container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px; font-weight:700;">Отзывов пока нет. Будьте первыми!</div>';
                 }
             } catch(e) {
-                if (container.innerHTML.includes('Загрузка')) {
-                    container.innerHTML = '<div style="text-align:center; color:var(--error); padding:40px; font-weight:700;">Не удалось загрузить отзывы.</div>';
-                }
+                if (container.innerHTML.includes('Загрузка')) container.innerHTML = '<div style="text-align:center; color:var(--accent-red); padding:40px; font-weight:700;">Не удалось загрузить отзывы.</div>';
             }
         }
+
+        // ==========================================
+        // ЧАТ ТЕХПОДДЕРЖКИ
+        // ==========================================
+        function toggleChat() { 
+            const widget = document.getElementById('chatWidget'); 
+            if (widget.style.display === 'none') widget.style.display = '';
+            widget.classList.toggle('active'); 
+            if (widget.classList.contains('active')) loadChatHistory(); 
+        }
+
+        function handleChatImageSelect(event) {
+            const files = Array.from(event.target.files);
+            if (currentChatImages.length + files.length > 2) return showToast('Внимание', 'Можно прикрепить максимум 2 фотографии', 'error');
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => { currentChatImages.push(e.target.result); updateChatImagePreview(); };
+                reader.readAsDataURL(file);
+            });
+            event.target.value = '';
+        }
+
+        function removeChatImage(index) {
+            currentChatImages.splice(index, 1); updateChatImagePreview();
+        }
+
+        function updateChatImagePreview() {
+            const preview = document.getElementById('chatImagePreview');
+            if (currentChatImages.length === 0) { preview.style.display = 'none'; return; }
+            preview.style.display = 'flex';
+            preview.innerHTML = currentChatImages.map((img, i) => `
+                <div class="chat-preview-item">
+                    <img src="${img}">
+                    <div class="remove-img" onclick="removeChatImage(${i})"><i class="fa-solid fa-xmark"></i></div>
+                </div>
+            `).join('');
+        }
+
+        function startMuteTimer(muteUntilStr) {
+            const endTime = new Date(muteUntilStr).getTime();
+            document.getElementById('chatInputWrapper').style.display = 'none';
+            const timerArea = document.getElementById('muteTimerArea');
+            timerArea.style.display = 'flex';
+            if (muteTimerInterval) clearInterval(muteTimerInterval);
+            
+            muteTimerInterval = setInterval(async () => {
+                const now = new Date().getTime(); const diff = endTime - now;
+                if (diff <= 0) {
+                    clearInterval(muteTimerInterval); document.getElementById('muteCountdownText').innerText = "Проверка...";
+                    try {
+                        const res = await fetch(`${BACKEND_URL}/api/chat/check-mute`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` }});
+                        const data = await res.json();
+                        if (data.success && !data.muted) {
+                            timerArea.style.display = 'none'; document.getElementById('chatInputWrapper').style.display = 'flex';
+                            renderChatMessage({ sender: 'system', text: 'Блокировка чата снята. Приятного общения!' });
+                        } else if (data.muted) startMuteTimer(data.mute_until);
+                    } catch(e) {}
+                    return;
+                }
+                const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+                document.getElementById('muteCountdownText').innerText = `${h}:${m}:${s}`;
+            }, 1000);
+        }
+
+        function renderChatMessage(msg) {
+            const chatBox = document.getElementById('chatMessages');
+            const div = document.createElement('div'); 
+            
+            let imagesHtml = '';
+            if (msg.images && msg.images.length > 0) {
+                imagesHtml = `<div class="chat-img-grid">` + msg.images.map(img => `<img src="${img}" onclick="openLightbox('${img}')">`).join('') + `</div>`;
+            }
+
+            if (msg.sender === 'admin') {
+                const roleClass = msg.role === 'creator' ? 'creator' : 'regular';
+                const roleName = msg.role === 'creator' ? '<i class="fa-solid fa-crown"></i> CREATOR' : '<i class="fa-solid fa-shield-halved"></i> ADMIN';
+                div.className = `msg admin ${roleClass}`;
+                
+                let resolveHtml = '';
+                if (msg.type === 'resolve_prompt') {
+                    resolveHtml = `
+                        <div class="resolve-prompt">
+                            <div class="resolve-prompt-text">Проблема решена?</div>
+                            <div class="resolve-btns">
+                                <button class="res-btn yes" onclick="answerResolve('${msg.id}', 'yes')">Да</button>
+                                <button class="res-btn no" onclick="answerResolve('${msg.id}', 'no')">Нет</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                div.innerHTML = `<div class="msg-sender-title">${roleName}</div><div>${msg.text}</div>${imagesHtml}${resolveHtml}`;
+            } else if (msg.sender === 'system') {
+                div.style = "text-align: center; color: var(--accent-red); font-size: 11px; font-weight: 800; margin: 10px 0; text-transform: uppercase;";
+                div.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${msg.text}`;
+            } else {
+                div.className = 'msg user'; 
+                div.innerHTML = `<div>${msg.text}</div>${imagesHtml}`;
+            }
+            
+            chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function loadChatHistory() {
+            if (!currentDbUser || !currentSessionToken) return;
+            const chatBox = document.getElementById('chatMessages');
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/chat/history`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
+                const result = await response.json();
+                
+                if (result.muted) startMuteTimer(result.mute_until);
+                else {
+                    document.getElementById('chatInputWrapper').style.display = 'flex';
+                    const m = document.getElementById('muteTimerArea'); if(m) m.style.display = 'none';
+                }
+
+                if (result.success && result.messages) {
+                    const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
+                    chatBox.innerHTML = ''; 
+                    renderChatMessage({ sender: 'admin', role: 'creator', text: 'Привет! Если есть вопросы по пополнению или выводу — пиши сюда.' });
+                    result.messages.forEach(msg => renderChatMessage(msg));
+                    if (isScrolledToBottom) chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            } catch (err) {}
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput'); const text = input.value.trim();
+            if((!text && currentChatImages.length === 0) || !currentDbUser || !currentSessionToken) return;
+            
+            const tempMsg = { sender: 'user', text: text, images: [...currentChatImages] };
+            renderChatMessage(tempMsg);
+            
+            input.value = ''; const imagesToSend = [...currentChatImages];
+            currentChatImages = []; updateChatImagePreview();
+
+            try { 
+                await fetch(`${BACKEND_URL}/api/chat/send`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ message: text, images: imagesToSend }) });
+            } catch (err) { showToast('Ошибка', 'Не удалось отправить сообщение.', 'error'); }
+        }
+
+        async function answerResolve(msgId, answer) {
+            try {
+                await fetch(`${BACKEND_URL}/api/chat/resolve-answer`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ msgId, answer }) });
+                loadChatHistory();
+            } catch(e) {}
+        }
     </script>
-    <!-- ЛАЙТБОКС ДЛЯ ПРОСМОТРА СКРИНШОТОВ -->
-    <div class="lightbox-overlay" id="imageLightbox" onclick="closeLightbox(event)">
-        <i class="fa-solid fa-xmark lightbox-close" onclick="closeLightbox(event, true)"></i>
-        <img id="lightboxImg" class="lightbox-img" src="">
-    </div>
 </body>
 </html>
