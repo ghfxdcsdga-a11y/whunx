@@ -345,7 +345,7 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
     // Сохраняем и фото и текст
     await supabase.from('support_messages').insert([{ user_email: req.user.email, sender: 'user', text: message, images: images || [] }]);
 
-    let tgText = `✉️ **Новое обращение**\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID:** \`${req.user.secret_id}\`\n\nСообщение: ${message || '[Только фото]'}`;
+    let tgText = `✉️ **Новое обращение**\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID:** \`${req.user.secret_id}\`\n\nСообщение:\n\`\`\`\n${message || '[Только фото]'}\n\`\`\``;
     
     const keyboard = {
         inline_keyboard: [
