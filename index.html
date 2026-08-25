@@ -1732,6 +1732,99 @@
                 document.getElementById('partnersSection').style.display = 'none';
             }
         }
+        // ==========================================
+        // ПОПОЛНЕНИЕ, ИСТОРИЯ И ЧАТ
+        // ==========================================
+        function goToTopupStep2() {
+            const amount = parseFloat(document.getElementById('topupAmountInput').value);
+            if (!amount || amount < 100) return showToast('Ошибка', 'Минимальная сумма 100 ₸', 'error');
+            document.getElementById('topupAmountDisplay').innerText = amount + ' ₸';
+            document.getElementById('topupStep1').style.display = 'none';
+            document.getElementById('topupStep2').style.display = 'block';
+        }
+
+        async function processTopup() {
+            const amount = parseFloat(document.getElementById('topupAmountInput').value);
+            closeModal('topupModal'); resetTopupModal();
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/finance/topup`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ amount }) });
+                const result = await response.json();
+                if(result.success) showToast('Заявка отправлена', 'Администратор проверяет платеж. Ожидайте...', 'success');
+                else showToast('Ошибка', result.error, 'error');
+            } catch(e) { showToast('Ошибка', 'Сбой связи с сервером', 'error'); }
+        }
+
+        async function openHistoryModal() {
+            openModal('historyModal');
+            const container = document.getElementById('historyListContainer'); 
+            container.innerHTML = '<div style="text-align:center; padding: 30px; color: var(--text-muted);">Загрузка...</div>';
+            const { data, error } = await supabaseClient.from('withdrawals').select('*').eq('user_email', currentDbUser.email).order('created_at', { ascending: false });
+            if (error || !data || !data.length) { container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 30px;">История пуста</div>'; return; }
+            container.innerHTML = '';
+            data.forEach(order => {
+                const d = new Date(order.created_at);
+                const dateStr = d.toLocaleDateString('ru-RU') + ' в ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute:'2-digit' });
+                let statusHtml = '';
+                if (order.status === 'pending') statusHtml = `<span class="h-status pending"><i class="fa-solid fa-clock"></i> В ожидании</span>`;
+                else if (order.status === 'completed') statusHtml = `<span class="h-status completed"><i class="fa-solid fa-check"></i> Завершен</span>`;
+                else statusHtml = `<span class="h-status cancelled"><i class="fa-solid fa-xmark"></i> Отменен</span>`;
+                const price = (order.target_skin || order.amount).toString().replace(' G', '');
+                container.innerHTML += `
+                <div class="history-card">
+                    <div class="hc-top"><div class="h-skin-badge"><img src="USP_G.png" alt="USP"><span>USP "Ghosts"</span></div><div class="hc-price">${price} G</div></div>
+                    <div class="hc-mid">
+                        <div class="hc-item"><span class="hc-item-label">Игровой ID</span><span class="hc-item-val">${order.game_id}</span></div>
+                        <div class="hc-item"><span class="hc-item-label">Паттерн</span><span class="hc-item-val"><div class="h-pattern"><i class="fa-solid fa-cube"></i> ${order.pattern || '000'}</div></span></div>
+                    </div>
+                    <div class="hc-bot"><div class="hc-date"><i class="fa-regular fa-calendar" style="margin-right: 5px;"></i>${dateStr}</div><div>${statusHtml}</div></div>
+                </div>`;
+            });
+        }
+
+        function toggleChat() { 
+            const widget = document.getElementById('chatWidget'); 
+            if (widget.style.display === 'none') widget.style.display = '';
+            
+            widget.classList.toggle('active'); 
+            if (widget.classList.contains('active')) { loadChatHistory(); chatInterval = setInterval(loadChatHistory, 3000); } 
+            else { clearInterval(chatInterval); }
+        }
+
+        async function loadChatHistory() {
+            if (!currentDbUser || !currentSessionToken) return;
+            const chatBox = document.getElementById('chatMessages');
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/chat/history`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
+                const result = await response.json();
+                if (result.success && result.messages) {
+                    const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
+                    chatBox.innerHTML = '<div class="msg admin"><div style="font-size: 10px; color: var(--accent-gold); margin-bottom: 4px; font-weight: 900; letter-spacing: 0.5px;"><i class="fa-solid fa-crown"></i> CREATOR</div>Привет! Если есть вопросы по пополнению или выводу — пиши сюда.</div>';
+                    result.messages.forEach(msg => {
+                        const div = document.createElement('div'); 
+                        div.className = msg.sender === 'user' ? 'msg user' : 'msg admin'; 
+                        
+                        if (msg.sender === 'admin') {
+                            div.innerHTML = `<div style="font-size: 10px; color: var(--accent-gold); margin-bottom: 4px; font-weight: 900; letter-spacing: 0.5px;"><i class="fa-solid fa-crown"></i> CREATOR</div>${msg.text}`;
+                        } else {
+                            div.innerText = msg.text;
+                        }
+                        
+                        chatBox.appendChild(div);
+                    });
+                    if (isScrolledToBottom) { chatBox.scrollTop = chatBox.scrollHeight; }
+                }
+            } catch (err) {}
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput'); const text = input.value.trim();
+            if(!text || !currentDbUser || !currentSessionToken) return showToast('Внимание', 'Войдите в аккаунт, чтобы писать в поддержку.', 'info');
+            const chatBox = document.getElementById('chatMessages');
+            const userMsg = document.createElement('div'); userMsg.className = 'msg user'; userMsg.innerText = text;
+            chatBox.appendChild(userMsg); input.value = ''; chatBox.scrollTop = chatBox.scrollHeight;
+            try { await fetch(`${BACKEND_URL}/api/chat/send`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ message: text }) });
+            } catch (err) { showToast('Ошибка', 'Не удалось отправить сообщение.', 'error'); }
+        }
 
     </script>
 </body>
