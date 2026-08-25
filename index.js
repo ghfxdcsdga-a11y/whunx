@@ -169,9 +169,8 @@ bot.on('message', async (msg) => {
       const userEmail = emailMatch[1];
       let imagesArray = [];
 
-      // Если админ прикрепил фото
       if (msg.photo && msg.photo.length > 0) {
-          const photo = msg.photo[msg.photo.length - 1]; // Берем лучшее качество
+          const photo = msg.photo[msg.photo.length - 1]; 
           const fileLink = await bot.getFileLink(photo.file_id);
           try {
               const imgResp = await fetch(fileLink);
@@ -181,13 +180,13 @@ bot.on('message', async (msg) => {
           } catch(e) { console.error("Ошибка загрузки фото админа", e); }
       }
 
-      // Если в таблице support_messages нет колонки role/images, они не сохранятся, но мы передадим их по сокету
-      const msgData = { user_email: userEmail, sender: 'admin', text: replyText, images: imagesArray, role: 'creator' };
-      await supabase.from('support_messages').insert([{ user_email: userEmail, sender: 'admin', text: replyText }]); // Сохраняем хотя бы текст
+      // ТЕПЕРЬ СОХРАНЯЕМ И РОЛЬ И ФОТО В БД
+      const msgData = { user_email: userEmail, sender: 'admin', text: replyText, images: imagesArray, role: 'creator', type: 'text' };
+      const { data: savedMsg } = await supabase.from('support_messages').insert([msgData]).select().single(); 
       
       bot.sendMessage(ADMIN_CHAT_ID, `✅ Ответ отправлен пользователю ${userEmail}`);
       const socketId = connectedUsers[userEmail];
-      if (socketId) io.to(socketId).emit('new_chat_message', msgData);
+      if (socketId && savedMsg) io.to(socketId).emit('new_chat_message', savedMsg);
     }
   }
 });
@@ -198,13 +197,13 @@ bot.on('callback_query', async (query) => {
   // ОБРАБОТКА НОВЫХ КНОПОК ПОДДЕРЖКИ
   if (query.data.startsWith('respr_')) {
       const userEmail = query.data.substring(6);
-      const msgData = { user_email: userEmail, sender: 'admin', type: 'resolve_prompt', text: 'Пожалуйста, подтвердите, решена ли ваша проблема:' };
+      const msgData = { user_email: userEmail, sender: 'admin', type: 'resolve_prompt', text: 'Пожалуйста, подтвердите, решена ли ваша проблема:', role: 'creator' };
       
-      const { data: savedMsg } = await supabase.from('support_messages').insert([msgData]).select().single();
+      const { data: savedMsg, error } = await supabase.from('support_messages').insert([msgData]).select().single();
+      
       const socketId = connectedUsers[userEmail];
-      if (socketId) io.to(socketId).emit('chat_resolve_prompt', savedMsg);
+      if (socketId && savedMsg) io.to(socketId).emit('chat_resolve_prompt', savedMsg);
       
-      // Таймер на авто-закрытие через 5 минут
       resolveTimeouts[userEmail] = setTimeout(async () => {
           await closeAndClearChat(userEmail);
           bot.sendMessage(ADMIN_CHAT_ID, `⏳ Чат с ${userEmail} автоматически закрыт (Тайм-аут 5 мин).`);
@@ -327,7 +326,6 @@ app.get('/api/chat/history', authenticateUser, async (req, res) => {
 
     const { data } = await supabase.from('support_messages').select('*').eq('user_email', req.user.email).order('created_at', { ascending: true });
     
-    // Если в таблице нет колонок role и images, они просто не вернутся, но текст будет
     res.json({ 
         success: true, 
         messages: data || [], 
@@ -344,8 +342,8 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
         return res.status(403).json({ error: 'Чат заблокирован' });
     }
 
-    // Сохраняем в БД (Колонки images может не быть, но текст сохранится)
-    await supabase.from('support_messages').insert([{ user_email: req.user.email, sender: 'user', text: message }]);
+    // Сохраняем и фото и текст
+    await supabase.from('support_messages').insert([{ user_email: req.user.email, sender: 'user', text: message, images: images || [] }]);
 
     let tgText = `✉️ **Новое обращение**\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID:** \`${req.user.secret_id}\`\n\nСообщение: ${message || '[Только фото]'}`;
     
@@ -358,7 +356,6 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
 
     try {
         if (images && images.length > 0) {
-            // Отправляем фото админу
             for (let img of images) {
                 const buffer = Buffer.from(img.replace(/^data:image\/\w+;base64,/, ""), 'base64');
                 await bot.sendPhoto(ADMIN_CHAT_ID, buffer);
@@ -373,7 +370,6 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
 app.post('/api/chat/resolve-answer', authenticateUser, async (req, res) => {
     const { msgId, answer } = req.body;
     
-    // Удаляем промпт из БД, чтобы он больше не выводился при релоаде
     if (msgId) await supabase.from('support_messages').delete().eq('id', msgId);
     
     if (resolveTimeouts[req.user.email]) {
