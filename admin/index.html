@@ -1008,20 +1008,26 @@
         async function loadReviews() {
             const { data } = await supabaseClient.from('reviews').select('*').order('created_at', {ascending: false}).limit(100);
             const tbody = document.getElementById('reviewsTable');
+            
             if(data && data.length) {
                 adminReviewsCache = data;
-                const usersMap = {}; allUsersCache.forEach(u => usersMap[u.email] = u);
+                
+                // ЭКОНОМИЯ EGRESS: Загружаем только галочки (is_verified), всё остальное уже есть в самом отзыве!
+                const emails = [...new Set(data.map(r => r.user_email))];
+                const { data: usersData } = await supabaseClient.from('users').select('email, is_verified').in('email', emails);
+                const verifiedMap = {};
+                if (usersData) usersData.forEach(u => verifiedMap[u.email] = u.is_verified);
 
                 tbody.innerHTML = data.map(r => {
-                    const authorInfo = usersMap[r.user_email] || {};
-                    const isVerified = authorInfo.is_verified || false;
-                    const role = authorInfo.role || r.user_role || 'user';
+                    const isVerified = verifiedMap[r.user_email] || false;
+                    const role = r.user_role || 'user';
                     const userBadges = getUserBadges(role, isVerified);
+                    const userName = r.username || r.user_email.split('@')[0];
 
                     return `
                     <tr>
                         <td style="font-size:0.85rem;">
-                            <b>${r.username || r.user_email.split('@')[0]}</b> ${userBadges}<br>
+                            <b>${userName}</b> ${userBadges}<br>
                             <span style="color:var(--text-muted);">${r.user_email}</span>
                         </td>
                         <td style="color:var(--accent-gold); font-weight:900;"><i class="fa-solid fa-star"></i> ${r.rating}</td>
@@ -1095,11 +1101,18 @@
 
         // --- 4. ИДЕИ ---
         let currentIdeaId = null, currentIdeaEmail = null;
+        
         async function loadIdeas() {
             const { data } = await supabaseClient.from('ideas').select('*').order('created_at', {ascending: false}).limit(100);
             const tbody = document.getElementById('ideasTable');
+            
             if(data && data.length) {
-                const usersMap = {}; allUsersCache.forEach(u => usersMap[u.email] = u);
+                // ЭКОНОМИЯ EGRESS: Загружаем только галочки (is_verified)
+                const emails = [...new Set(data.map(i => i.user_email))];
+                const { data: usersData } = await supabaseClient.from('users').select('email, is_verified').in('email', emails);
+                const verifiedMap = {};
+                if (usersData) usersData.forEach(u => verifiedMap[u.email] = u.is_verified);
+
                 tbody.innerHTML = data.map(i => {
                     let statClass = '', statText = '';
                     if (i.status === 'approved') { statClass = 'active'; statText = 'Одобрено'; }
@@ -1111,15 +1124,22 @@
                     const safeText = (i.idea_text || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
                     const safeReply = (i.admin_reply || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
                     const imagesJson = i.images ? JSON.stringify(i.images).replace(/'/g, "\\'").replace(/"/g, '&quot;') : '[]';
-                    const authorInfo = usersMap[i.user_email] || {};
-                    const userBadges = getUserBadges(authorInfo.role || i.user_role || 'user', authorInfo.is_verified || false);
+                    
+                    const isVerified = verifiedMap[i.user_email] || false;
+                    const role = i.user_role || 'user';
+                    const userBadges = getUserBadges(role, isVerified);
+                    const userName = i.username || i.user_email.split('@')[0];
+                    let safeAvatar = 'https://whunx.shop/whunx_pp.png';
+                    if (i.avatar_url) {
+                        safeAvatar = i.avatar_url.startsWith('http') || i.avatar_url.startsWith('data:') ? i.avatar_url : 'https://whunx.shop/' + i.avatar_url;
+                    }
 
                     return `<tr>
                         <td>
                             <div class="td-user">
-                                <img src="${getSafeAvatar(i.avatar_url)}" onerror="this.src='https://whunx.shop/whunx_pp.png'">
+                                <img src="${safeAvatar}" onerror="this.src='https://whunx.shop/whunx_pp.png'">
                                 <div>
-                                    <b>${i.username || i.user_email.split('@')[0]}</b> ${userBadges}<br>
+                                    <b>${userName}</b> ${userBadges}<br>
                                     <span style="font-size:0.75rem; color:var(--text-muted);">${i.user_email}</span>
                                 </div>
                             </div>
