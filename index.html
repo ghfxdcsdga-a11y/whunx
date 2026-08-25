@@ -44,6 +44,7 @@
             --accent-purple-glow: rgba(139, 92, 246, 0.4);
             --accent-green: #10b981;
             --accent-red: #ef4444;
+            --accent-red-glow: rgba(239, 68, 68, 0.4);
             --text-main: #ffffff;
             --text-muted: #a3a8b5;
             --glass-border: rgba(255, 255, 255, 0.08);
@@ -233,18 +234,106 @@
         .partner-img-icon { width: 18px; height: 18px; border-radius: 4px; object-fit: contain; }
 
         /* =========================================
-           FOOTER & CHAT
+           FOOTER (ОБНОВЛЕННЫЙ ПРЕМИАЛЬНЫЙ ДИЗАЙН)
         ========================================= */
-        footer { background: rgba(10, 12, 16, 0.6); backdrop-filter: blur(20px); padding: 40px 20px; border-top: 1px solid var(--glass-border); margin-top: auto; z-index: 10; position: relative; display: flex; justify-content: center; gap: 15px; }
-        .btn-donate { background: rgba(244, 199, 69, 0.05); color: var(--accent-gold); border: 1px solid rgba(244, 199, 69, 0.3); padding: 14px 30px; border-radius: 12px; font-size: 14px; font-weight: 800; transition: 0.3s; display: inline-flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;} .btn-donate:hover { background: rgba(244, 199, 69, 0.2); box-shadow: 0 10px 20px rgba(244,199,69,0.2); transform: translateY(-2px); }
+        footer { background: rgba(10, 12, 16, 0.8); backdrop-filter: blur(40px); padding: 40px 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto; z-index: 10; position: relative; display: flex; justify-content: center; align-items: center; }
+        footer::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); }
+        .footer-buttons-wrapper { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        
+        .btn-footer {
+            background: linear-gradient(145deg, rgba(30, 34, 48, 0.4) 0%, rgba(15, 18, 26, 0.8) 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 16px 36px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .btn-footer i { font-size: 16px; z-index: 2; transition: 0.3s; }
+        .btn-footer span { z-index: 2; }
+        
+        .btn-footer.donate { border-bottom: 2px solid var(--accent-gold); }
+        .btn-footer.donate i { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
+        .btn-footer.donate:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(244,199,69,0.15); border-color: rgba(244,199,69,0.4); }
 
-        #chatWidget { position: fixed; bottom: 20px; right: 20px; width: 350px; background: rgba(15, 18, 26, 0.95); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.8); display: none; flex-direction: column; overflow: hidden; z-index: 1000; transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); transform: translateY(20px) scale(0.95); opacity: 0; }
+        .btn-footer.support { border-bottom: 2px solid var(--accent-purple); }
+        .btn-footer.support i { color: var(--accent-purple); text-shadow: 0 0 10px var(--accent-purple-glow); }
+        .btn-footer.support:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.4); }
+
+        /* =========================================
+           ОБНОВЛЕННЫЙ ЧАТ ТЕХ. ПОДДЕРЖКИ
+        ========================================= */
+        #chatWidget { position: fixed; bottom: 20px; right: 20px; width: 380px; background: rgba(15, 18, 26, 0.95); backdrop-filter: blur(35px); border: 1px solid var(--glass-border); border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02); display: none; flex-direction: column; overflow: hidden; z-index: 1000; transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); transform: translateY(20px) scale(0.95); opacity: 0; }
         #chatWidget.active { display: flex !important; transform: translateY(0) scale(1); opacity: 1; }
-        .chat-header { background: rgba(0,0,0,0.3); padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); } .chat-header h4 { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;}
-        .chat-messages { height: 300px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 600; line-height: 1.5; word-wrap: break-word; } .msg.user { background: var(--accent-purple); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 5px 15px var(--accent-purple-glow);} .msg.admin { background: rgba(255,255,255,0.08); color: #fff; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--glass-border);}
-        .chat-input-area { padding: 15px; background: rgba(0,0,0,0.3); display: flex; gap: 10px; border-top: 1px solid var(--glass-border); } .chat-input { flex: 1; background: var(--bg-input); border: 1px solid var(--glass-border); padding: 12px 15px; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 600; outline: none; transition: 0.3s;} .chat-input:focus { border-color: var(--accent-purple); }
-        .chat-send-btn { background: var(--accent-purple); color: #fff; width: 45px; height: 45px; border-radius: 12px; display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: 0 5px 15px var(--accent-purple-glow);} .chat-send-btn:hover { background: var(--accent-purple-hover); transform: scale(1.05);}
+        .chat-header { background: rgba(0,0,0,0.4); padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); } 
+        .chat-header h4 { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;}
+        
+        .chat-messages { height: 350px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg { max-width: 85%; padding: 14px 18px; border-radius: 18px; font-size: 13px; font-weight: 600; line-height: 1.5; word-wrap: break-word; position: relative; }
+        .msg.user { background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-purple-hover) 100%); color: #fff; align-self: flex-end; border-bottom-right-radius: 6px; box-shadow: 0 5px 20px var(--accent-purple-glow); }
+        
+        /* Стили ролей админов */
+        .msg.admin { align-self: flex-start; border-bottom-left-radius: 6px; }
+        .msg.admin.creator {
+            background: linear-gradient(145deg, rgba(244, 199, 69, 0.1) 0%, rgba(0,0,0,0.6) 100%);
+            border: 1px solid var(--accent-gold);
+            box-shadow: 0 0 15px var(--accent-gold-glow), inset 0 0 15px rgba(244,199,69,0.05);
+            animation: creatorPulse 3s infinite alternate;
+        }
+        @keyframes creatorPulse { from { box-shadow: 0 0 10px var(--accent-gold-glow); } to { box-shadow: 0 0 25px rgba(244, 199, 69, 0.6); border-color: #ffd700; } }
+        
+        .msg.admin.regular {
+            background: linear-gradient(145deg, rgba(239, 68, 68, 0.1) 0%, rgba(0,0,0,0.6) 100%);
+            border: 1px solid var(--accent-red);
+            box-shadow: 0 0 15px var(--accent-red-glow);
+        }
+        
+        .msg-sender-title { font-size: 10px; margin-bottom: 6px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+        .msg.admin.creator .msg-sender-title { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold-glow); }
+        .msg.admin.regular .msg-sender-title { color: var(--accent-red); text-shadow: 0 0 10px var(--accent-red-glow); }
+
+        .chat-img-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .chat-img-grid img { max-width: 150px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
+        .chat-img-grid img:hover { transform: scale(1.05); border-color: rgba(255,255,255,0.3); }
+
+        /* Поле ввода чата */
+        .chat-input-wrapper { display: flex; flex-direction: column; background: rgba(0,0,0,0.4); border-top: 1px solid var(--glass-border); }
+        #chatImagePreview { display: flex; gap: 10px; padding: 10px 15px; overflow-x: auto; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .chat-preview-item { position: relative; width: 60px; height: 60px; border-radius: 10px; overflow: hidden; border: 1px solid var(--glass-border); flex-shrink: 0; }
+        .chat-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .chat-preview-item .remove-img { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: #fff; border-radius: 50%; width: 18px; height: 18px; display: flex; justify-content: center; align-items: center; font-size: 10px; cursor: pointer; transition: 0.3s;}
+        .chat-preview-item .remove-img:hover { background: var(--accent-red); }
+
+        .chat-input-area { padding: 15px; display: flex; gap: 10px; align-items: center; }
+        .chat-attach-btn { background: rgba(255,255,255,0.05); color: var(--text-muted); width: 45px; height: 45px; border-radius: 14px; font-size: 18px; transition: 0.3s; border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; flex-shrink: 0;}
+        .chat-attach-btn:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.3);}
+        .chat-input { flex: 1; background: var(--bg-input); border: 1px solid var(--glass-border); padding: 12px 15px; border-radius: 14px; color: #fff; font-size: 14px; font-weight: 600; outline: none; transition: 0.3s;} .chat-input:focus { border-color: var(--accent-purple); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .chat-send-btn { background: var(--accent-purple); color: #fff; width: 45px; height: 45px; border-radius: 14px; display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: 0 5px 15px var(--accent-purple-glow); flex-shrink: 0;} .chat-send-btn:hover { background: var(--accent-purple-hover); transform: scale(1.05);}
+
+        /* Mute UI */
+        .mute-timer-area { padding: 20px; text-align: center; background: linear-gradient(0deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%); border-top: 1px solid rgba(239, 68, 68, 0.3); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .mute-timer-text { color: var(--accent-red); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+        .mute-timer-countdown { font-size: 26px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: 2px;}
+
+        /* Кнопки решения проблемы */
+        .resolve-prompt { margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.15); }
+        .resolve-prompt-text { font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;}
+        .resolve-btns { display: flex; gap: 10px; justify-content: center; }
+        .res-btn { flex: 1; padding: 10px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.3s; text-transform: uppercase; border: 1px solid transparent; background: rgba(0,0,0,0.3);}
+        .res-btn.yes { color: var(--accent-green); border-color: rgba(16, 185, 129, 0.3); }
+        .res-btn.yes:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+        .res-btn.no { color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3); }
+        .res-btn.no:hover { background: var(--accent-red); color: #000; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
 
         /* =========================================
            GLASSMORPHISM MODALS
@@ -368,9 +457,10 @@
 
             .modal-box { padding: 30px 20px; margin: 15px; width: calc(100% - 30px); border-radius: 20px;}
             .modal-title { font-size: 20px; margin-bottom: 25px; }
-            #chatWidget { width: calc(100% - 40px); bottom: 20px; right: 20px; border-radius: 18px; }
-            footer { flex-direction: column; align-items: stretch; gap: 12px; padding: 30px 20px; }
-            .btn-donate { justify-content: center; width: 100%; padding: 15px;}
+            #chatWidget { width: calc(100% - 30px); bottom: 15px; right: 15px; border-radius: 18px; }
+            
+            .btn-footer { padding: 14px 20px; font-size: 12px; width: 100%; justify-content: center;}
+            .footer-buttons-wrapper { flex-direction: column; width: 100%; gap: 12px;}
         }
         
         @media (max-width: 400px) {
@@ -383,6 +473,11 @@
         .gw-channels-list { margin-top: 5px; gap: 10px; flex-wrap: wrap; justify-content: flex-start !important; }
         @media (max-width: 768px) { .gw-channels-list { justify-content: center !important; } }
         
+        /* Лайтбокс */
+        .lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 100000; opacity: 0; transition: 0.3s; cursor: pointer; }
+        .lightbox-img { max-width: 90%; max-height: 90%; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); cursor: default; }
+        .lightbox-close { position: absolute; top: 25px; right: 25px; font-size: 30px; color: var(--text-muted); cursor: pointer; transition: 0.3s; }
+        .lightbox-close:hover { color: var(--accent-red); transform: rotate(90deg); }
     </style>
 </head>
 <body>
@@ -493,23 +588,47 @@
     </section>
 
     <footer>
-        <button class="btn-donate" onclick="initDonateModal()">
-            <i class="fa-solid fa-heart"></i> Пожертвовать проекту
-        </button>
-        <button class="btn-donate" style="color: var(--accent-purple); border-color: var(--accent-purple);" onclick="toggleChat()">
-            <i class="fa-solid fa-headset"></i> Тех. поддержка
-        </button>
+        <div class="footer-buttons-wrapper">
+            <div class="btn-footer donate" onclick="initDonateModal()">
+                <i class="fa-solid fa-heart"></i>
+                <span>Пожертвовать проекту</span>
+            </div>
+            <div class="btn-footer support" onclick="toggleChat()">
+                <i class="fa-solid fa-headset"></i>
+                <span>Тех. поддержка</span>
+            </div>
+        </div>
     </footer>
 
+    <!-- ВИДЖЕТ ТЕХ. ПОДДЕРЖКИ (ОБНОВЛЕННЫЙ) -->
     <div id="chatWidget" style="display: none;">
         <div class="chat-header">
             <h4><i class="fa-solid fa-headset" style="color:var(--accent-purple);"></i> Поддержка онлайн</h4>
-            <i class="fa-solid fa-xmark" style="cursor:pointer; color:var(--text-muted);" onclick="toggleChat()"></i>
+            <i class="fa-solid fa-xmark" style="cursor:pointer; color:var(--text-muted); transition: 0.3s;" onclick="toggleChat()" onmouseover="this.style.color='var(--accent-red)'" onmouseout="this.style.color='var(--text-muted)'"></i>
         </div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-area">
-            <input type="text" id="chatInput" class="chat-input" placeholder="Введите сообщение..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
-            <button class="chat-send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        
+        <div class="chat-messages" id="chatMessages">
+            <!-- Сообщения генерируются через JS -->
+        </div>
+        
+        <!-- Обертка поля ввода с превью фото -->
+        <div class="chat-input-wrapper" id="chatInputWrapper">
+            <div id="chatImagePreview" style="display:none;">
+                <!-- Тут будут превью загруженных картинок (макс 2) -->
+            </div>
+            <div class="chat-input-area">
+                <input type="file" id="chatUploadImg" accept="image/*" multiple style="display:none;" onchange="handleChatImageSelect(event)">
+                <button class="chat-attach-btn" onclick="document.getElementById('chatUploadImg').click()"><i class="fa-solid fa-paperclip"></i></button>
+                <input type="text" id="chatInput" class="chat-input" placeholder="Введите сообщение..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button class="chat-send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <!-- Таймер мута (показывается только если есть блокировка) -->
+        <div id="muteTimerArea" class="mute-timer-area" style="display: none;">
+            <div class="mute-timer-text">Чат заблокирован администратором</div>
+            <div class="mute-timer-countdown" id="muteCountdownText">00:00:00</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">Возможность писать откроется по истечению времени</div>
         </div>
     </div>
 
@@ -782,7 +901,6 @@
         let currentDbUser = null; 
         let currentSessionToken = null;
         let pendingPurchaseItem = null;
-        let chatInterval = null;
         let socket = null;
         let gwParticipantsInterval = null; 
         let isLoggingIn = false;
@@ -790,6 +908,9 @@
         let donateType = 'gold'; 
         let donateCountdownTimer = null;
         let donateTimeLeft = 900; 
+        
+        let currentChatImages = []; // Хранит base64 фото перед отправкой
+        let muteTimerInterval = null;
 
         const DEFAULT_GAME_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23222222' rx='10'/><text x='50%' y='55%' fill='%23dddddd' font-size='45' font-weight='bold' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>?</text></svg>";
 
@@ -881,7 +1002,7 @@
         window.addEventListener('DOMContentLoaded', async () => {
             loadDynamicShop();
             loadActiveGiveaway();
-            loadPartners(); // Загрузка партнеров
+            loadPartners();
             
             const savedGameAvatar = localStorage.getItem('gameAvatarTemp');
             if (savedGameAvatar) {
@@ -912,9 +1033,7 @@
 
             try {
                 socket = io(BACKEND_URL);
-                socket.on('open_plashka', (data) => {
-                    openGiftWithdrawModal(data.amount);
-                });
+                socket.on('open_plashka', (data) => openGiftWithdrawModal(data.amount));
                 
                 socket.on('donation_skin_ready', (data) => {
                     document.getElementById('donateStepWait').style.display = 'none';
@@ -937,6 +1056,38 @@
                     closeModal('donateModal');
                     resetDonateModal();
                 });
+                
+                // СОКЕТЫ ДЛЯ ЧАТА И БАЛАНСА
+                socket.on('new_chat_message', (msg) => {
+                    renderChatMessage(msg);
+                    const widget = document.getElementById('chatWidget');
+                    if (widget.style.display === 'none' || !widget.classList.contains('active')) {
+                        showToast('Новое сообщение', 'Вам ответила поддержка', 'info');
+                    }
+                });
+
+                socket.on('balance_updated', (data) => {
+                    if (currentDbUser) {
+                        currentDbUser.balance = data.balance;
+                        updateUI();
+                    }
+                });
+                
+                socket.on('chat_resolve_prompt', (msg) => {
+                    renderChatMessage(msg);
+                });
+                
+                socket.on('chat_closed', () => {
+                    const chatBox = document.getElementById('chatMessages');
+                    chatBox.innerHTML = ''; // ПОЛНАЯ ОЧИСТКА ИСТОРИИ ИЗ ПАМЯТИ
+                    renderChatMessage({ sender: 'system', text: 'Чат был завершен и история очищена.' });
+                });
+                
+                socket.on('chat_muted', (data) => {
+                    renderChatMessage({ sender: 'system', text: 'Вы получили блокировку чата от администратора.' });
+                    startMuteTimer(data.mute_until);
+                });
+                
             } catch(e) {}
         });
 
@@ -950,12 +1101,8 @@
                     google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin });
                     google.accounts.id.renderButton(btn, { theme: "outline", size: "large", type: "standard", width: 250 });
                     fakeText.innerText = 'Войти';
-                } catch (e) {
-                    fakeText.innerText = 'Ошибка';
-                }
-            } else {
-                setTimeout(initGoogleAuth, 100);
-            }
+                } catch (e) { fakeText.innerText = 'Ошибка'; }
+            } else { setTimeout(initGoogleAuth, 100); }
         }
 
         async function handleGoogleLogin(response) {
@@ -973,33 +1120,18 @@
 
         function getUserBadges(userRole, isVerified) {
             let html = '';
-            if (isVerified) {
-                html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
-            }
-            if (userRole === 'creator') {
-                html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
-            } else if (userRole === 'admin') {
-                html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
-            }
+            if (isVerified) html += `<i class="fa-solid fa-circle-check badge-verified" title="Верифицирован"></i>`;
+            if (userRole === 'creator') html += `<span class="badge-creator"><i class="fa-solid fa-crown"></i> CREATOR</span>`;
+            else if (userRole === 'admin') html += `<span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> ADMIN</span>`;
             return html;
         }
 
         async function fetchActiveDiscount(email) {
             try {
-                const { data: usedList } = await supabaseClient.from('used_promocodes')
-                    .select('promo_code')
-                    .eq('user_email', email)
-                    .eq('is_spent', false)
-                    .order('id', { ascending: false });
-
+                const { data: usedList } = await supabaseClient.from('used_promocodes').select('promo_code').eq('user_email', email).eq('is_spent', false).order('id', { ascending: false });
                 if (usedList && usedList.length > 0) {
                     for (let used of usedList) {
-                        const { data: promoList } = await supabaseClient.from('promocodes')
-                            .select('*')
-                            .eq('code', used.promo_code)
-                            .eq('reward_type', 'discount')
-                            .limit(1);
-
+                        const { data: promoList } = await supabaseClient.from('promocodes').select('*').eq('code', used.promo_code).eq('reward_type', 'discount').limit(1);
                         if (promoList && promoList.length > 0) {
                             const promo = promoList[0];
                             if (promo.is_active && (!promo.expires_at || new Date() < new Date(promo.expires_at))) {
@@ -1015,7 +1147,6 @@
         async function handleUserLogin(session) {
             if (isLoggingIn) return;
             isLoggingIn = true;
-            
             try {
                 currentSessionToken = session.access_token;
                 const userAuth = session.user;
@@ -1042,19 +1173,16 @@
                 updateUI();
                 renderDynamicShop(); 
                 
-                if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 5000);
+                if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 30000); // 30 секунд (Оптимизация)
                 if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
             } catch (err) {
-            } finally {
-                isLoggingIn = false; 
-            }
+            } finally { isLoggingIn = false; }
         }
 
         async function syncUserData() {
             if (!currentSessionToken || !currentDbUser) return;
             try {
                 const { data: usersData } = await supabaseClient.from('users').select('*').eq('email', currentDbUser.email).limit(1);
-                
                 if (usersData && usersData.length > 0) {
                     const freshUser = usersData[0];
                     freshUser.active_discount = await fetchActiveDiscount(freshUser.email);
@@ -1065,10 +1193,7 @@
                     let oldTg = currentDbUser.telegram_username; 
                     
                     currentDbUser = freshUser;
-                    
-                    if (oldBalance !== freshUser.balance || oldTg !== freshUser.telegram_username) {
-                        updateUI(); 
-                    }
+                    if (oldBalance !== freshUser.balance || oldTg !== freshUser.telegram_username) updateUI(); 
                     if (oldDisc !== newDisc) renderDynamicShop();
                 }
                 checkNotifications(); 
@@ -1082,17 +1207,12 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    const wIds = [];
-                    const tIds = [];
-                    let hasNewCompletedWithdrawal = false; 
+                    const wIds = []; const tIds = []; let hasNewCompletedWithdrawal = false; 
                     
                     if (result.notifications.withdrawals) {
                         result.notifications.withdrawals.forEach(n => {
                             wIds.push(n.id);
-                            if (n.status === 'completed') {
-                                showToast('Заказ выполнен', `Ваш заказ на ${n.amount} G успешно выведен в игру!`, 'success');
-                                hasNewCompletedWithdrawal = true; 
-                            }
+                            if (n.status === 'completed') { showToast('Заказ выполнен', `Ваш заказ на ${n.amount} G успешно выведен в игру!`, 'success'); hasNewCompletedWithdrawal = true; }
                             else if (n.status === 'cancelled') showToast('Заказ отменен', `Вывод ${n.amount} G отменен. ${n.spent_rubles} ₸ возвращены на баланс.`, 'error');
                         });
                     }
@@ -1100,37 +1220,19 @@
                     if (result.notifications.topups) {
                         result.notifications.topups.forEach(n => {
                             tIds.push(n.id);
-                            if (n.status === 'approved') {
-                                showToast('Баланс пополнен', `Платеж ${n.amount} ₸ успешно зачислен!`, 'success');
-                            } else if (n.status === 'rejected') {
-                                showToast('Платеж отклонен', `Пополнение на ${n.amount} ₸ не найдено. Напишите в поддержку.`, 'error');
-                            }
+                            if (n.status === 'approved') showToast('Баланс пополнен', `Платеж ${n.amount} ₸ успешно зачислен!`, 'success');
+                            else if (n.status === 'rejected') showToast('Платеж отклонен', `Пополнение на ${n.amount} ₸ не найдено. Напишите в поддержку.`, 'error');
                         });
                     }
                     
                     if (wIds.length > 0 || tIds.length > 0) {
                         await fetch(`${BACKEND_URL}/api/notifications/read`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
-                            body: JSON.stringify({ withdrawalIds: wIds, topupIds: tIds })
+                            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ withdrawalIds: wIds, topupIds: tIds })
                         });
                     }
-
-                    if (hasNewCompletedWithdrawal) {
-                        openModal('reviewPromptModal');
-                    }
+                    if (hasNewCompletedWithdrawal) openModal('reviewPromptModal');
                 }
             } catch(e) {}
-        }
-
-        function handleUserLogout() {
-            currentDbUser = null; currentSessionToken = null;
-            document.getElementById('googleLoginWrapper').style.display = 'inline-block';
-            document.getElementById('balanceModule').style.display = 'none';
-            document.getElementById('profileModule').style.display = 'none';
-            document.getElementById('fakeGoogleText').innerHTML = 'Войти';
-            if (window.syncInterval) { clearInterval(window.syncInterval); window.syncInterval = null; }
-            initGoogleAuth();
         }
 
         function getSafeAvatar(url) {
@@ -1154,9 +1256,7 @@
             document.getElementById('inputSetNick').value = currentDbUser.username;
 
             const verifiedWarning = document.getElementById('verifiedWarningText');
-            if (verifiedWarning) {
-                verifiedWarning.style.display = currentDbUser.is_verified ? 'flex' : 'none';
-            }
+            if (verifiedWarning) verifiedWarning.style.display = currentDbUser.is_verified ? 'flex' : 'none';
 
             const tgBtn = document.getElementById('tgBindBtn');
             const tgText = document.getElementById('tgBindText');
@@ -1166,28 +1266,16 @@
                 tgBtn.style.background = 'rgba(16, 185, 129, 0.05)';
                 tgBtn.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                 tgText.innerText = currentDbUser.telegram_username ? `@${currentDbUser.telegram_username}` : 'Привязан';
-                
                 tgIcon.className = 'fa-solid fa-arrows-rotate';
                 tgIcon.style.color = 'var(--accent-green)';
-                tgBtn.style.cursor = 'pointer';
-                
-                tgBtn.onclick = () => {
-                    const botUsername = 'WhunxShopAdmin_bot'; 
-                    window.open(`https://t.me/${botUsername}?start=BIND_${currentDbUser.secret_id}`, '_blank');
-                };
             } else {
                 tgBtn.style.background = 'rgba(36, 161, 222, 0.1)';
                 tgBtn.style.borderColor = 'rgba(36, 161, 222, 0.3)';
                 tgText.innerText = 'Привязать Telegram';
                 tgIcon.className = 'fa-solid fa-link';
                 tgIcon.style.color = 'var(--text-muted)';
-                tgBtn.style.cursor = 'pointer';
-                
-                tgBtn.onclick = () => {
-                    const botUsername = 'WhunxShopAdmin_bot'; 
-                    window.open(`https://t.me/${botUsername}?start=BIND_${currentDbUser.secret_id}`, '_blank');
-                };
             }
+            tgBtn.onclick = () => window.open(`https://t.me/WhunxShopAdmin_bot?start=BIND_${currentDbUser.secret_id}`, '_blank');
         }
 
         function previewSiteAvatar(event) {
@@ -1223,41 +1311,23 @@
         async function saveSettings() {
             const newName = document.getElementById('inputSetNick').value.trim();
             const newAvatar = document.getElementById('settingsAvatar').src;
-            
             if (!newName) return showToast('Ошибка', 'Никнейм не может быть пустым', 'error');
 
             let payload = { username: newName, avatar_url: newAvatar };
             let lostVerification = false;
 
-            if (newName !== currentDbUser.username && currentDbUser.is_verified) {
-                payload.is_verified = false;
-                lostVerification = true;
-            }
+            if (newName !== currentDbUser.username && currentDbUser.is_verified) { payload.is_verified = false; lostVerification = true; }
 
-            const { data, error } = await supabaseClient
-                .from('users')
-                .update(payload)
-                .eq('email', currentDbUser.email)
-                .select()
-                .limit(1);
-                
+            const { data, error } = await supabaseClient.from('users').update(payload).eq('email', currentDbUser.email).select().limit(1);
             if (!error && data && data.length > 0) { 
-                currentDbUser = data[0]; 
-                updateUI(); 
-                closeModal('settingsModal'); 
-                
-                if (lostVerification) {
-                    showToast('Внимание', 'Из-за смены никнейма статус верификации был снят.', 'info');
-                } else {
-                    showToast('Успех', 'Настройки сохранены!', 'success'); 
-                }
-            } else { 
-                showToast('Ошибка', 'Не удалось сохранить', 'error'); 
-            }
+                currentDbUser = data[0]; updateUI(); closeModal('settingsModal'); 
+                if (lostVerification) showToast('Внимание', 'Из-за смены никнейма статус верификации был снят.', 'info');
+                else showToast('Успех', 'Настройки сохранены!', 'success'); 
+            } else showToast('Ошибка', 'Не удалось сохранить', 'error'); 
         }
 
         // ==========================================
-        // ПОЖЕРТВОВАНИЯ (ТЕНГЕ И ГОЛДА)
+        // ПОЖЕРТВОВАНИЯ
         // ==========================================
         function initDonateModal() {
             if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт, чтобы сделать пожертвование.', 'info');
@@ -1266,15 +1336,12 @@
         }
 
         function resetDonateModal() {
-            donateType = 'gold';
-            switchDonateType('gold');
+            donateType = 'gold'; switchDonateType('gold');
             document.getElementById('donateAmountInput').value = '';
-            
             document.getElementById('donateStep1').style.display = 'block';
             document.getElementById('donateStepKzt').style.display = 'none';
             document.getElementById('donateStepWait').style.display = 'none';
             document.getElementById('donateStepSkinReady').style.display = 'none';
-            
             clearInterval(donateCountdownTimer);
             document.getElementById('donateTimerDisplay').innerText = '15:00';
             document.getElementById('donateSkinTimerDisplay').innerText = '15:00';
@@ -1282,21 +1349,15 @@
 
         function switchDonateType(type) {
             donateType = type;
-            const btnGold = document.getElementById('btnDonateGold');
-            const btnKzt = document.getElementById('btnDonateKzt');
-            
+            const btnGold = document.getElementById('btnDonateGold'); const btnKzt = document.getElementById('btnDonateKzt');
             if (type === 'gold') {
-                btnGold.classList.add('active-gold');
-                btnKzt.classList.remove('active-kzt');
+                btnGold.classList.add('active-gold'); btnKzt.classList.remove('active-kzt');
                 document.getElementById('donateAmountLabel').innerText = 'Сумма пожертвования (Голда)';
-                document.getElementById('donateSuffix').innerText = 'G';
-                document.getElementById('donateWarningGold').style.display = 'block';
+                document.getElementById('donateSuffix').innerText = 'G'; document.getElementById('donateWarningGold').style.display = 'block';
             } else {
-                btnKzt.classList.add('active-kzt');
-                btnGold.classList.remove('active-gold');
+                btnKzt.classList.add('active-kzt'); btnGold.classList.remove('active-gold');
                 document.getElementById('donateAmountLabel').innerText = 'Сумма пожертвования (Тенге)';
-                document.getElementById('donateSuffix').innerText = '₸';
-                document.getElementById('donateWarningGold').style.display = 'none';
+                document.getElementById('donateSuffix').innerText = '₸'; document.getElementById('donateWarningGold').style.display = 'none';
             }
         }
 
@@ -1307,86 +1368,57 @@
             if (donateType === 'kzt') {
                 if (amount < 100) return showToast('Ошибка', 'Минимальная сумма пожертвования 100 ₸', 'error');
                 document.getElementById('donateKztAmountDisplay').innerText = amount + ' ₸';
-                document.getElementById('donateStep1').style.display = 'none';
-                document.getElementById('donateStepKzt').style.display = 'block';
+                document.getElementById('donateStep1').style.display = 'none'; document.getElementById('donateStepKzt').style.display = 'block';
             } else {
                 if (amount < 10) return showToast('Ошибка', 'Минимальное пожертвование голдой — 10 G', 'error');
                 try {
-                    const response = await fetch(`${BACKEND_URL}/api/donate/create`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
-                        body: JSON.stringify({ type: 'gold', amount })
-                    });
+                    const response = await fetch(`${BACKEND_URL}/api/donate/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ type: 'gold', amount }) });
                     const result = await response.json();
                     if (result.success) {
-                        document.getElementById('donateStep1').style.display = 'none';
-                        document.getElementById('donateStepWait').style.display = 'block';
-                        startDonateTimer();
-                        showToast('Ожидаем администратора', 'Информация о скине скоро появится', 'info');
-                    } else {
-                        showToast('Ошибка', result.error, 'error');
-                    }
-                } catch(e) {
-                    showToast('Ошибка', 'Сбой связи. Попробуйте еще раз.', 'error');
-                }
+                        document.getElementById('donateStep1').style.display = 'none'; document.getElementById('donateStepWait').style.display = 'block';
+                        startDonateTimer(); showToast('Ожидаем администратора', 'Информация о скине скоро появится', 'info');
+                    } else showToast('Ошибка', result.error, 'error');
+                } catch(e) { showToast('Ошибка', 'Сбой связи. Попробуйте еще раз.', 'error'); }
             }
         }
 
         async function confirmDonateKzt() {
             const amount = parseFloat(document.getElementById('donateAmountInput').value);
             try {
-                const response = await fetch(`${BACKEND_URL}/api/donate/create`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
-                    body: JSON.stringify({ type: 'kzt', amount })
-                });
+                const response = await fetch(`${BACKEND_URL}/api/donate/create`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ type: 'kzt', amount }) });
                 const result = await response.json();
                 if (result.success) {
-                    document.getElementById('donateStepKzt').style.display = 'none';
-                    document.getElementById('donateStepWait').style.display = 'block';
-                    startDonateTimer();
-                    showToast('Успех', 'Заявка отправлена. Ожидайте подтверждения', 'success');
-                } else {
-                    showToast('Ошибка', result.error, 'error');
-                }
+                    document.getElementById('donateStepKzt').style.display = 'none'; document.getElementById('donateStepWait').style.display = 'block';
+                    startDonateTimer(); showToast('Успех', 'Заявка отправлена. Ожидайте подтверждения', 'success');
+                } else showToast('Ошибка', result.error, 'error');
             } catch(e) { showToast('Ошибка', 'Сбой связи', 'error'); }
         }
 
         async function confirmDonateSkinBought() {
             try {
-                const response = await fetch(`${BACKEND_URL}/api/donate/confirm-skin`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }
-                });
+                const response = await fetch(`${BACKEND_URL}/api/donate/confirm-skin`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` } });
                 const result = await response.json();
                 if (result.success) {
-                    document.getElementById('donateStepSkinReady').style.display = 'none';
-                    document.getElementById('donateStepWait').style.display = 'block';
+                    document.getElementById('donateStepSkinReady').style.display = 'none'; document.getElementById('donateStepWait').style.display = 'block';
                     showToast('Ожидаем', 'Запрос отправлен. Ждём подтверждения админа.', 'info');
-                } else {
-                    showToast('Ошибка', result.error, 'error');
-                }
+                } else showToast('Ошибка', result.error, 'error');
             } catch(e) { showToast('Ошибка', 'Сбой связи', 'error'); }
         }
 
         function startDonateTimer() {
-            donateTimeLeft = 900; 
-            updateDonateTimerDisplay();
-            clearInterval(donateCountdownTimer);
+            donateTimeLeft = 900; updateDonateTimerDisplay(); clearInterval(donateCountdownTimer);
             donateCountdownTimer = setInterval(() => {
-                donateTimeLeft--;
-                updateDonateTimerDisplay();
+                donateTimeLeft--; updateDonateTimerDisplay();
                 if (donateTimeLeft <= 0) {
-                    clearInterval(donateCountdownTimer);
-                    showToast('Время вышло', 'Вы не успели завершить пожертвование.', 'error');
-                    closeModal('donateModal');
-                    resetDonateModal();
+                    clearInterval(donateCountdownTimer); showToast('Время вышло', 'Вы не успели завершить пожертвование.', 'error');
+                    closeModal('donateModal'); resetDonateModal();
                 }
             }, 1000);
         }
 
         function updateDonateTimerDisplay() {
-            const m = Math.floor(donateTimeLeft / 60).toString().padStart(2, '0');
-            const s = (donateTimeLeft % 60).toString().padStart(2, '0');
-            document.getElementById('donateTimerDisplay').innerText = `${m}:${s}`;
-            document.getElementById('donateSkinTimerDisplay').innerText = `${m}:${s}`;
+            const m = Math.floor(donateTimeLeft / 60).toString().padStart(2, '0'); const s = (donateTimeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('donateTimerDisplay').innerText = `${m}:${s}`; document.getElementById('donateSkinTimerDisplay').innerText = `${m}:${s}`;
         }
 
         // ==========================================
@@ -1405,32 +1437,19 @@
             input.classList.remove('input-error', 'input-success'); msgBox.style.display = 'none';
 
             try {
-                const response = await fetch(`${BACKEND_URL}/api/promocodes/activate`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ code })
-                });
+                const response = await fetch(`${BACKEND_URL}/api/promocodes/activate`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ code }) });
                 const result = await response.json();
 
                 if (result.success) {
-                    input.classList.add('input-success');
-                    msgBox.style.display = 'block';
-
-                    if (result.restored) {
-                        msgBox.innerHTML = `<div class="promo-reward-text" style="color: var(--accent-purple); border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.1); text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);">Уже активирован и действует! 🔥</div>`;
-                    } else {
+                    input.classList.add('input-success'); msgBox.style.display = 'block';
+                    if (result.restored) { msgBox.innerHTML = `<div class="promo-reward-text" style="color: var(--accent-purple); border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.1); text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);">Уже активирован и действует! 🔥</div>`; } 
+                    else {
                         confetti({ zIndex: 100005, particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#f4c745', '#8b5cf6', '#10b981'] });
-                        if (result.type === 'balance') {
-                            msgBox.innerHTML = `<div class="promo-reward-text">Успешно! +${result.value} ₸ на баланс! 🎉</div>`;
-                        } else if (result.type === 'discount') {
-                            msgBox.innerHTML = `<div class="promo-reward-text">Успешно! Скидка -${result.value}% 🔥</div>`;
-                        }
+                        if (result.type === 'balance') msgBox.innerHTML = `<div class="promo-reward-text">Успешно! +${result.value} ₸ на баланс! 🎉</div>`;
+                        else if (result.type === 'discount') msgBox.innerHTML = `<div class="promo-reward-text">Успешно! Скидка -${result.value}% 🔥</div>`;
                     }
-
-                    if (result.type === 'balance' && !result.restored) {
-                        currentDbUser.balance = result.new_balance; updateUI();
-                    } else if (result.type === 'discount') {
-                        currentDbUser.active_discount = { code: result.code, percent: result.value, target: result.target, expires_at: result.expires_at };
-                        renderDynamicShop(); 
-                    }
+                    if (result.type === 'balance' && !result.restored) { currentDbUser.balance = result.new_balance; updateUI(); } 
+                    else if (result.type === 'discount') { currentDbUser.active_discount = { code: result.code, percent: result.value, target: result.target, expires_at: result.expires_at }; renderDynamicShop(); }
                     btn.style.display = 'none'; 
                 } else {
                     input.classList.add('input-error');
@@ -1451,43 +1470,33 @@
         }
 
         // ==========================================
-        // ДИНАМИЧЕСКИЙ МАГАЗИН ИЗ БД
+        // МАГАЗИН И ВЫВОДЫ
         // ==========================================
         let shopItemsCache = [];
 
         async function loadDynamicShop() {
             try {
                 const { data, error } = await supabaseClient.from('shop_items').select('*').order('id', {ascending: true});
-                if (data && data.length) {
-                    shopItemsCache = data;
-                    renderDynamicShop();
-                } else {
-                    document.getElementById('productsGrid').innerHTML = '<div style="color:var(--text-muted); text-align:center; width:100%;">Товары не загружены</div>';
-                }
+                if (data && data.length) { shopItemsCache = data; renderDynamicShop(); } 
+                else document.getElementById('productsGrid').innerHTML = '<div style="color:var(--text-muted); text-align:center; width:100%;">Товары не загружены</div>';
             } catch (err) {}
         }
 
         function renderDynamicShop() {
             const grid = document.getElementById('productsGrid'); grid.innerHTML = '';
-            
             let activePromo = currentDbUser ? currentDbUser.active_discount : null;
             
             shopItemsCache.forEach(item => {
                 const card = document.createElement('div'); card.className = 'product-card';
                 let priceHtml = `<div class="product-price">${item.price} ₸</div>`;
-                let badgeHtml = '';
-                let finalPrice = item.price;
+                let badgeHtml = ''; let finalPrice = item.price;
 
                 let activeDiscount = 0;
                 if (item.discount_active && item.discount_percent > 0) activeDiscount = item.discount_percent;
                 
                 let promoApplies = false;
-                
                 if (activePromo && (!activePromo.target || Number(activePromo.target) === Number(item.id))) {
-                    if (Number(activePromo.percent) > activeDiscount) {
-                        activeDiscount = Number(activePromo.percent);
-                        promoApplies = true;
-                    }
+                    if (Number(activePromo.percent) > activeDiscount) { activeDiscount = Number(activePromo.percent); promoApplies = true; }
                 }
 
                 if (activeDiscount > 0) {
@@ -1496,8 +1505,7 @@
                     priceHtml = `<div class="product-price"><span class="old-price">${item.price} ₸</span> ${finalPrice} ₸</div>`;
                 }
 
-                item.finalPrice = finalPrice;
-                item.appliedPromoCode = promoApplies ? activePromo.code : null;
+                item.finalPrice = finalPrice; item.appliedPromoCode = promoApplies ? activePromo.code : null;
 
                 card.innerHTML = `
                     ${badgeHtml}
@@ -1520,10 +1528,8 @@
         }
 
         async function executePurchaseWithdraw() {
-            const gameId = document.getElementById('pwIdInput').value;
-            const pattern = document.getElementById('pwPatternInput').value;
-            const targetSkin = document.getElementById('pwListingPrice').innerText;
-            const gameAvatar = localStorage.getItem('gameAvatarTemp') || 'default';
+            const gameId = document.getElementById('pwIdInput').value; const pattern = document.getElementById('pwPatternInput').value;
+            const targetSkin = document.getElementById('pwListingPrice').innerText; const gameAvatar = localStorage.getItem('gameAvatarTemp') || 'default';
             
             if(!gameId || !pattern) { showToast('Ошибка', 'Заполните Игровой ID и Паттерн скина!', 'error'); return; }
             if(!currentSessionToken) return;
@@ -1538,18 +1544,11 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    currentDbUser.balance = result.balance; updateUI();
-                    closeModal('purchaseWithdrawModal');
+                    currentDbUser.balance = result.balance; updateUI(); closeModal('purchaseWithdrawModal');
                     showToast('Успех', `Заказ создан! На ваш аккаунт скоро будет зачислено ${pendingPurchaseItem.gold} G.`, 'success');
-                    
-                    if (pendingPurchaseItem.appliedPromoCode) {
-                        currentDbUser.active_discount = null;
-                        renderDynamicShop();
-                    }
-
+                    if (pendingPurchaseItem.appliedPromoCode) { currentDbUser.active_discount = null; renderDynamicShop(); }
                     document.getElementById('pwIdInput').value = ''; document.getElementById('pwPatternInput').value = '';
-                    pendingPurchaseItem = null;
-                    document.getElementById('pwModalTitle').innerText = "Получение голды"; 
+                    pendingPurchaseItem = null; document.getElementById('pwModalTitle').innerText = "Получение голды"; 
                 } else {
                     showToast('Ошибка', result.error || 'Сбой. Деньги НЕ списаны.', 'error');
                     document.getElementById('pwBtnAction').disabled = false; document.getElementById('pwBtnAction').innerText = `Списать ${pendingPurchaseItem.finalPrice} ₸`;
@@ -1568,20 +1567,16 @@
             if (!data) return;
 
             const banner = document.getElementById('giveawayBanner');
-            const now = new Date().getTime();
-            const endTime = new Date(data.end_time).getTime();
+            const now = new Date().getTime(); const endTime = new Date(data.end_time).getTime();
             let endedAt = data.ended_at ? new Date(data.ended_at).getTime() : null;
 
             if (data.is_active === false && endedAt && (now - endedAt > 3600000)) {
-                await supabaseClient.from('giveaways').delete().eq('id', data.id);
-                banner.style.display = 'none';
-                if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
-                return;
+                await supabaseClient.from('giveaways').delete().eq('id', data.id); banner.style.display = 'none';
+                if (gwParticipantsInterval) clearInterval(gwParticipantsInterval); return;
             }
 
             banner.style.display = 'flex';
-            document.getElementById('gwTitle').innerText = data.amount + ' GOLD';
-            document.getElementById('gwCondText').innerText = data.conditions || '';
+            document.getElementById('gwTitle').innerText = data.amount + ' GOLD'; document.getElementById('gwCondText').innerText = data.conditions || '';
 
             const channelsDiv = document.getElementById('gwChannelsDiv');
             if (data.require_sub && data.tg_channels && data.tg_channels.length > 0) {
@@ -1592,15 +1587,12 @@
                 }).join('');
             } else { channelsDiv.style.display = 'none'; }
             
-            const participantsCount = data.participants ? data.participants.length : 0;
-            const maxP = data.max_participants || '∞';
+            const participantsCount = data.participants ? data.participants.length : 0; const maxP = data.max_participants || '∞';
             document.getElementById('gwParticipants').innerText = `Участников: ${participantsCount} / ${maxP}`;
 
             if (data.is_active && now < endTime) {
-                document.getElementById('gwCountdown').style.display = 'flex';
-                document.getElementById('gwActionBtn').style.display = 'block';
-                document.getElementById('gwActionBtn').innerText = 'Принять участие';
-                document.getElementById('gwActionBtn').onclick = () => participateGw(data.id);
+                document.getElementById('gwCountdown').style.display = 'flex'; document.getElementById('gwActionBtn').style.display = 'block';
+                document.getElementById('gwActionBtn').innerText = 'Принять участие'; document.getElementById('gwActionBtn').onclick = () => participateGw(data.id);
                 startGwTimer(endTime, data);
 
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
@@ -1621,36 +1613,24 @@
                 setTimeout(loadActiveGiveaway, 1500); 
             } else if (!data.is_active && data.winner) {
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
-                document.getElementById('gwCountdown').style.display = 'none';
-                document.getElementById('gwActionBtn').style.display = 'none';
-                
+                document.getElementById('gwCountdown').style.display = 'none'; document.getElementById('gwActionBtn').style.display = 'none';
                 document.getElementById('gwGiftIcon').style.display = 'none';
                 const winnerImg = document.getElementById('gwWinnerAvatarInside');
-                winnerImg.src = getSafeAvatar(data.winner.avatar);
-                winnerImg.style.display = 'block';
+                winnerImg.src = getSafeAvatar(data.winner.avatar); winnerImg.style.display = 'block';
 
                 const winnerName = document.getElementById('gwWinnerName');
-                winnerName.innerHTML = `Победитель: <span style="color:#fff;">${data.winner.nickname}</span>`;
-                winnerName.style.display = 'block';
+                winnerName.innerHTML = `Победитель: <span style="color:#fff;">${data.winner.nickname}</span>`; winnerName.style.display = 'block';
                 
                 const badge = document.getElementById('gwStatusBadge');
-                badge.innerText = 'Розыгрыш завершен';
-                badge.style.color = 'var(--accent-gold)';
-                badge.style.borderColor = 'var(--accent-gold)';
-                badge.style.boxShadow = '0 0 15px rgba(244, 199, 69, 0.4)';
+                badge.innerText = 'Розыгрыш завершен'; badge.style.color = 'var(--accent-gold)'; badge.style.borderColor = 'var(--accent-gold)'; badge.style.boxShadow = '0 0 15px rgba(244, 199, 69, 0.4)';
             }
         }
 
         function startGwTimer(endTime, data) {
             if (window.gwInterval) clearInterval(window.gwInterval);
             window.gwInterval = setInterval(() => {
-                const now = new Date().getTime();
-                const distance = endTime - now;
-                if (distance <= 0) {
-                    clearInterval(window.gwInterval);
-                    loadActiveGiveaway(); 
-                    return;
-                }
+                const now = new Date().getTime(); const distance = endTime - now;
+                if (distance <= 0) { clearInterval(window.gwInterval); loadActiveGiveaway(); return; }
                 document.getElementById("gwDays").innerText = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
                 document.getElementById("gwHours").innerText = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
                 document.getElementById("gwMinutes").innerText = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
@@ -1662,33 +1642,18 @@
             if (!currentDbUser) return showToast('Внимание', 'Войдите в аккаунт для участия', 'info');
             if (!currentDbUser.tg_id) return showToast('Ошибка', 'Для участия необходимо привязать Telegram в настройках аккаунта!', 'error');
 
-            const btn = document.getElementById('gwActionBtn');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Проверка подписки...';
+            const btn = document.getElementById('gwActionBtn'); const originalText = btn.innerText;
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Проверка подписки...';
 
             try {
-                const response = await fetch(`${BACKEND_URL}/api/giveaways/participate`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gwId, userEmail: currentDbUser.email })
-                });
-                
+                const response = await fetch(`${BACKEND_URL}/api/giveaways/participate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gwId, userEmail: currentDbUser.email }) });
                 const result = await response.json();
                 if (result.success) { 
                     showToast('Успех', 'Вы успешно участвуете в розыгрыше!', 'success'); 
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Вы участник';
-                    btn.onclick = null; 
-                    loadActiveGiveaway(); 
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Вы участник'; btn.onclick = null; loadActiveGiveaway(); 
                 } 
-                else { 
-                    showToast('Ошибка', result.error, 'error'); 
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                }
-            } catch(e) { 
-                showToast('Ошибка', 'Сбой связи с сервером', 'error'); 
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
+                else { showToast('Ошибка', result.error, 'error'); btn.disabled = false; btn.innerText = originalText; }
+            } catch(e) { showToast('Ошибка', 'Сбой связи с сервером', 'error'); btn.disabled = false; btn.innerText = originalText; }
         }
 
         // ==========================================
@@ -1697,8 +1662,6 @@
        async function loadPartners() {
             try {
                 const { data, error } = await supabaseClient.from('partners').select('*').order('sort_order', {ascending: true});
-                console.log("Данные партнеров из БД:", data); // <--- Посмотрит что выведет в F12 -> Console
-
                 const section = document.getElementById('partnersSection');
                 const grid = document.getElementById('partnersGrid');
                 
@@ -1710,37 +1673,26 @@
                         else if (p.platform === 'youtube') iconHtml = '<i class="fa-brands fa-youtube partner-icon youtube"></i>';
                         else if (p.platform === 'tiktok') iconHtml = '<i class="fa-brands fa-tiktok partner-icon tiktok"></i>';
                         else if (p.platform === 'website') {
-                            try {
-                                const domain = new URL(p.link).hostname;
-                                iconHtml = `<img src="https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=64" class="partner-img-icon" alt="site-icon">`;
-                            } catch(e) {
-                                iconHtml = '<i class="fa-solid fa-globe partner-icon"></i>';
-                            }
+                            try { const domain = new URL(p.link).hostname; iconHtml = `<img src="https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=64" class="partner-img-icon" alt="site-icon">`; } 
+                            catch(e) { iconHtml = '<i class="fa-solid fa-globe partner-icon"></i>'; }
                         }
                         
-                        return `<a href="${p.link}" target="_blank" class="partner-card">
-                            ${iconHtml}
-                            <span>${p.name}</span>
-                        </a>`;
+                        let finalLink = p.link.startsWith('http') ? p.link : 'https://' + p.link;
+                        return `<a href="${finalLink}" target="_blank" class="partner-card">${iconHtml}<span>${p.name}</span></a>`;
                     }).join('');
                     section.style.display = 'block';
-                } else {
-                    section.style.display = 'none';
-                }
-            } catch(e) {
-                console.error("Ошибка загрузки партнеров:", e);
-                document.getElementById('partnersSection').style.display = 'none';
-            }
+                } else { section.style.display = 'none'; }
+            } catch(e) { document.getElementById('partnersSection').style.display = 'none'; }
         }
+
         // ==========================================
-        // ПОПОЛНЕНИЕ, ИСТОРИЯ И ЧАТ
+        // ПОПОЛНЕНИЕ, ИСТОРИЯ
         // ==========================================
         function goToTopupStep2() {
             const amount = parseFloat(document.getElementById('topupAmountInput').value);
             if (!amount || amount < 100) return showToast('Ошибка', 'Минимальная сумма 100 ₸', 'error');
             document.getElementById('topupAmountDisplay').innerText = amount + ' ₸';
-            document.getElementById('topupStep1').style.display = 'none';
-            document.getElementById('topupStep2').style.display = 'block';
+            document.getElementById('topupStep1').style.display = 'none'; document.getElementById('topupStep2').style.display = 'block';
         }
 
         async function processTopup() {
@@ -1781,13 +1733,126 @@
             });
         }
 
+        // ==========================================
+        // ЧАТ ТЕХПОДДЕРЖКИ (ОБНОВЛЕННЫЙ)
+        // ==========================================
         function toggleChat() { 
             const widget = document.getElementById('chatWidget'); 
             if (widget.style.display === 'none') widget.style.display = '';
             
             widget.classList.toggle('active'); 
-            if (widget.classList.contains('active')) { loadChatHistory(); chatInterval = setInterval(loadChatHistory, 3000); } 
-            else { clearInterval(chatInterval); }
+            // Загружаем чат 1 РАЗ при открытии! Больше никаких setInterval (экономия Egress)
+            if (widget.classList.contains('active')) { loadChatHistory(); } 
+        }
+
+        function handleChatImageSelect(event) {
+            const files = Array.from(event.target.files);
+            if (currentChatImages.length + files.length > 2) {
+                showToast('Внимание', 'Можно прикрепить максимум 2 фотографии', 'error');
+                return;
+            }
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentChatImages.push(e.target.result);
+                    updateChatImagePreview();
+                };
+                reader.readAsDataURL(file);
+            });
+            event.target.value = '';
+        }
+
+        function removeChatImage(index) {
+            currentChatImages.splice(index, 1);
+            updateChatImagePreview();
+        }
+
+        function updateChatImagePreview() {
+            const preview = document.getElementById('chatImagePreview');
+            if (currentChatImages.length === 0) { preview.style.display = 'none'; return; }
+            preview.style.display = 'flex';
+            preview.innerHTML = currentChatImages.map((img, i) => `
+                <div class="chat-preview-item">
+                    <img src="${img}">
+                    <div class="remove-img" onclick="removeChatImage(${i})"><i class="fa-solid fa-xmark"></i></div>
+                </div>
+            `).join('');
+        }
+
+        function startMuteTimer(muteUntilStr) {
+            const endTime = new Date(muteUntilStr).getTime();
+            document.getElementById('chatInputWrapper').style.display = 'none';
+            const timerArea = document.getElementById('muteTimerArea');
+            timerArea.style.display = 'flex';
+            
+            if (muteTimerInterval) clearInterval(muteTimerInterval);
+            
+            muteTimerInterval = setInterval(async () => {
+                const now = new Date().getTime();
+                const diff = endTime - now;
+                
+                if (diff <= 0) {
+                    clearInterval(muteTimerInterval);
+                    document.getElementById('muteCountdownText').innerText = "Проверка...";
+                    
+                    try {
+                        const res = await fetch(`${BACKEND_URL}/api/chat/check-mute`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` }});
+                        const data = await res.json();
+                        if (data.success && !data.muted) {
+                            timerArea.style.display = 'none';
+                            document.getElementById('chatInputWrapper').style.display = 'flex';
+                            renderChatMessage({ sender: 'system', text: 'Блокировка чата снята. Приятного общения!' });
+                        } else if (data.muted) {
+                            startMuteTimer(data.mute_until);
+                        }
+                    } catch(e) {}
+                    return;
+                }
+                
+                const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+                document.getElementById('muteCountdownText').innerText = `${h}:${m}:${s}`;
+            }, 1000);
+        }
+
+        function renderChatMessage(msg) {
+            const chatBox = document.getElementById('chatMessages');
+            const div = document.createElement('div'); 
+            
+            let imagesHtml = '';
+            if (msg.images && msg.images.length > 0) {
+                imagesHtml = `<div class="chat-img-grid">` + msg.images.map(img => `<img src="${img}" onclick="openLightbox('${img}')">`).join('') + `</div>`;
+            }
+
+            if (msg.sender === 'admin') {
+                const roleClass = msg.role === 'creator' ? 'creator' : 'regular';
+                const roleName = msg.role === 'creator' ? '<i class="fa-solid fa-crown"></i> CREATOR' : '<i class="fa-solid fa-shield-halved"></i> ADMIN';
+                div.className = `msg admin ${roleClass}`;
+                
+                let resolveHtml = '';
+                if (msg.type === 'resolve_prompt') {
+                    resolveHtml = `
+                        <div class="resolve-prompt">
+                            <div class="resolve-prompt-text">Проблема решена?</div>
+                            <div class="resolve-btns">
+                                <button class="res-btn yes" onclick="answerResolve('${msg.id}', 'yes')">Да</button>
+                                <button class="res-btn no" onclick="answerResolve('${msg.id}', 'no')">Нет</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                div.innerHTML = `<div class="msg-sender-title">${roleName}</div><div>${msg.text}</div>${imagesHtml}${resolveHtml}`;
+            } else if (msg.sender === 'system') {
+                div.style = "text-align: center; color: var(--accent-red); font-size: 11px; font-weight: 800; margin: 10px 0; text-transform: uppercase;";
+                div.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${msg.text}`;
+            } else {
+                div.className = 'msg user'; 
+                div.innerHTML = `<div>${msg.text}</div>${imagesHtml}`;
+            }
+            
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         async function loadChatHistory() {
@@ -1796,21 +1861,19 @@
             try {
                 const response = await fetch(`${BACKEND_URL}/api/chat/history`, { headers: { 'Authorization': `Bearer ${currentSessionToken}` } });
                 const result = await response.json();
+                
+                if (result.muted) {
+                    startMuteTimer(result.mute_until);
+                } else {
+                    document.getElementById('chatInputWrapper').style.display = 'flex';
+                    const m = document.getElementById('muteTimerArea'); if(m) m.style.display = 'none';
+                }
+
                 if (result.success && result.messages) {
                     const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
-                    chatBox.innerHTML = '<div class="msg admin"><div style="font-size: 10px; color: var(--accent-gold); margin-bottom: 4px; font-weight: 900; letter-spacing: 0.5px;"><i class="fa-solid fa-crown"></i> CREATOR</div>Привет! Если есть вопросы по пополнению или выводу — пиши сюда.</div>';
-                    result.messages.forEach(msg => {
-                        const div = document.createElement('div'); 
-                        div.className = msg.sender === 'user' ? 'msg user' : 'msg admin'; 
-                        
-                        if (msg.sender === 'admin') {
-                            div.innerHTML = `<div style="font-size: 10px; color: var(--accent-gold); margin-bottom: 4px; font-weight: 900; letter-spacing: 0.5px;"><i class="fa-solid fa-crown"></i> CREATOR</div>${msg.text}`;
-                        } else {
-                            div.innerText = msg.text;
-                        }
-                        
-                        chatBox.appendChild(div);
-                    });
+                    chatBox.innerHTML = ''; // Очистка
+                    renderChatMessage({ sender: 'admin', role: 'creator', text: 'Привет! Если есть вопросы по пополнению или выводу — пиши сюда.' });
+                    result.messages.forEach(msg => renderChatMessage(msg));
                     if (isScrolledToBottom) { chatBox.scrollTop = chatBox.scrollHeight; }
                 }
             } catch (err) {}
@@ -1818,12 +1881,31 @@
 
         async function sendChatMessage() {
             const input = document.getElementById('chatInput'); const text = input.value.trim();
-            if(!text || !currentDbUser || !currentSessionToken) return showToast('Внимание', 'Войдите в аккаунт, чтобы писать в поддержку.', 'info');
-            const chatBox = document.getElementById('chatMessages');
-            const userMsg = document.createElement('div'); userMsg.className = 'msg user'; userMsg.innerText = text;
-            chatBox.appendChild(userMsg); input.value = ''; chatBox.scrollTop = chatBox.scrollHeight;
-            try { await fetch(`${BACKEND_URL}/api/chat/send`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, body: JSON.stringify({ message: text }) });
+            if((!text && currentChatImages.length === 0) || !currentDbUser || !currentSessionToken) return;
+            
+            const tempMsg = { sender: 'user', text: text, images: [...currentChatImages] };
+            renderChatMessage(tempMsg);
+            
+            input.value = ''; 
+            const imagesToSend = [...currentChatImages];
+            currentChatImages = []; updateChatImagePreview();
+
+            try { 
+                await fetch(`${BACKEND_URL}/api/chat/send`, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` }, 
+                    body: JSON.stringify({ message: text, images: imagesToSend }) 
+                });
             } catch (err) { showToast('Ошибка', 'Не удалось отправить сообщение.', 'error'); }
+        }
+
+        async function answerResolve(msgId, answer) {
+            try {
+                await fetch(`${BACKEND_URL}/api/chat/resolve-answer`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSessionToken}` },
+                    body: JSON.stringify({ msgId, answer })
+                });
+                loadChatHistory(); // Перезагружаем UI чтобы скрыть кнопки
+            } catch(e) {}
         }
 
     </script>
