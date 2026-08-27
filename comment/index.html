@@ -524,8 +524,7 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             loadReviews(); 
-            // ЭКОНОМИЯ EGRESS: Обновляем только раз в 60 сек вместо 3
-            setInterval(loadReviews, 60000); 
+setInterval(() => { if (!document.hidden) loadReviews(); }, 60000);
 
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) handleUserLogin(session);
