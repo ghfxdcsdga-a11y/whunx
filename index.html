@@ -1280,25 +1280,72 @@
 
         function previewSiteAvatar(event) {
             const file = event.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = function(e) { document.getElementById('settingsAvatar').src = e.target.result; }
-                reader.readAsDataURL(file);
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) { 
+                const img = new Image();
+                img.onload = function() {
+                    // Создаем невидимый холст (canvas)
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 150; // Аватарки больше 150px нам не нужны
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Высчитываем пропорции
+                    if (width > height) {
+                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                    } else {
+                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Сжимаем в JPEG (качество 70%). Это превратит 5 МБ в 10 КБ!
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    document.getElementById('settingsAvatar').src = compressedBase64; 
+                };
+                img.src = e.target.result;
             }
+            reader.readAsDataURL(file);
         }
 
         function previewGameAvatar(event) {
             const file = event.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = function(e) { 
-                    const b64 = e.target.result;
-                    document.getElementById('gameAvatarPreview').src = b64; 
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) { 
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 150; // Для аватарок больше 150px не нужно
+                    let width = img.width; let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                    } else {
+                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    }
+
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Сжимаем до 10-15 КБ
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    document.getElementById('gameAvatarPreview').src = compressedBase64; 
                     document.getElementById('gameAvatarBtn').innerHTML = `Файл загружен <i class="fa-solid fa-check-double" style="color:var(--accent-green);"></i>`;
-                    localStorage.setItem('gameAvatarTemp', b64);
-                }
-                reader.readAsDataURL(file);
+                    localStorage.setItem('gameAvatarTemp', compressedBase64); // В память идет уже легкая версия!
+                };
+                img.src = e.target.result;
             }
+            reader.readAsDataURL(file);
         }
 
         function resetGameAvatar() {
