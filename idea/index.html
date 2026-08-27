@@ -524,8 +524,7 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             loadIdeasFeed(); 
-            // ЭКОНОМИЯ EGRESS: Живое обновление каждые 60 сек вместо 3
-            setInterval(loadIdeasFeed, 60000); 
+setInterval(() => { if (!document.hidden) loadIdeasFeed(); }, 60000);
 
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) handleUserLogin(session);
