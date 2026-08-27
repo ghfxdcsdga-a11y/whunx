@@ -1173,7 +1173,7 @@
                 updateUI();
                 renderDynamicShop(); 
                 
-                if (!window.syncInterval) window.syncInterval = setInterval(syncUserData, 30000); // 30 секунд (Оптимизация)
+                if (!window.syncInterval) window.syncInterval = setInterval(() => { if (!document.hidden) syncUserData(); }, 60000); // 60 секунд (Оптимизация)
                 if (socket && socket.connected) socket.emit('register_client', { token: currentSessionToken });
             } catch (err) {
             } finally { isLoggingIn = false; }
@@ -1597,15 +1597,16 @@
 
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
                 gwParticipantsInterval = setInterval(async () => {
-                    try {
-                        const { data: updateData } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).maybeSingle();
-                        if (updateData) {
-                            const count = updateData.participants ? updateData.participants.length : 0;
-                            document.getElementById('gwParticipants').innerText = `Участников: ${count} / ${maxP}`;
-                            if (!updateData.is_active) { clearInterval(gwParticipantsInterval); loadActiveGiveaway(); }
-                        }
-                    } catch(e) {}
-                }, 3000);
+    if (document.hidden) return; // СТОП ТРАФИК: Если вкладка неактивна, ничего не делаем!
+    try {
+        const { data: updateData } = await supabaseClient.from('giveaways').select('participants, is_active').eq('id', data.id).maybeSingle();
+        if (updateData) {
+            const count = updateData.participants ? updateData.participants.length : 0;
+            document.getElementById('gwParticipants').innerText = `Участников: ${count} / ${maxP}`;
+            if (!updateData.is_active) { clearInterval(gwParticipantsInterval); loadActiveGiveaway(); }
+        }
+    } catch(e) {}
+}, 60000); // 60 секунд вместо 3-х!
 
             } else if (data.is_active && now >= endTime) {
                 if (gwParticipantsInterval) clearInterval(gwParticipantsInterval);
