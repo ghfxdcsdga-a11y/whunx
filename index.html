@@ -1080,6 +1080,8 @@
                     closeModal('donateModal');
                     resetDonateModal();
                 });
+
+                socket.on('shop_updated', () => loadDynamicShop());
                 
                 socket.on('donation_rejected', () => {
                     clearInterval(donateCountdownTimer);
