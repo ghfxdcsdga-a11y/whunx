@@ -83,6 +83,37 @@
         input[type="number"] { -moz-appearance: textfield; }
 
         /* =========================================
+   СОСТОЯНИЕ "НЕТ В НАЛИЧИИ"
+========================================= */
+.product-card.out-of-stock {
+    border-color: var(--glass-border) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
+    transform: none !important;
+    cursor: default;
+}
+.product-card.out-of-stock .product-img-wrapper::before {
+    display: none; /* Убираем свечение за голдой */
+}
+.product-card.out-of-stock .product-img {
+    filter: grayscale(100%) opacity(0.4) !important;
+    transform: none !important;
+}
+.product-card.out-of-stock .product-price {
+    color: var(--text-muted);
+    text-shadow: none;
+}
+.product-card.out-of-stock .product-gold {
+    color: var(--text-muted);
+}
+.btn-buy.disabled-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--glass-border) !important;
+    box-shadow: none !important;
+    cursor: not-allowed;
+}
+        
+        /* =========================================
            CUSTOM TOAST ALERTS
         ========================================= */
         #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; pointer-events: none; }
@@ -1530,40 +1561,55 @@
         }
 
         function renderDynamicShop() {
-            const grid = document.getElementById('productsGrid'); grid.innerHTML = '';
-            let activePromo = currentDbUser ? currentDbUser.active_discount : null;
-            
-            shopItemsCache.forEach(item => {
-                const card = document.createElement('div'); card.className = 'product-card';
-                let priceHtml = `<div class="product-price">${item.price} ₸</div>`;
-                let badgeHtml = ''; let finalPrice = item.price;
+    const grid = document.getElementById('productsGrid'); grid.innerHTML = '';
+    let activePromo = currentDbUser ? currentDbUser.active_discount : null;
 
-                let activeDiscount = 0;
-                if (item.discount_active && item.discount_percent > 0) activeDiscount = item.discount_percent;
-                
-                let promoApplies = false;
-                if (activePromo && (!activePromo.target || Number(activePromo.target) === Number(item.id))) {
-                    if (Number(activePromo.percent) > activeDiscount) { activeDiscount = Number(activePromo.percent); promoApplies = true; }
-                }
+    shopItemsCache.forEach(item => {
+        const card = document.createElement('div'); 
+        
+        // Проверяем наличие. Если колонки еще нет, считаем что товар есть (по умолчанию true)
+        const isStockAvailable = item.in_stock !== false; 
+        
+        card.className = `product-card ${!isStockAvailable ? 'out-of-stock' : ''}`;
+        
+        let priceHtml = `<div class="product-price">${item.price} ₸</div>`;
+        let badgeHtml = ''; let finalPrice = item.price;
 
-                if (activeDiscount > 0) {
-                    finalPrice = Math.round(item.price * (1 - (activeDiscount / 100)));
-                    badgeHtml = `<div class="discount-badge">-${activeDiscount}%</div>`;
-                    priceHtml = `<div class="product-price"><span class="old-price">${item.price} ₸</span> ${finalPrice} ₸</div>`;
-                }
+        let activeDiscount = 0;
+        if (item.discount_active && item.discount_percent > 0) activeDiscount = item.discount_percent;
 
-                item.finalPrice = finalPrice; item.appliedPromoCode = promoApplies ? activePromo.code : null;
-
-                card.innerHTML = `
-                    ${badgeHtml}
-                    <div class="product-img-wrapper"><img src="${item.img}" class="product-img" alt="Gold"></div>
-                    <div class="product-gold">${item.gold} G</div>
-                    ${priceHtml}
-                    <button class="btn-buy" onclick="attemptPurchase(${item.id})">Купить</button>
-                `;
-                grid.appendChild(card);
-            });
+        let promoApplies = false;
+        if (activePromo && (!activePromo.target || Number(activePromo.target) === Number(item.id))) {
+            if (Number(activePromo.percent) > activeDiscount) { activeDiscount = Number(activePromo.percent); promoApplies = true; }
         }
+
+        if (activeDiscount > 0) {
+            finalPrice = Math.round(item.price * (1 - (activeDiscount / 100)));
+            badgeHtml = `<div class="discount-badge">-${activeDiscount}%</div>`;
+            priceHtml = `<div class="product-price"><span class="old-price">${item.price} ₸</span> ${finalPrice} ₸</div>`;
+        }
+
+        item.finalPrice = finalPrice; item.appliedPromoCode = promoApplies ? activePromo.code : null;
+
+        // Генерация кнопки в зависимости от наличия
+        let buttonHtml = '';
+        if (isStockAvailable) {
+            buttonHtml = `<button class="btn-buy" onclick="attemptPurchase(${item.id})">Купить</button>`;
+        } else {
+            buttonHtml = `<button class="btn-buy disabled-btn" disabled>Нет в наличии</button>`;
+            badgeHtml = ''; // Скрываем бейдж скидки, если товара нет
+        }
+
+        card.innerHTML = `
+            ${badgeHtml}
+            <div class="product-img-wrapper"><img src="${item.img}" class="product-img" alt="Gold"></div>
+            <div class="product-gold">${item.gold} G</div>
+            ${priceHtml}
+            ${buttonHtml}
+        `;
+        grid.appendChild(card);
+    });
+}
 
         function attemptPurchase(itemId) {
             if (!currentDbUser) return showToast('Ошибка', 'Войдите в аккаунт для покупок.', 'error');
