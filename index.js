@@ -77,11 +77,77 @@ app.get('/api/tops/cache', (req, res) => {
     res.json({ success: true, data: topsCacheData });
 });
 
+
+// ==========================================
+// НОВАЯ СИСТЕМА: АВТО-НАЛИЧИЕ ТОВАРОВ
+// ==========================================
+async function recalculateStock(currentValue) {
+    try {
+        const safeAmount = currentValue - (currentValue * 0.20);
+        
+        const { data: items } = await supabase.from('shop_items').select('*');
+        if (!items) return;
+
+        let isUpdated = false;
+
+        for (let item of items) {
+            const shouldBeInStock = item.gold <= safeAmount;
+            if (item.in_stock !== shouldBeInStock) {
+                await supabase.from('shop_items').update({ in_stock: shouldBeInStock }).eq('id', item.id);
+                isUpdated = true;
+            }
+        }
+
+        // Если что-то поменялось — отправляем сигнал на фронт для обновления UI
+        if (isUpdated) {
+            io.emit('shop_updated');
+        }
+    } catch (error) {
+        console.error("Ошибка при перерасчете наличия:", error);
+    }
+}
+
+// Страховочный крон (проверка раз в час)
+setInterval(async () => {
+    const { data } = await supabase.from('store_settings').select('current_value').eq('id', 1).single();
+    if (data) recalculateStock(parseFloat(data.current_value));
+}, 3600000);
+
+
 // ==========================================
 // ТЕЛЕГРАМ БОТ
 // ==========================================
 const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 const ADMIN_CHAT_ID = 1210777759;
+
+// --- КОМАНДЫ ДЛЯ УПРАВЛЕНИЯ БАЛАНСОМ (НОВОЕ) ---
+bot.onText(/^\/value$/, async (msg) => {
+    if (msg.chat.id !== ADMIN_CHAT_ID) return;
+    const { data } = await supabase.from('store_settings').select('current_value').eq('id', 1).single();
+    const val = data ? data.current_value : 0;
+    bot.sendMessage(ADMIN_CHAT_ID, `💰 Текущий заданный баланс: ${val} G`);
+});
+
+bot.onText(/^\/value\s+(set|\+|\-)\s+([\d.]+)$/, async (msg, match) => {
+    if (msg.chat.id !== ADMIN_CHAT_ID) return;
+    const action = match[1];
+    const amount = parseFloat(match[2]);
+    
+    const { data } = await supabase.from('store_settings').select('current_value').eq('id', 1).single();
+    let oldVal = data ? parseFloat(data.current_value) : 0;
+    let newVal = oldVal;
+
+    if (action === 'set') newVal = amount;
+    else if (action === '+') newVal = oldVal + amount;
+    else if (action === '-') newVal = oldVal - amount;
+
+    await supabase.from('store_settings').upsert({ id: 1, current_value: newVal });
+    bot.sendMessage(ADMIN_CHAT_ID, `🔄 Баланс обновлен!\nБыло: ${oldVal} G\nСтало: ${newVal} G`);
+    
+    // Сразу пересчитываем наличие
+    recalculateStock(newVal);
+});
+// ------------------------------------------------
 
 bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
   if (msg.chat.id !== ADMIN_CHAT_ID) return;
@@ -145,7 +211,6 @@ bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
   bot.sendMessage(ADMIN_CHAT_ID, response, { parse_mode: 'Markdown' });
 });
 
-// ВЫДАЧА МУТА (Команда из Telegram)
 bot.onText(/^\/mute\s+([^\s]+)\s+(\d+)\s+(.+)$/, async (msg, match) => {
     if (msg.chat.id !== ADMIN_CHAT_ID) return;
     const userEmail = match[1]; const minutes = parseInt(match[2]); const reason = match[3];
@@ -161,7 +226,6 @@ bot.onText(/^\/mute\s+([^\s]+)\s+(\d+)\s+(.+)$/, async (msg, match) => {
 });
 
 bot.on('message', async (msg) => {
-  // ОТВЕТ АДМИНА В ТЕХПОДДЕРЖКЕ С ПОДДЕРЖКОЙ ФОТО
   if (msg.chat.id === ADMIN_CHAT_ID && msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes('Почта:')) {
     const replyText = msg.text || msg.caption || '';
     const emailMatch = msg.reply_to_message.text.match(/Почта:\s*([^\s\n]+)/);
@@ -180,7 +244,6 @@ bot.on('message', async (msg) => {
           } catch(e) { console.error("Ошибка загрузки фото админа", e); }
       }
 
-      // ТЕПЕРЬ СОХРАНЯЕМ И РОЛЬ И ФОТО В БД
       const msgData = { user_email: userEmail, sender: 'admin', text: replyText, images: imagesArray, role: 'creator', type: 'text' };
       const { data: savedMsg } = await supabase.from('support_messages').insert([msgData]).select().single(); 
       
@@ -194,7 +257,6 @@ bot.on('message', async (msg) => {
 bot.on('callback_query', async (query) => {
   if (query.from.id !== ADMIN_CHAT_ID) return;
 
-  // ОБРАБОТКА НОВЫХ КНОПОК ПОДДЕРЖКИ
   if (query.data.startsWith('respr_')) {
       const userEmail = query.data.substring(6);
       const msgData = { user_email: userEmail, sender: 'admin', type: 'resolve_prompt', text: 'Пожалуйста, подтвердите, решена ли ваша проблема:', role: 'creator' };
@@ -224,7 +286,6 @@ bot.on('callback_query', async (query) => {
       return bot.sendMessage(ADMIN_CHAT_ID, `Для выдачи мута скопируйте команду и вставьте свои значения:\n\`/mute ${userEmail} [минуты] [причина]\`\n\nПример: \`/mute ${userEmail} 60 Оскорбление\``, { parse_mode: 'Markdown' });
   }
 
-  // СТАРЫЕ ОБРАБОТЧИКИ
   const action = query.data.split('_')[0]; 
   const orderId = query.data.split('_')[1];
 
@@ -283,6 +344,17 @@ bot.on('callback_query', async (query) => {
       if (socketId) io.to(socketId).emit('balance_updated', { balance: newBalance });
     }
     if (order.applied_promo) await supabase.from('used_promocodes').update({ is_spent: false }).eq('user_email', order.user_email).eq('promo_code', order.applied_promo);
+    
+  } else if (action === 'complete') {
+    // НОВОЕ ВНЕДРЕНИЕ: Автоматически отнимаем сумму из баланса бота при подтверждении
+    try {
+        const { data: storeSetting } = await supabase.from('store_settings').select('current_value').eq('id', 1).single();
+        if (storeSetting) {
+            const newVal = Math.max(0, parseFloat(storeSetting.current_value) - order.amount);
+            await supabase.from('store_settings').update({ current_value: newVal }).eq('id', 1);
+            recalculateStock(newVal); // Авто-обновление маркета сразу же
+        }
+    } catch(e) { console.error("Ошибка обновления value при выводе", e); }
   }
 
   await supabase.from('withdrawals').update({ status: newStatus }).eq('id', orderId);
@@ -342,7 +414,6 @@ app.post('/api/chat/send', authenticateUser, async (req, res) => {
         return res.status(403).json({ error: 'Чат заблокирован' });
     }
 
-    // Сохраняем и фото и текст
     await supabase.from('support_messages').insert([{ user_email: req.user.email, sender: 'user', text: message, images: images || [] }]);
 
     let tgText = `✉️ **Новое обращение**\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID:** \`${req.user.secret_id}\`\n\nСообщение:\n\`\`\`\n${message || '[Только фото]'}\n\`\`\``;
