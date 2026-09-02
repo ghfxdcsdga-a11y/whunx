@@ -128,7 +128,6 @@ bot.onText(/^\/start$/, async (msg) => {
 
 bot.onText(/^\/profile$/, async (msg) => {
     const tgId = msg.from.id;
-    if (tgId === ADMIN_CHAT_ID) return; 
 
     const { data: user } = await supabase.from('users').select('*').eq('tg_id', tgId).maybeSingle();
     if (!user) return bot.sendMessage(tgId, "❌ Ваш Telegram не привязан к сайту.\n\nЗайдите в Настройки на сайте Whunx.shop и нажмите кнопку «Привязать Telegram».");
