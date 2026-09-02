@@ -21,7 +21,7 @@ const server = require('http').createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
 const connectedUsers = {};
-const resolveTimeouts = {}; // Хранит таймеры 5-минутного закрытия чатов
+const resolveTimeouts = {}; 
 
 io.on('connection', (socket) => {
   socket.on('register_client', async (data) => {
@@ -39,12 +39,9 @@ io.on('connection', (socket) => {
 });
 
 async function closeAndClearChat(userEmail) {
-    // Удаляем всю историю из БД (ЭКОНОМИЯ EGRESS)
     await supabase.from('support_messages').delete().eq('user_email', userEmail);
-    // Отправляем сигнал на очистку клиенту
     const socketId = connectedUsers[userEmail];
     if (socketId) io.to(socketId).emit('chat_closed');
-    // Сбрасываем таймер
     if (resolveTimeouts[userEmail]) {
         clearTimeout(resolveTimeouts[userEmail]);
         delete resolveTimeouts[userEmail];
@@ -77,42 +74,42 @@ app.get('/api/tops/cache', (req, res) => {
     res.json({ success: true, data: topsCacheData });
 });
 
+// ==========================================
+// НОВАЯ СИСТЕМА: АВТО-НАЛИЧИЕ ТОВАРОВ (РЕЗЕРВ ГОЛДЫ)
+// ==========================================
+async function getGoldReserve() {
+    const { data } = await supabase.from('system_settings').select('value').eq('key', 'gold_reserve').single();
+    return data && data.value && data.value.amount !== undefined ? parseFloat(data.value.amount) : 0;
+}
 
-// ==========================================
-// НОВАЯ СИСТЕМА: АВТО-НАЛИЧИЕ ТОВАРОВ
-// ==========================================
+async function setGoldReserve(amount) {
+    await supabase.from('system_settings').upsert({ key: 'gold_reserve', value: { amount: parseFloat(amount) } });
+    recalculateStock(amount);
+    io.emit('reserve_updated'); 
+}
+
 async function recalculateStock(currentValue) {
     try {
-        const safeAmount = currentValue - (currentValue * 0.20);
-        
+        const safeAmount = currentValue * 0.8; 
         const { data: items } = await supabase.from('shop_items').select('*');
         if (!items) return;
 
         let isUpdated = false;
-
         for (let item of items) {
-            const shouldBeInStock = item.gold <= safeAmount;
+            const shouldBeInStock = safeAmount >= item.gold;
             if (item.in_stock !== shouldBeInStock) {
                 await supabase.from('shop_items').update({ in_stock: shouldBeInStock }).eq('id', item.id);
                 isUpdated = true;
             }
         }
-
-        // Если что-то поменялось — отправляем сигнал на фронт для обновления UI
-        if (isUpdated) {
-            io.emit('shop_updated');
-        }
-    } catch (error) {
-        console.error("Ошибка при перерасчете наличия:", error);
-    }
+        if (isUpdated) io.emit('shop_updated');
+    } catch (error) { console.error("Ошибка при перерасчете наличия:", error); }
 }
 
-// Страховочный крон (проверка раз в час)
 setInterval(async () => {
-    const { data } = await supabase.from('store_settings').select('current_value').eq('id', 1).single();
-    if (data) recalculateStock(parseFloat(data.current_value));
+    const val = await getGoldReserve();
+    recalculateStock(val);
 }, 3600000);
-
 
 // ==========================================
 // ТЕЛЕГРАМ БОТ
@@ -120,34 +117,88 @@ setInterval(async () => {
 const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 const ADMIN_CHAT_ID = 1210777759;
 
-// --- КОМАНДЫ ДЛЯ УПРАВЛЕНИЯ БАЛАНСОМ (НОВОЕ) ---
+// --- КОМАНДЫ ДЛЯ КЛИЕНТОВ (ГЛОБАЛЬНАЯ СИНХРОНИЗАЦИЯ) ---
+bot.onText(/^\/start$/, async (msg) => {
+    if (msg.text.includes('BIND_')) return; 
+    bot.sendMessage(msg.chat.id, "👋 **Привет! Я официальный бот Whunx Shop.**\n\nПривяжи свой аккаунт на сайте, чтобы проверять баланс и моментально получать уведомления о заказах прямо сюда!\n\n📋 *Команды бота:*\n/profile — Твой профиль на сайте\n/orders — История твоих выводов голды", {
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: [[{ text: '🌐 Открыть сайт', url: 'https://whunx.shop' }]] }
+    });
+});
+
+bot.onText(/^\/profile$/, async (msg) => {
+    const tgId = msg.from.id;
+    if (tgId === ADMIN_CHAT_ID) return; 
+
+    const { data: user } = await supabase.from('users').select('*').eq('tg_id', tgId).maybeSingle();
+    if (!user) return bot.sendMessage(tgId, "❌ Ваш Telegram не привязан к сайту.\n\nЗайдите в Настройки на сайте Whunx.shop и нажмите кнопку «Привязать Telegram».");
+
+    const badges = user.is_verified ? '✅ Верифицирован' : '👤 Обычный';
+    const role = user.role.toUpperCase();
+
+    bot.sendMessage(tgId, `📋 **Ваш профиль Whunx Shop**\n\n👤 Никнейм: \`${user.username}\`\n📧 Почта: \`${user.email}\`\n💰 Баланс: **${user.balance} ₸**\n\nСтатус: ${badges} | ${role}`, { parse_mode: 'Markdown' });
+});
+
+bot.onText(/^\/orders$/, async (msg) => {
+    const tgId = msg.from.id;
+    const { data: user } = await supabase.from('users').select('email').eq('tg_id', tgId).maybeSingle();
+    if (!user) return bot.sendMessage(tgId, "❌ Ваш Telegram не привязан к сайту.");
+
+    const { data: orders } = await supabase.from('withdrawals').select('*').eq('user_email', user.email).order('created_at', { ascending: false }).limit(5);
+    if (!orders || orders.length === 0) return bot.sendMessage(tgId, "У вас пока нет заказов на вывод голды.");
+
+    let text = "🛍 **Ваши последние заказы:**\n\n";
+    orders.forEach(o => {
+        const status = o.status === 'completed' ? '✅ Выполнен' : (o.status === 'pending' ? '⏳ В ожидании' : '❌ Отменен');
+        text += `— **${o.amount} G** | ${status}\nСкин: \`${o.target_skin}\` | Паттерн: \`${o.pattern || '000'}\`\n\n`;
+    });
+
+    bot.sendMessage(tgId, text, { parse_mode: 'Markdown' });
+});
+
+// --- АДМИНСКАЯ РАССЫЛКА ---
+bot.onText(/^\/broadcast\s+([\s\S]+)$/, async (msg, match) => {
+    if (msg.chat.id !== ADMIN_CHAT_ID) return;
+    const text = match[1];
+
+    bot.sendMessage(ADMIN_CHAT_ID, "⏳ Начинаю массовую рассылку...");
+    const { data: users } = await supabase.from('users').select('tg_id').not('tg_id', 'is', null);
+    
+    if (!users || users.length === 0) return bot.sendMessage(ADMIN_CHAT_ID, "❌ Нет пользователей с привязанным Telegram.");
+
+    let successCount = 0;
+    for (let u of users) {
+        try {
+            await bot.sendMessage(u.tg_id, `📢 **Уведомление от Whunx Shop**\n\n${text}`, { parse_mode: 'Markdown' });
+            successCount++;
+            await new Promise(res => setTimeout(res, 50)); // Пауза от анти-спама ТГ
+        } catch(e) {}
+    }
+    bot.sendMessage(ADMIN_CHAT_ID, `✅ Рассылка завершена!\nУспешно доставлено: ${successCount} из ${users.length} пользователей.`);
+});
+
+// --- КОМАНДЫ ДЛЯ УПРАВЛЕНИЯ БАЛАНСОМ ГОЛДЫ ---
 bot.onText(/^\/value$/, async (msg) => {
     if (msg.chat.id !== ADMIN_CHAT_ID) return;
-    const { data } = await supabase.from('store_settings').select('current_value').eq('id', 1).single();
-    const val = data ? data.current_value : 0;
-    bot.sendMessage(ADMIN_CHAT_ID, `💰 Текущий заданный баланс: ${val} G`);
+    const val = await getGoldReserve();
+    const safe = Math.floor(val * 0.8);
+    bot.sendMessage(ADMIN_CHAT_ID, `💰 Текущий заданный резерв: ${val} G\n✅ Доступно для продажи (с учетом комиссии 20%): ${safe} G`);
 });
 
 bot.onText(/^\/value\s+(set|\+|\-)\s+([\d.]+)$/, async (msg, match) => {
     if (msg.chat.id !== ADMIN_CHAT_ID) return;
-    const action = match[1];
-    const amount = parseFloat(match[2]);
-    
-    const { data } = await supabase.from('store_settings').select('current_value').eq('id', 1).single();
-    let oldVal = data ? parseFloat(data.current_value) : 0;
-    let newVal = oldVal;
+    const action = match[1]; const amount = parseFloat(match[2]);
+    let oldVal = await getGoldReserve(); let newVal = oldVal;
 
     if (action === 'set') newVal = amount;
     else if (action === '+') newVal = oldVal + amount;
     else if (action === '-') newVal = oldVal - amount;
+    newVal = Math.max(0, newVal);
 
-    await supabase.from('store_settings').upsert({ id: 1, current_value: newVal });
-    bot.sendMessage(ADMIN_CHAT_ID, `🔄 Баланс обновлен!\nБыло: ${oldVal} G\nСтало: ${newVal} G`);
-    
-    // Сразу пересчитываем наличие
-    recalculateStock(newVal);
+    await setGoldReserve(newVal);
+    const safe = Math.floor(newVal * 0.8);
+    bot.sendMessage(ADMIN_CHAT_ID, `🔄 Резерв голды обновлен!\n\nБыло: ${oldVal} G\nСтало: ${newVal} G\n✅ Доступно в магазине: ${safe} G`);
 });
-// ------------------------------------------------
 
 bot.onText(/^\/setplash\s+([^\s]+)\s+(\d+)$/, async (msg, match) => {
   if (msg.chat.id !== ADMIN_CHAT_ID) return;
@@ -182,13 +233,13 @@ bot.onText(/^\/start BIND_(.+)$/, async (msg, match) => {
   if (existingUser) {
       if (existingUser.secret_id === secretId) {
           if (existingUser.telegram_username !== tgUsername) await supabase.from('users').update({ telegram_username: tgUsername }).eq('secret_id', secretId);
-          return bot.sendMessage(msg.chat.id, `✅ Telegram синхронизирован!`);
+          return bot.sendMessage(msg.chat.id, `✅ Telegram синхронизирован! Теперь ты будешь получать сюда уведомления.`);
       }
       return bot.sendMessage(msg.chat.id, `❌ Ошибка: Этот Telegram уже привязан к другому аккаунту.`);
   }
 
   await supabase.from('users').update({ tg_id: tgId, telegram_username: tgUsername }).eq('secret_id', secretId);
-  bot.sendMessage(msg.chat.id, `✅ Аккаунт успешно привязан!\n👤 Никнейм: ${targetUser.username}`);
+  bot.sendMessage(msg.chat.id, `✅ Аккаунт успешно привязан!\n👤 Никнейм: ${targetUser.username}\n\nТеперь все важные уведомления о донатах и балансе будут приходить прямо сюда!`);
 });
 
 bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
@@ -241,7 +292,7 @@ bot.on('message', async (msg) => {
               const buffer = await imgResp.arrayBuffer();
               const base64 = Buffer.from(buffer).toString('base64');
               imagesArray.push(`data:image/jpeg;base64,${base64}`);
-          } catch(e) { console.error("Ошибка загрузки фото админа", e); }
+          } catch(e) {}
       }
 
       const msgData = { user_email: userEmail, sender: 'admin', text: replyText, images: imagesArray, role: 'creator', type: 'text' };
@@ -250,6 +301,13 @@ bot.on('message', async (msg) => {
       bot.sendMessage(ADMIN_CHAT_ID, `✅ Ответ отправлен пользователю ${userEmail}`);
       const socketId = connectedUsers[userEmail];
       if (socketId && savedMsg) io.to(socketId).emit('new_chat_message', savedMsg);
+
+      // Уведомляем юзера в ТГ напрямую, если он привязал аккаунт
+      const { data: tUser } = await supabase.from('users').select('tg_id').eq('email', userEmail).single();
+      if (tUser && tUser.tg_id) {
+          bot.sendMessage(tUser.tg_id, `💬 **Ответ от техподдержки:**\n\n${replyText}`, { parse_mode: 'Markdown' });
+          if (imagesArray.length > 0) bot.sendMessage(tUser.tg_id, `*(Администратор прикрепил фото. Посмотреть можно на сайте)*`, { parse_mode: 'Markdown' });
+      }
     }
   }
 });
@@ -260,7 +318,6 @@ bot.on('callback_query', async (query) => {
   if (query.data.startsWith('respr_')) {
       const userEmail = query.data.substring(6);
       const msgData = { user_email: userEmail, sender: 'admin', type: 'resolve_prompt', text: 'Пожалуйста, подтвердите, решена ли ваша проблема:', role: 'creator' };
-      
       const { data: savedMsg, error } = await supabase.from('support_messages').insert([msgData]).select().single();
       
       const socketId = connectedUsers[userEmail];
@@ -283,7 +340,7 @@ bot.on('callback_query', async (query) => {
   else if (query.data.startsWith('mutebtn_')) {
       const userEmail = query.data.substring(8);
       bot.answerCallbackQuery(query.id);
-      return bot.sendMessage(ADMIN_CHAT_ID, `Для выдачи мута скопируйте команду и вставьте свои значения:\n\`/mute ${userEmail} [минуты] [причина]\`\n\nПример: \`/mute ${userEmail} 60 Оскорбление\``, { parse_mode: 'Markdown' });
+      return bot.sendMessage(ADMIN_CHAT_ID, `Для выдачи мута скопируйте команду и вставьте свои значения:\n\`/mute ${userEmail} [минуты] [причина]\``, { parse_mode: 'Markdown' });
   }
 
   const action = query.data.split('_')[0]; 
@@ -304,26 +361,31 @@ bot.on('callback_query', async (query) => {
 
     const statusText = newStatus === 'approved' ? '✅ ДОНАТ ПОДТВЕРЖДЕН' : '❌ ДОНАТ ОТКЛОНЕН / ОТМЕНЕН';
     bot.editMessageText(`${query.message.text}\n\nСтатус: ${statusText}`, { chat_id: query.message.chat.id, message_id: query.message.message_id });
-    return bot.answerCallbackQuery(query.id, { text: 'Решение по донату принято!' });
+    return bot.answerCallbackQuery(query.id, { text: 'Решение принято!' });
   }
 
   if (action === 'approvetopup' || action === 'rejecttopup') {
     const { data: request } = await supabase.from('topup_requests').select('*').eq('id', orderId).single();
     if (!request || request.status !== 'pending') return;
 
+    const { data: user } = await supabase.from('users').select('*').eq('email', request.user_email).single();
+
     if (action === 'approvetopup') {
-      const { data: user } = await supabase.from('users').select('*').eq('email', request.user_email).single();
       if (user) {
         const newBalance = Number(user.balance) + Number(request.amount);
         await supabase.from('users').update({ balance: newBalance }).eq('email', request.user_email);
         await supabase.from('transactions').insert([{ user_email: request.user_email, type: 'deposit', amount: request.amount, description: 'Пополнение Kaspi' }]);
+        
         const socketId = connectedUsers[request.user_email];
         if (socketId) io.to(socketId).emit('balance_updated', { balance: newBalance });
+
+        if (user.tg_id) bot.sendMessage(user.tg_id, `✅ **Ваше пополнение на ${request.amount} ₸ успешно зачислено!**\nТекущий баланс: ${newBalance} ₸`, { parse_mode: 'Markdown' });
       }
       await supabase.from('topup_requests').update({ status: 'approved' }).eq('id', orderId);
       bot.editMessageText(`${query.message.text}\n\nСтатус: ✅ ЗАЧИСЛЕНО НА БАЛАНС`, { chat_id: query.message.chat.id, message_id: query.message.message_id });
     } else {
       await supabase.from('topup_requests').update({ status: 'rejected' }).eq('id', orderId);
+      if (user && user.tg_id) bot.sendMessage(user.tg_id, `❌ **Ваша заявка на пополнение ${request.amount} ₸ отклонена.**\nПлатеж не найден. Если вы перевели деньги, обратитесь в техподдержку на сайте.`, { parse_mode: 'Markdown' });
       bot.editMessageText(`${query.message.text}\n\nСтатус: ❌ ПЛАТЕЖ НЕ НАЙДЕН`, { chat_id: query.message.chat.id, message_id: query.message.message_id });
     }
     return bot.answerCallbackQuery(query.id, { text: 'Заявка обработана!' });
@@ -335,26 +397,32 @@ bot.on('callback_query', async (query) => {
   const newStatus = action === 'complete' ? 'completed' : 'cancelled';
 
   if (action === 'cancel') {
-    const { data: user } = await supabase.from('users').select('balance').eq('email', order.user_email).single();
+    const { data: user } = await supabase.from('users').select('balance, tg_id').eq('email', order.user_email).single();
     if (user && order.spent_rubles > 0) { 
       const newBalance = Number(user.balance) + Number(order.spent_rubles);
       await supabase.from('users').update({ balance: newBalance }).eq('email', order.user_email);
       await supabase.from('transactions').insert([{ user_email: order.user_email, type: 'refund', amount: order.spent_rubles, description: `Возврат за отмену заказа #${order.id}` }]);
       const socketId = connectedUsers[order.user_email];
       if (socketId) io.to(socketId).emit('balance_updated', { balance: newBalance });
+      
+      if (user.tg_id) bot.sendMessage(user.tg_id, `❌ Ваш заказ на вывод **${order.amount} G** был отменен администратором.\n${order.spent_rubles} ₸ возвращены на баланс.`, { parse_mode: 'Markdown' });
     }
     if (order.applied_promo) await supabase.from('used_promocodes').update({ is_spent: false }).eq('user_email', order.user_email).eq('promo_code', order.applied_promo);
     
   } else if (action === 'complete') {
-    // НОВОЕ ВНЕДРЕНИЕ: Автоматически отнимаем сумму из баланса бота при подтверждении
     try {
-        const { data: storeSetting } = await supabase.from('store_settings').select('current_value').eq('id', 1).single();
-        if (storeSetting) {
-            const newVal = Math.max(0, parseFloat(storeSetting.current_value) - order.amount);
-            await supabase.from('store_settings').update({ current_value: newVal }).eq('id', 1);
-            recalculateStock(newVal); // Авто-обновление маркета сразу же
+        const oldVal = await getGoldReserve();
+        if (oldVal > 0) {
+            const newVal = Math.max(0, oldVal - order.amount);
+            await setGoldReserve(newVal);
+            bot.sendMessage(ADMIN_CHAT_ID, `📉 Из резерва автоматически списано ${order.amount} G (Вывод заказа #${orderId}).\nОстаток резерва: ${newVal} G`);
         }
-    } catch(e) { console.error("Ошибка обновления value при выводе", e); }
+        
+        const { data: targetUser } = await supabase.from('users').select('tg_id').eq('email', order.user_email).single();
+        if (targetUser && targetUser.tg_id) {
+            bot.sendMessage(targetUser.tg_id, `✅ **Ваш заказ успешно выполнен!**\n**${order.amount} G** отправлены на ваш игровой аккаунт.\n\nЗайдите в игру и проверьте баланс!`, { parse_mode: 'Markdown' });
+        }
+    } catch(e) {}
   }
 
   await supabase.from('withdrawals').update({ status: newStatus }).eq('id', orderId);
