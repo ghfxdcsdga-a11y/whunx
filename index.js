@@ -168,7 +168,7 @@ bot.onText(/^\/broadcast\s+([\s\S]+)$/, async (msg, match) => {
     let successCount = 0;
     for (let u of users) {
         try {
-            await bot.sendMessage(u.tg_id, `📢 **Уведомление от Whunx Shop**\n\n${text}`, { parse_mode: 'Markdown' });
+            await bot.sendMessage(u.tg_id, `💜 **Whunx Shop**\n\n${text}`, { parse_mode: 'Markdown' });
             successCount++;
             await new Promise(res => setTimeout(res, 50)); // Пауза от анти-спама ТГ
         } catch(e) {}
