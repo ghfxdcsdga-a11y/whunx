@@ -117,6 +117,13 @@ setInterval(async () => {
 const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 const ADMIN_CHAT_ID = 1210777759;
 
+const orderMessages = {}; // orderId -> { messages: {tgId: msgId}, accepted: bool }
+
+async function getAdminTelegramList() {
+    const { data } = await supabase.from('users').select('tg_id, username, telegram_username').in('role', ['admin', 'creator']).not('tg_id', 'is', null);
+    return data || [];
+}
+
 // --- КОМАНДЫ ДЛЯ КЛИЕНТОВ (ГЛОБАЛЬНАЯ СИНХРОНИЗАЦИЯ) ---
 bot.onText(/^\/start$/, async (msg) => {
     if (msg.text.includes('BIND_')) return; 
@@ -261,6 +268,27 @@ bot.onText(/^\/checkbal\s+(.+)$/, async (msg, match) => {
   bot.sendMessage(ADMIN_CHAT_ID, response, { parse_mode: 'Markdown' });
 });
 
+bot.onText(/^\/order\s+(\d+)$/, async (msg, match) => {
+    const { data: requester } = await supabase.from('users').select('role').eq('tg_id', msg.from.id).maybeSingle();
+    const isAdmin = msg.chat.id === ADMIN_CHAT_ID || (requester && ['admin', 'creator'].includes(requester.role));
+    if (!isAdmin) return;
+
+    const orderId = match[1];
+    const { data: order } = await supabase.from('withdrawals').select('*').eq('id', orderId).single();
+    if (!order) return bot.sendMessage(msg.chat.id, '❌ Заказ не найден.');
+
+    const { data: buyer } = await supabase.from('users').select('*').eq('email', order.user_email).single();
+    const statusText = order.status === 'completed' ? '✅ Выполнен' : (order.status === 'pending' ? '⏳ В ожидании' : '❌ Отменен');
+    const text = `📦 **Заказ №${order.id}**\n👤 Ник: ${buyer ? buyer.username : '—'}\n📧 Почта: ${order.user_email}\n🔑 ID: \`${buyer ? buyer.secret_id : '—'}\`\n💰 Количество: ${order.amount} G\n💵 Списано: ${order.spent_rubles} ₸\n🔫 Скин: ${order.target_skin}\n🎮 Игровой ID: ${order.game_id}\n🎲 Паттерн: ${order.pattern}\nСтатус: ${statusText}`;
+
+    if (order.game_avatar && order.game_avatar !== 'default' && order.game_avatar.startsWith('data:image')) {
+        const buffer = Buffer.from(order.game_avatar.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+        bot.sendPhoto(msg.chat.id, buffer, { caption: text, parse_mode: 'Markdown' }).catch(() => {});
+    } else {
+        bot.sendMessage(msg.chat.id, text, { parse_mode: 'Markdown' }).catch(() => {});
+    }
+});
+
 bot.onText(/^\/mute\s+([^\s]+)\s+(\d+)\s+(.+)$/, async (msg, match) => {
     if (msg.chat.id !== ADMIN_CHAT_ID) return;
     const userEmail = match[1]; const minutes = parseInt(match[2]); const reason = match[3];
@@ -342,6 +370,43 @@ bot.on('callback_query', async (query) => {
       return bot.sendMessage(ADMIN_CHAT_ID, `Для выдачи мута скопируйте команду и вставьте свои значения:\n\`/mute ${userEmail} [минуты] [причина]\``, { parse_mode: 'Markdown' });
   }
 
+    else if (query.data.startsWith('acceptorder_')) {
+      const orderId = query.data.substring(12);
+      const orderMsgs = orderMessages[orderId];
+      if (!orderMsgs || orderMsgs.accepted) return bot.answerCallbackQuery(query.id, { text: 'Уже принято другим админом', show_alert: true });
+
+      orderMsgs.accepted = true;
+
+      const { data: order } = await supabase.from('withdrawals').select('*').eq('id', orderId).single();
+      if (!order) return bot.answerCallbackQuery(query.id, { text: 'Заказ не найден', show_alert: true });
+
+      const { data: adminUser } = await supabase.from('users').select('username, telegram_username').eq('tg_id', query.from.id).maybeSingle();
+      const adminName = adminUser ? adminUser.username : (query.from.first_name || 'Админ');
+      const adminTg = (adminUser && adminUser.telegram_username) || query.from.username || '—';
+
+      for (let tgId in orderMsgs.messages) {
+          const msgId = orderMsgs.messages[tgId];
+          if (Number(tgId) === query.from.id) {
+              bot.editMessageText(`✅ Вы приняли заказ №${orderId}, начинаем трекать!`, { chat_id: tgId, message_id: msgId }).catch(() => {});
+          } else {
+              bot.editMessageText(`✅ Заказ №${orderId} принят\n👤 Администратор ${adminName} [@${adminTg}] принял заказ.`, { chat_id: tgId, message_id: msgId }).catch(() => {});
+          }
+      }
+
+      const { data: buyer } = await supabase.from('users').select('*').eq('email', order.user_email).single();
+      const fullMessage = `🔥 **ЗАКАЗ №${orderId}**\n👤 **Ник:** ${buyer.username}\n📧 **Почта:** ${buyer.email}\n🔑 **ID:** \`${buyer.secret_id}\`\n💰 **Количество:** ${order.amount} G\n💵 **Списано:** ${order.spent_rubles} ₸\n🔫 **Скин:** ${order.target_skin}\n🎮 **Игровой ID:** ${order.game_id}\n🎲 **Паттерн:** ${order.pattern}`;
+      const fullOptions = { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '✅ Выведено', callback_data: `complete_${orderId}` }, { text: '❌ Отменено', callback_data: `cancel_${orderId}` }]] } };
+
+      if (order.game_avatar && order.game_avatar !== 'default' && order.game_avatar.startsWith('data:image')) {
+          const buffer = Buffer.from(order.game_avatar.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+          bot.sendPhoto(query.from.id, buffer, { caption: fullMessage, parse_mode: 'Markdown', reply_markup: fullOptions.reply_markup }).catch(() => {});
+      } else {
+          bot.sendMessage(query.from.id, fullMessage, fullOptions).catch(() => {});
+      }
+
+      return bot.answerCallbackQuery(query.id, { text: 'Заказ принят!' });
+  }
+  
   const action = query.data.split('_')[0]; 
   const orderId = query.data.split('_')[1];
 
@@ -422,6 +487,11 @@ bot.on('callback_query', async (query) => {
             bot.sendMessage(targetUser.tg_id, `✅ **Ваш заказ успешно выполнен!**\n**${order.amount} G** отправлены на ваш игровой аккаунт.\n\nЗайдите в игру и проверьте баланс!`, { parse_mode: 'Markdown' });
         }
     } catch(e) {}
+
+        const admins = await getAdminTelegramList();
+        for (let admin of admins) {
+          bot.sendMessage(admin.tg_id, `✅ Заказ №${orderId} выведен.`).catch(() => {});
+      }
   }
 
   await supabase.from('withdrawals').update({ status: newStatus }).eq('id', orderId);
@@ -609,11 +679,19 @@ app.post('/api/finance/withdraw', authenticateUser, async (req, res) => {
     await supabase.from('transactions').insert([{ user_email: req.user.email, type: 'withdrawal', amount: spentTenge, description: `Покупка ${amount} G` }]);
   }
 
-  if (order) {
-    const title = spentTenge === 0 ? '🎁 **ВЫДАЧА ПРИЗА РОЗЫГРЫША!**' : '🔥 **НОВЫЙ ЗАКАЗ ГОЛДЫ!**';
-    const tgMessage = `${title}\n👤 **Ник:** ${req.user.username}\n📧 **Почта:** ${req.user.email}\n🔑 **ID:** \`${req.user.secret_id}\`\n💰 **Количество:** ${amount} G\n💵 **Списано:** ${spentTenge} ₸\n🔫 **Скин:** ${targetSkin}\n🎮 **Игровой ID:** ${gameId}\n🎲 **Паттерн:** ${pattern}`;
-    const tgOptions = { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[ { text: '✅ Выведено', callback_data: `complete_${order.id}` }, { text: '❌ Отменено', callback_data: `cancel_${order.id}` } ]] } };
-    bot.sendMessage(ADMIN_CHAT_ID, tgMessage, tgOptions);
+    if (order) {
+    const title = spentTenge === 0 ? '🎁 Выдача приза розыгрыша' : '🔥 Новый заказ голды';
+    const briefMsg = `${title}\nСумма: ${amount} G\nСписано: ${spentTenge} ₸\n\nНажмите, чтобы принять заказ.`;
+    const briefOptions = { reply_markup: { inline_keyboard: [[{ text: '✅ Принять заказ', callback_data: `acceptorder_${order.id}` }]] } };
+
+    orderMessages[order.id] = { messages: {}, accepted: false };
+    const admins = await getAdminTelegramList();
+    for (let admin of admins) {
+        try {
+            const sent = await bot.sendMessage(admin.tg_id, briefMsg, briefOptions);
+            orderMessages[order.id].messages[admin.tg_id] = sent.message_id;
+        } catch (e) {}
+    }
   }
   res.json({ success: true, message: 'Заявка на вывод создана', balance: newBalance });
 });
