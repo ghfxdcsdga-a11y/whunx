@@ -477,13 +477,14 @@ bot.on('callback_query', async (query) => {
     }
     if (order.applied_promo) await supabase.from('used_promocodes').update({ is_spent: false }).eq('user_email', order.user_email).eq('promo_code', order.applied_promo);
     
-  } else if (action === 'complete') {
+   } else if (action === 'complete') {
     try {
+        const listingAmount = parseFloat((order.target_skin || '').toString().replace(/[^\d.]/g, '')) || order.amount;
         const oldVal = await getGoldReserve();
         if (oldVal > 0) {
-            const newVal = Math.max(0, oldVal - order.amount);
+            const newVal = Math.max(0, oldVal - listingAmount);
             await setGoldReserve(newVal);
-            bot.sendMessage(ADMIN_CHAT_ID, `📉 Из резерва автоматически списано ${order.amount} G (Вывод заказа #${orderId}).\nОстаток резерва: ${newVal} G`);
+            bot.sendMessage(ADMIN_CHAT_ID, `📉 Из резерва автоматически списано ${listingAmount} G (Вывод заказа #${orderId}).\nОстаток резерва: ${newVal} G`);
         }
         
         const { data: targetUser } = await supabase.from('users').select('tg_id').eq('email', order.user_email).single();
