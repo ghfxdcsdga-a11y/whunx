@@ -340,7 +340,13 @@ bot.on('message', async (msg) => {
 });
 
 bot.on('callback_query', async (query) => {
-  if (query.from.id !== ADMIN_CHAT_ID) return;
+  if (query.data.startsWith('acceptorder_')) {
+      const { data: reqUser } = await supabase.from('users').select('role').eq('tg_id', query.from.id).maybeSingle();
+      const isAllowed = query.from.id === ADMIN_CHAT_ID || (reqUser && ['admin', 'creator'].includes(reqUser.role));
+      if (!isAllowed) return bot.answerCallbackQuery(query.id, { text: 'Нет доступа', show_alert: true });
+  } else if (query.from.id !== ADMIN_CHAT_ID) {
+      return;
+  }
 
   if (query.data.startsWith('respr_')) {
       const userEmail = query.data.substring(6);
